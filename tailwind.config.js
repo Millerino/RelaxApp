@@ -54,6 +54,7 @@ export default {
         'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
         'pulse-once': 'pulseOnce 0.3s ease-out',
         'bounce-small': 'bounceSmall 0.4s ease-out',
+        'shimmer': 'shimmer 2s infinite',
       },
       keyframes: {
         glow: {
@@ -81,6 +82,10 @@ export default {
           '0%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.02)' },
           '100%': { transform: 'scale(1)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       backdropBlur: {
