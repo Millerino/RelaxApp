@@ -16,6 +16,12 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubscribe = async () => {
+    // Require login before subscribing
+    if (!user && isAuthConfigured && onLoginClick) {
+      onLoginClick();
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -125,23 +131,20 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
               <p className="text-red-500 text-sm mb-4">{error}</p>
             )}
 
-            {/* Login prompt if not logged in and auth is configured */}
-            {!user && isAuthConfigured && onLoginClick && (
-              <p className="text-sm text-silver-500 dark:text-silver-400 mb-4">
-                <button onClick={onLoginClick} className="text-lavender-500 hover:text-lavender-600 underline">
-                  Sign in
-                </button>
-                {' '}to keep your subscription linked to your account
-              </p>
-            )}
-
             <button
               onClick={handleSubscribe}
               disabled={isLoading}
               className="btn-primary w-full max-w-xs py-4"
             >
-              {isLoading ? 'Processing...' : 'Become a supporter'}
+              {isLoading ? 'Processing...' : (!user && isAuthConfigured ? 'Sign in to subscribe' : 'Become a supporter')}
             </button>
+
+            {/* Hint for non-logged-in users */}
+            {!user && isAuthConfigured && (
+              <p className="text-xs text-silver-400 dark:text-silver-500 mt-3">
+                You'll create an account before subscribing
+              </p>
+            )}
           </div>
 
           {/* Referral section */}

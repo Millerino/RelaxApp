@@ -1,10 +1,15 @@
+import { useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { Calendar } from '../Calendar';
 import { StreakBadge } from '../StreakBadge';
+import { MoodGraph } from '../MoodGraph';
+import { DailyInsight } from '../DailyInsight';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
-  const { state, setStep, shouldShowPaywall } = useApp();
+  const { state, setStep, shouldShowPaywall, updateEntry } = useApp();
+  const { user } = useAuth();
 
   // Check if should show paywall
   if (shouldShowPaywall) {
@@ -15,6 +20,26 @@ export function CompleteStep() {
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
 
+  // Get user's first name from profile or email
+  const userName = useMemo(() => {
+    if (state.profile?.name) {
+      return state.profile.name.split(' ')[0];
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return null;
+  }, [state.profile?.name, user?.email]);
+
+  // Get time-based greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    if (hour < 21) return 'Good evening';
+    return 'Good night';
+  }, []);
+
   const handleNewEntry = () => {
     setStep('welcome');
   };
@@ -22,7 +47,7 @@ export function CompleteStep() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
       <div className="text-center w-full max-w-md px-6">
-        {/* Success state */}
+        {/* Success state - today's entry exists */}
         {todayEntry ? (
           <>
             {/* Streak badge at top */}
@@ -88,9 +113,21 @@ export function CompleteStep() {
               )}
             </div>
 
+            {/* 7-day Mood Graph */}
+            {state.entries.length >= 2 && (
+              <div className="glass-card p-5 mb-6">
+                <MoodGraph entries={state.entries} />
+              </div>
+            )}
+
+            {/* Daily Insight */}
+            <div className="mb-6">
+              <DailyInsight entries={state.entries} />
+            </div>
+
             {/* Calendar */}
             <div className="glass-card p-5 mb-6">
-              <Calendar entries={state.entries} />
+              <Calendar entries={state.entries} onSaveEntry={updateEntry} />
             </div>
 
             <p className="text-sm text-silver-400 dark:text-silver-500">
@@ -98,6 +135,7 @@ export function CompleteStep() {
             </p>
           </>
         ) : (
+          /* No entry today - welcome back state */
           <>
             {/* Show streak if returning user */}
             {streak > 0 && (
@@ -106,17 +144,30 @@ export function CompleteStep() {
               </div>
             )}
 
-            <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
-              Welcome back
+            {/* Personalized greeting */}
+            <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-2">
+              {greeting}{userName ? `, ${userName}` : ''}
             </h2>
             <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
               Ready for today's reflection?
             </p>
 
+            {/* 7-day Mood Graph for returning users */}
+            {state.entries.length >= 2 && (
+              <div className="glass-card p-5 mb-6">
+                <MoodGraph entries={state.entries} />
+              </div>
+            )}
+
+            {/* Daily Insight */}
+            <div className="mb-6">
+              <DailyInsight entries={state.entries} />
+            </div>
+
             {/* Show calendar for returning users */}
             {state.entries.length > 0 && (
               <div className="glass-card p-5 mb-6">
-                <Calendar entries={state.entries} />
+                <Calendar entries={state.entries} onSaveEntry={updateEntry} />
               </div>
             )}
 

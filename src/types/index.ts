@@ -17,6 +17,33 @@ export interface Goal {
   completed: boolean;
 }
 
+export interface UserProfile {
+  name: string;
+  birthday?: string;
+  gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
+  country?: string;
+  timezone?: string;
+  wellnessGoals?: WellnessGoal[];
+  notificationPreferences?: NotificationPreferences;
+  createdAt: number;
+}
+
+export type WellnessGoal =
+  | 'reduce-stress'
+  | 'improve-sleep'
+  | 'build-mindfulness'
+  | 'track-emotions'
+  | 'increase-gratitude'
+  | 'boost-productivity'
+  | 'better-relationships'
+  | 'self-discovery';
+
+export interface NotificationPreferences {
+  dailyReminder: boolean;
+  reminderTime?: string;
+  weeklyInsights: boolean;
+}
+
 export interface UserState {
   isOnboarded: boolean;
   isLoggedIn: boolean;
@@ -25,6 +52,7 @@ export interface UserState {
   entries: DayEntry[];
   currentStep: OnboardingStep;
   email?: string;
+  profile?: UserProfile;
 }
 
 export type OnboardingStep =

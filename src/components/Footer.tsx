@@ -11,35 +11,35 @@ export function Footer({ onPricingClick, onFAQClick, onSupportClick, onLegalClic
       <div className="max-w-4xl mx-auto flex justify-center items-center gap-6">
         <button
           onClick={onFAQClick}
-          className="text-xs text-silver-400 dark:text-silver-500
-                   hover:text-silver-600 dark:hover:text-silver-300
+          className="text-xs text-silver-500 dark:text-silver-400
+                   hover:text-silver-700 dark:hover:text-silver-200
                    transition-colors"
         >
           FAQ
         </button>
-        <span className="text-silver-300 dark:text-silver-700">·</span>
+        <span className="text-silver-400 dark:text-silver-500">·</span>
         <button
           onClick={onSupportClick}
-          className="text-xs text-silver-400 dark:text-silver-500
-                   hover:text-silver-600 dark:hover:text-silver-300
+          className="text-xs text-silver-500 dark:text-silver-400
+                   hover:text-silver-700 dark:hover:text-silver-200
                    transition-colors"
         >
           Support
         </button>
-        <span className="text-silver-300 dark:text-silver-700">·</span>
+        <span className="text-silver-400 dark:text-silver-500">·</span>
         <button
           onClick={onPricingClick}
-          className="text-xs text-silver-400 dark:text-silver-500
-                   hover:text-silver-600 dark:hover:text-silver-300
+          className="text-xs text-silver-500 dark:text-silver-400
+                   hover:text-silver-700 dark:hover:text-silver-200
                    transition-colors"
         >
           Pricing
         </button>
-        <span className="text-silver-300 dark:text-silver-700">·</span>
+        <span className="text-silver-400 dark:text-silver-500">·</span>
         <button
           onClick={onLegalClick}
-          className="text-xs text-silver-400 dark:text-silver-500
-                   hover:text-silver-600 dark:hover:text-silver-300
+          className="text-xs text-silver-500 dark:text-silver-400
+                   hover:text-silver-700 dark:hover:text-silver-200
                    transition-colors"
         >
           Legal

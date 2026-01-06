@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal } from '../types';
+import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile } from '../types';
 
 interface AppContextType {
   state: UserState;
@@ -11,6 +11,8 @@ interface AppContextType {
   setGratitude: (text: string) => void;
   setGoals: (goals: Goal[]) => void;
   saveDayEntry: () => void;
+  updateEntry: (entry: DayEntry) => void;
+  setProfile: (profile: UserProfile) => void;
   login: (email: string) => void;
   skipLogin: () => void;
   subscribeToPremium: () => void;
@@ -125,6 +127,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, isPremium: false }));
   };
 
+  const updateEntry = (entry: DayEntry) => {
+    setState(prev => {
+      const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
+      const isNewEntry = existingIndex === -1;
+
+      return {
+        ...prev,
+        entries: isNewEntry
+          ? [...prev.entries, entry]
+          : prev.entries.map((e, i) => i === existingIndex ? entry : e),
+        daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
+        isOnboarded: true,
+      };
+    });
+  };
+
+  const setProfile = (profile: UserProfile) => {
+    setState(prev => ({ ...prev, profile }));
+  };
+
   return (
     <AppContext.Provider value={{
       state,
@@ -135,6 +157,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setGratitude,
       setGoals,
       saveDayEntry,
+      updateEntry,
+      setProfile,
       login,
       skipLogin,
       subscribeToPremium,

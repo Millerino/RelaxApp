@@ -4,9 +4,10 @@ import { DayDetailModal } from './DayDetailModal';
 
 interface Props {
   entries: DayEntry[];
+  onSaveEntry?: (entry: DayEntry) => void;
 }
 
-export function Calendar({ entries }: Props) {
+export function Calendar({ entries, onSaveEntry }: Props) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DayEntry | null>(null);
@@ -207,6 +208,11 @@ export function Calendar({ entries }: Props) {
           date={selectedDate}
           onClose={closeModal}
           isEmpty={!selectedEntry}
+          onSaveEntry={(entry) => {
+            onSaveEntry?.(entry);
+            setSelectedEntry(entry);
+            setShowEmptyDay(false);
+          }}
         />
       )}
     </>
