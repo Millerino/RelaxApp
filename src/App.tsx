@@ -2,6 +2,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { LampToggle } from './components/LampToggle';
 import { Background } from './components/Background';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { ProgressIndicator } from './components/ProgressIndicator';
 import {
   WelcomeStep,
@@ -63,10 +65,12 @@ function App() {
       <AppProvider>
         <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
           <Background />
+          <Header />
           <LampToggle />
-          <main className="relative min-h-screen flex items-center justify-center px-4 py-16">
+          <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
             <AppContent />
           </main>
+          <Footer />
         </div>
       </AppProvider>
     </ThemeProvider>

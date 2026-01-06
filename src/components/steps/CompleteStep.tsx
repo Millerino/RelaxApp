@@ -1,4 +1,7 @@
 import { useApp } from '../../context/AppContext';
+import { Calendar } from '../Calendar';
+import { StreakBadge } from '../StreakBadge';
+import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
   const { state, setStep, shouldShowPaywall } = useApp();
@@ -10,6 +13,7 @@ export function CompleteStep() {
 
   const today = new Date().toDateString();
   const todayEntry = state.entries.find(e => e.date === today);
+  const streak = calculateStreak(state.entries);
 
   const handleNewEntry = () => {
     setStep('welcome');
@@ -21,13 +25,19 @@ export function CompleteStep() {
         {/* Success state */}
         {todayEntry ? (
           <>
-            <div className="mb-8 flex justify-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-500
-                            flex items-center justify-center shadow-xl shadow-lavender-500/25
-                            animate-pulse-soft">
+            {/* Streak badge at top */}
+            {streak > 0 && (
+              <div className="mb-6">
+                <StreakBadge streak={streak} showMessage={true} />
+              </div>
+            )}
+
+            {/* Success icon */}
+            <div className="mb-6 flex justify-center">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl
+                            ${getMoodGradient(todayEntry.mood)}`}>
                 <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
@@ -35,25 +45,25 @@ export function CompleteStep() {
             <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
               Today is captured
             </h2>
-            <p className="text-silver-500 dark:text-silver-400 mb-8 leading-relaxed">
-              Well done taking time for yourself. See you tomorrow for another moment of reflection.
+            <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
+              Well done taking time for yourself. See you tomorrow!
             </p>
 
-            {/* Today's summary */}
-            <div className="glass-card p-6 text-left mb-8">
-              <div className="flex items-center justify-between mb-4">
+            {/* Today's summary card */}
+            <div className="glass-card p-5 text-left mb-6">
+              <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-silver-500 dark:text-silver-400">Today's mood</span>
-                <span className="text-lg font-medium text-lavender-600 dark:text-lavender-400">
+                <span className={`text-base font-medium ${getMoodTextColor(todayEntry.mood)}`}>
                   {getMoodLabel(todayEntry.mood)}
                 </span>
               </div>
 
               {todayEntry.emotions.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-3">
                   <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Emotions felt</span>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {todayEntry.emotions.map(e => (
-                      <span key={e} className="px-3 py-1 rounded-full text-sm
+                      <span key={e} className="px-2.5 py-1 rounded-full text-xs
                                              bg-lavender-100 dark:bg-lavender-900/40
                                              text-lavender-700 dark:text-lavender-300">
                         {e}
@@ -78,18 +88,38 @@ export function CompleteStep() {
               )}
             </div>
 
+            {/* Calendar */}
+            <div className="glass-card p-5 mb-6">
+              <Calendar entries={state.entries} />
+            </div>
+
             <p className="text-sm text-silver-400 dark:text-silver-500">
               {state.daysUsed} day{state.daysUsed !== 1 ? 's' : ''} of reflection
             </p>
           </>
         ) : (
           <>
+            {/* Show streak if returning user */}
+            {streak > 0 && (
+              <div className="mb-6">
+                <StreakBadge streak={streak} showMessage={false} />
+              </div>
+            )}
+
             <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
               Welcome back
             </h2>
-            <p className="text-silver-500 dark:text-silver-400 mb-8 leading-relaxed">
+            <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
               Ready for today's reflection?
             </p>
+
+            {/* Show calendar for returning users */}
+            {state.entries.length > 0 && (
+              <div className="glass-card p-5 mb-6">
+                <Calendar entries={state.entries} />
+              </div>
+            )}
+
             <button
               onClick={handleNewEntry}
               className="btn-primary px-10 py-4"
@@ -103,6 +133,45 @@ export function CompleteStep() {
   );
 }
 
+function calculateStreak(entries: DayEntry[]): number {
+  if (entries.length === 0) return 0;
+
+  // Sort entries by date descending
+  const sortedEntries = [...entries].sort((a, b) => b.createdAt - a.createdAt);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Check if latest entry is today or yesterday
+  const latestDate = new Date(sortedEntries[0].date);
+  latestDate.setHours(0, 0, 0, 0);
+
+  if (latestDate.getTime() !== today.getTime() && latestDate.getTime() !== yesterday.getTime()) {
+    return 0; // Streak broken
+  }
+
+  let streak = 1;
+  let checkDate = new Date(latestDate);
+  checkDate.setDate(checkDate.getDate() - 1);
+
+  for (let i = 1; i < sortedEntries.length; i++) {
+    const entryDate = new Date(sortedEntries[i].date);
+    entryDate.setHours(0, 0, 0, 0);
+
+    if (entryDate.getTime() === checkDate.getTime()) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else if (entryDate.getTime() < checkDate.getTime()) {
+      break; // Gap in streak
+    }
+  }
+
+  return streak;
+}
+
 function getMoodLabel(mood: number): string {
   const labels: Record<number, string> = {
     1: 'Difficult',
@@ -112,4 +181,26 @@ function getMoodLabel(mood: number): string {
     5: 'Great',
   };
   return labels[mood] || 'Okay';
+}
+
+function getMoodGradient(mood: number): string {
+  const gradients: Record<number, string> = {
+    1: 'bg-gradient-to-br from-red-400 to-red-500 shadow-red-500/25',
+    2: 'bg-gradient-to-br from-orange-400 to-orange-500 shadow-orange-500/25',
+    3: 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-500/25',
+    4: 'bg-gradient-to-br from-lime-400 to-lime-500 shadow-lime-500/25',
+    5: 'bg-gradient-to-br from-green-400 to-green-500 shadow-green-500/25',
+  };
+  return gradients[mood] || gradients[3];
+}
+
+function getMoodTextColor(mood: number): string {
+  const colors: Record<number, string> = {
+    1: 'text-red-600 dark:text-red-400',
+    2: 'text-orange-600 dark:text-orange-400',
+    3: 'text-amber-600 dark:text-amber-400',
+    4: 'text-lime-600 dark:text-lime-400',
+    5: 'text-green-600 dark:text-green-400',
+  };
+  return colors[mood] || colors[3];
 }
