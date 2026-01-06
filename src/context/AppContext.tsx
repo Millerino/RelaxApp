@@ -14,6 +14,7 @@ interface AppContextType {
   login: (email: string) => void;
   skipLogin: () => void;
   subscribeToPremium: () => void;
+  cancelSubscription: () => void;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
 }
@@ -120,6 +121,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, isPremium: true }));
   };
 
+  const cancelSubscription = () => {
+    setState(prev => ({ ...prev, isPremium: false }));
+  };
+
   return (
     <AppContext.Provider value={{
       state,
@@ -133,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       login,
       skipLogin,
       subscribeToPremium,
+      cancelSubscription,
       currentEntry,
       shouldShowPaywall,
     }}>

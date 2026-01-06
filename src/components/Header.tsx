@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 import { AuthModal } from './AuthModal';
+import { CancelSubscriptionModal } from './CancelSubscriptionModal';
 
 interface HeaderProps {
   onNavigateHome?: () => void;
@@ -8,9 +10,11 @@ interface HeaderProps {
 
 export function Header({ onNavigateHome }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { state } = useApp();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const handleLogoClick = () => {
     onNavigateHome?.();
@@ -29,6 +33,11 @@ export function Header({ onNavigateHome }: HeaderProps) {
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+  };
+
+  const handleManageSubscription = () => {
+    setShowUserMenu(false);
+    setShowCancelModal(true);
   };
 
   return (
@@ -79,7 +88,22 @@ export function Header({ onNavigateHome }: HeaderProps) {
                         <p className="text-xs text-silver-500 dark:text-silver-400 truncate">
                           {user.email}
                         </p>
+                        {state.isPremium && (
+                          <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs
+                                         bg-lavender-100 dark:bg-lavender-900/40 text-lavender-600 dark:text-lavender-400">
+                            Premium
+                          </span>
+                        )}
                       </div>
+                      {state.isPremium && (
+                        <button
+                          onClick={handleManageSubscription}
+                          className="w-full text-left px-4 py-2 text-sm text-silver-600 dark:text-silver-300
+                                   hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors"
+                        >
+                          Manage subscription
+                        </button>
+                      )}
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-4 py-2 text-sm text-silver-600 dark:text-silver-300
@@ -123,6 +147,13 @@ export function Header({ onNavigateHome }: HeaderProps) {
         <AuthModal
           onClose={() => setShowAuthModal(false)}
           initialMode={authMode}
+        />
+      )}
+
+      {/* Cancel Subscription Modal */}
+      {showCancelModal && (
+        <CancelSubscriptionModal
+          onClose={() => setShowCancelModal(false)}
         />
       )}
     </>

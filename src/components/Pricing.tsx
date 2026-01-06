@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { getStripe, isStripeConfigured } from '../lib/stripe';
+import { getStripe, isStripeConfigured, STRIPE_PAYMENT_LINK } from '../lib/stripe';
 
 interface PricingProps {
   onClose: () => void;
@@ -22,27 +22,15 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
     try {
       // If Stripe is configured, redirect to Stripe Checkout
       if (isStripeConfigured) {
-        const stripe = await getStripe();
+        await getStripe();
 
-        if (stripe) {
-          // For now, we'll use a simple redirect to Stripe Payment Link
-          // You need to create this in your Stripe Dashboard:
-          // 1. Go to Products -> Add product -> Create $4.99/month subscription
-          // 2. Go to Payment Links -> Create payment link
-          // 3. Copy the URL and set it below
+        // Add customer email if user is logged in
+        const url = user?.email
+          ? `${STRIPE_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(user.email)}`
+          : STRIPE_PAYMENT_LINK;
 
-          // Option 1: Payment Link (simplest - no backend needed)
-          // Replace this URL with your actual Stripe Payment Link
-          const paymentLinkUrl = 'https://buy.stripe.com/test_your_payment_link';
-
-          // Add customer email if user is logged in
-          const url = user?.email
-            ? `${paymentLinkUrl}?prefilled_email=${encodeURIComponent(user.email)}`
-            : paymentLinkUrl;
-
-          window.location.href = url;
-          return;
-        }
+        window.location.href = url;
+        return;
       }
 
       // Fallback: Demo mode (for development/testing)

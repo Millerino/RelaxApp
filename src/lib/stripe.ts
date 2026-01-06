@@ -20,10 +20,12 @@ export const getStripe = () => {
 
 export const isStripeConfigured = !!stripePublishableKey;
 
-// Stripe Payment Link - Create this in your Stripe Dashboard
-// Dashboard -> Payment Links -> Create payment link -> Select your $4.99/month product
-// Then paste the URL here
-export const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/your_payment_link';
+// Stripe Payment Link for Pulsero Monthly ($4.99/month)
+export const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/fZu00icuRaAV5xB8EH9R606';
+
+// Stripe Customer Portal - Users can manage subscriptions here
+// You need to enable this in Stripe Dashboard -> Settings -> Customer portal
+export const STRIPE_CUSTOMER_PORTAL = 'https://billing.stripe.com/p/login/test_your_portal_link';
 
 // For Stripe Checkout with backend, you would create a checkout session
 // This requires a backend endpoint - we'll use Supabase Edge Functions for this
