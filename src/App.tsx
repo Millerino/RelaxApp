@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
 import { LampToggle } from './components/LampToggle';
 import { Background } from './components/Background';
 import { Header } from './components/Header';
@@ -11,6 +12,7 @@ import { SupportModal } from './components/SupportModal';
 import { LegalModal } from './components/LegalModal';
 import { CookieConsent } from './components/CookieConsent';
 import { ProgressIndicator } from './components/ProgressIndicator';
+import { AuthModal } from './components/AuthModal';
 import {
   WelcomeStep,
   MoodStep,
@@ -103,6 +105,12 @@ function AppShell() {
   const [showFAQ, setShowFAQ] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const handleLoginFromPricing = () => {
+    setShowPricing(false);
+    setShowAuthModal(true);
+  };
 
   return (
     <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
@@ -118,10 +126,16 @@ function AppShell() {
       </main>
 
       {/* Modals */}
-      {showPricing && <Pricing onClose={() => setShowPricing(false)} />}
+      {showPricing && (
+        <Pricing
+          onClose={() => setShowPricing(false)}
+          onLoginClick={handleLoginFromPricing}
+        />
+      )}
       {showFAQ && <FAQModal onClose={() => setShowFAQ(false)} />}
       {showSupport && <SupportModal onClose={() => setShowSupport(false)} />}
       {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
       {/* Cookie Consent Banner */}
       <CookieConsent />
@@ -132,9 +146,11 @@ function AppShell() {
 function App() {
   return (
     <ThemeProvider>
-      <AppProvider>
-        <AppShell />
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <AppShell />
+        </AppProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,27 +1,68 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { getStripe, isStripeConfigured } from '../lib/stripe';
 
 interface PricingProps {
   onClose: () => void;
+  onLoginClick?: () => void;
 }
 
-export function Pricing({ onClose }: PricingProps) {
+export function Pricing({ onClose, onLoginClick }: PricingProps) {
   const { subscribeToPremium } = useApp();
+  const { user, isConfigured: isAuthConfigured } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    // In production, this would redirect to Stripe Checkout
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    subscribeToPremium();
-    setIsLoading(false);
-    onClose();
+    setError(null);
+
+    try {
+      // If Stripe is configured, redirect to Stripe Checkout
+      if (isStripeConfigured) {
+        const stripe = await getStripe();
+
+        if (stripe) {
+          // For now, we'll use a simple redirect to Stripe Payment Link
+          // You need to create this in your Stripe Dashboard:
+          // 1. Go to Products -> Add product -> Create $4.99/month subscription
+          // 2. Go to Payment Links -> Create payment link
+          // 3. Copy the URL and set it below
+
+          // Option 1: Payment Link (simplest - no backend needed)
+          // Replace this URL with your actual Stripe Payment Link
+          const paymentLinkUrl = 'https://buy.stripe.com/test_your_payment_link';
+
+          // Add customer email if user is logged in
+          const url = user?.email
+            ? `${paymentLinkUrl}?prefilled_email=${encodeURIComponent(user.email)}`
+            : paymentLinkUrl;
+
+          window.location.href = url;
+          return;
+        }
+      }
+
+      // Fallback: Demo mode (for development/testing)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      subscribeToPremium();
+      onClose();
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      console.error('Subscription error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyReferralLink = () => {
-    // In production, this would be a unique referral link
-    const referralLink = 'https://pulsero.fit/ref/yourcode';
+    // Generate referral link with user ID if logged in
+    const baseUrl = import.meta.env.VITE_APP_URL || 'https://pulsero.fit';
+    const referralCode = user?.id?.slice(0, 8) || 'guest';
+    const referralLink = `${baseUrl}?ref=${referralCode}`;
+
     navigator.clipboard.writeText(referralLink);
     setReferralCopied(true);
     setTimeout(() => setReferralCopied(false), 2000);
@@ -91,6 +132,20 @@ export function Pricing({ onClose }: PricingProps) {
                 </li>
               ))}
             </ul>
+
+            {error && (
+              <p className="text-red-500 text-sm mb-4">{error}</p>
+            )}
+
+            {/* Login prompt if not logged in and auth is configured */}
+            {!user && isAuthConfigured && onLoginClick && (
+              <p className="text-sm text-silver-500 dark:text-silver-400 mb-4">
+                <button onClick={onLoginClick} className="text-lavender-500 hover:text-lavender-600 underline">
+                  Sign in
+                </button>
+                {' '}to keep your subscription linked to your account
+              </p>
+            )}
 
             <button
               onClick={handleSubscribe}
