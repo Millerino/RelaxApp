@@ -53,6 +53,7 @@ export interface UserState {
   currentStep: OnboardingStep;
   email?: string;
   profile?: UserProfile;
+  xp: number;
 }
 
 export type OnboardingStep =

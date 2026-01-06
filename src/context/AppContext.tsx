@@ -41,6 +41,7 @@ const getInitialState = (): UserState => {
     daysUsed: 0,
     entries: [],
     currentStep: 'welcome',
+    xp: 0,
   };
 };
 
@@ -88,6 +89,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentEntry(prev => ({ ...prev, goals }));
   };
 
+  // Calculate XP earned for an entry
+  const calculateXP = (entry: DayEntry, isStreak: boolean): number => {
+    let xp = 10; // Base XP for logging
+
+    // Bonus for detailed entries
+    if (entry.emotions.length >= 3) xp += 5;
+    if (entry.reflection.length >= 50) xp += 5;
+    if (entry.gratitude.length >= 20) xp += 5;
+    if (entry.goals.length >= 1) xp += 5;
+
+    // Streak bonus
+    if (isStreak) xp += 10;
+
+    return xp;
+  };
+
   const saveDayEntry = () => {
     const today = new Date().toDateString();
     const entry: DayEntry = {
@@ -101,11 +118,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: Date.now(),
     };
 
+    // Check if this continues a streak
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const hadYesterday = state.entries.some(e => e.date === yesterday.toDateString());
+
+    const earnedXP = calculateXP(entry, hadYesterday);
+
     setState(prev => ({
       ...prev,
       entries: [...prev.entries.filter(e => e.date !== today), entry],
       daysUsed: prev.daysUsed + 1,
       isOnboarded: true,
+      xp: (prev.xp || 0) + earnedXP,
     }));
 
     setCurrentEntry({});
@@ -132,6 +157,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
       const isNewEntry = existingIndex === -1;
 
+      // Only give XP for new entries (not edits)
+      const xpGain = isNewEntry ? 10 : 0;
+
       return {
         ...prev,
         entries: isNewEntry
@@ -139,6 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : prev.entries.map((e, i) => i === existingIndex ? entry : e),
         daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
         isOnboarded: true,
+        xp: (prev.xp || 0) + xpGain,
       };
     });
   };

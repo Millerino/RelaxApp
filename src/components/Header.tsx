@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { AuthModal } from './AuthModal';
-import { CancelSubscriptionModal } from './CancelSubscriptionModal';
+import { SubscriptionModal } from './SubscriptionModal';
+import { ProfileSetup } from './ProfileSetup';
 
 interface HeaderProps {
   onNavigateHome?: () => void;
@@ -10,13 +11,22 @@ interface HeaderProps {
 
 export function Header({ onNavigateHome }: HeaderProps) {
   const { user, signOut } = useAuth();
-  const { state } = useApp();
+  const { state, setProfile, setStep } = useApp();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+
+  // Get display name - prefer profile name over email
+  const displayName = state.profile?.name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName.charAt(0).toUpperCase();
 
   const handleLogoClick = () => {
+    // Always navigate to complete step (home) when clicking logo
+    if (state.isOnboarded) {
+      setStep('complete');
+    }
     onNavigateHome?.();
   };
 
@@ -37,7 +47,12 @@ export function Header({ onNavigateHome }: HeaderProps) {
 
   const handleManageSubscription = () => {
     setShowUserMenu(false);
-    setShowCancelModal(true);
+    setShowSubscriptionModal(true);
+  };
+
+  const handleEditProfile = () => {
+    setShowUserMenu(false);
+    setShowEditProfile(true);
   };
 
   return (
@@ -66,10 +81,10 @@ export function Header({ onNavigateHome }: HeaderProps) {
                   <div className="w-6 h-6 rounded-full bg-lavender-200 dark:bg-lavender-800
                                 flex items-center justify-center text-lavender-600 dark:text-lavender-300
                                 text-xs font-medium">
-                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                    {initials}
                   </div>
                   <span className="hidden sm:inline max-w-[120px] truncate">
-                    {user.email}
+                    {displayName}
                   </span>
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -83,34 +98,62 @@ export function Header({ onNavigateHome }: HeaderProps) {
                       className="fixed inset-0 z-40"
                       onClick={() => setShowUserMenu(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 glass-card py-2 shadow-lg z-50 animate-fade-in">
+                    <div className="absolute right-0 mt-2 w-52 glass-card py-2 shadow-lg z-50 animate-fade-in">
                       <div className="px-4 py-2 border-b border-silver-200/50 dark:border-silver-700/30">
+                        <p className="text-sm font-medium text-silver-700 dark:text-silver-200">
+                          {displayName}
+                        </p>
                         <p className="text-xs text-silver-500 dark:text-silver-400 truncate">
                           {user.email}
                         </p>
                         {state.isPremium && (
-                          <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs
-                                         bg-lavender-100 dark:bg-lavender-900/40 text-lavender-600 dark:text-lavender-400">
+                          <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-xs
+                                         bg-gradient-to-r from-lavender-500 to-lavender-600 text-white">
                             Premium
                           </span>
                         )}
                       </div>
-                      {state.isPremium && (
-                        <button
-                          onClick={handleManageSubscription}
-                          className="w-full text-left px-4 py-2 text-sm text-silver-600 dark:text-silver-300
-                                   hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors"
-                        >
-                          Manage subscription
-                        </button>
-                      )}
+
                       <button
-                        onClick={handleSignOut}
-                        className="w-full text-left px-4 py-2 text-sm text-silver-600 dark:text-silver-300
-                                 hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors"
+                        onClick={handleEditProfile}
+                        className="w-full text-left px-4 py-2.5 text-sm text-silver-600 dark:text-silver-300
+                                 hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors
+                                 flex items-center gap-2"
                       >
-                        Sign out
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Edit profile
                       </button>
+
+                      <button
+                        onClick={handleManageSubscription}
+                        className="w-full text-left px-4 py-2.5 text-sm text-silver-600 dark:text-silver-300
+                                 hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors
+                                 flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Manage subscription
+                      </button>
+
+                      <div className="border-t border-silver-200/50 dark:border-silver-700/30 mt-1 pt-1">
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full text-left px-4 py-2.5 text-sm text-silver-500 dark:text-silver-400
+                                   hover:bg-silver-100/50 dark:hover:bg-silver-800/50 transition-colors
+                                   flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Sign out
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -150,10 +193,22 @@ export function Header({ onNavigateHome }: HeaderProps) {
         />
       )}
 
-      {/* Cancel Subscription Modal */}
-      {showCancelModal && (
-        <CancelSubscriptionModal
-          onClose={() => setShowCancelModal(false)}
+      {/* Subscription Modal */}
+      {showSubscriptionModal && (
+        <SubscriptionModal
+          onClose={() => setShowSubscriptionModal(false)}
+        />
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <ProfileSetup
+          onComplete={(profile) => {
+            setProfile(profile);
+            setShowEditProfile(false);
+          }}
+          onSkip={() => setShowEditProfile(false)}
+          initialProfile={state.profile}
         />
       )}
     </>
