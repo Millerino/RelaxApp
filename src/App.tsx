@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { LampToggle } from './components/LampToggle';
 import { Background } from './components/Background';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { Pricing } from './components/Pricing';
 import { ProgressIndicator } from './components/ProgressIndicator';
 import {
   WelcomeStep,
@@ -17,13 +19,29 @@ import {
   CompleteStep,
 } from './components/steps';
 
-function AppContent() {
-  const { state, shouldShowPaywall } = useApp();
+function AppContent({ onShowPricing }: { onShowPricing: () => void }) {
+  const { state, shouldShowPaywall, setStep } = useApp();
   const { currentStep } = state;
+
+  // Handle logo click - go to home/complete based on state
+  const handleNavigateHome = () => {
+    if (state.isOnboarded) {
+      // Returning user - go to complete screen
+      setStep('complete');
+    } else {
+      // New user - go to welcome
+      setStep('welcome');
+    }
+  };
 
   // Show paywall if user has used for 3+ days and isn't premium
   if (shouldShowPaywall && currentStep !== 'complete') {
-    return <Paywall />;
+    return (
+      <>
+        <Header onNavigateHome={handleNavigateHome} />
+        <Paywall />
+      </>
+    );
   }
 
   const renderStep = () => {
@@ -53,9 +71,30 @@ function AppContent() {
 
   return (
     <>
+      <Header onNavigateHome={handleNavigateHome} />
       <ProgressIndicator currentStep={currentStep} />
       {renderStep()}
+      <Footer onPricingClick={onShowPricing} />
     </>
+  );
+}
+
+function AppShell() {
+  const [showPricing, setShowPricing] = useState(false);
+
+  return (
+    <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
+      <Background />
+      <LampToggle />
+      <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
+        <AppContent onShowPricing={() => setShowPricing(true)} />
+      </main>
+
+      {/* Pricing Modal */}
+      {showPricing && (
+        <Pricing onClose={() => setShowPricing(false)} />
+      )}
+    </div>
   );
 }
 
@@ -63,15 +102,7 @@ function App() {
   return (
     <ThemeProvider>
       <AppProvider>
-        <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
-          <Background />
-          <Header />
-          <LampToggle />
-          <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
-            <AppContent />
-          </main>
-          <Footer />
-        </div>
+        <AppShell />
       </AppProvider>
     </ThemeProvider>
   );

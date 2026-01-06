@@ -1,35 +1,60 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
-export function Header() {
+interface HeaderProps {
+  onNavigateHome?: () => void;
+}
+
+export function Header({ onNavigateHome }: HeaderProps) {
   const { state } = useApp();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+
+  const handleLogoClick = () => {
+    onNavigateHome?.();
+  };
 
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           {/* Logo/Brand - left side */}
-          <div className="text-silver-600 dark:text-silver-400 text-sm font-medium tracking-wide">
-            reflect
-          </div>
+          <button
+            onClick={handleLogoClick}
+            className="text-silver-700 dark:text-silver-300 text-sm font-semibold tracking-wide
+                     hover:text-lavender-600 dark:hover:text-lavender-400 transition-colors"
+          >
+            pulsero
+          </button>
 
-          {/* Login button - positioned to the left of lamp */}
-          <div className="flex items-center gap-3 mr-14">
+          {/* Auth buttons - positioned to the left of lamp */}
+          <div className="flex items-center gap-2 mr-14">
             {state.isLoggedIn ? (
-              <span className="text-xs text-silver-500 dark:text-silver-400">
+              <span className="text-xs text-silver-500 dark:text-silver-400 px-2">
                 {state.email}
               </span>
             ) : (
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="text-xs text-silver-500 dark:text-silver-400
-                         hover:text-silver-700 dark:hover:text-silver-200
-                         transition-colors px-3 py-1.5 rounded-lg
-                         hover:bg-white/30 dark:hover:bg-silver-800/30"
-              >
-                Log in
-              </button>
+              <>
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="text-xs text-silver-500 dark:text-silver-400
+                           hover:text-silver-700 dark:hover:text-silver-200
+                           transition-colors px-3 py-1.5 rounded-lg
+                           hover:bg-white/30 dark:hover:bg-silver-800/30"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => setShowSignupModal(true)}
+                  className="text-xs font-medium text-lavender-600 dark:text-lavender-400
+                           hover:text-lavender-700 dark:hover:text-lavender-300
+                           transition-colors px-3 py-1.5 rounded-lg
+                           bg-lavender-100/50 dark:bg-lavender-900/30
+                           hover:bg-lavender-100 dark:hover:bg-lavender-900/50"
+                >
+                  Sign up
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -37,13 +62,38 @@ export function Header() {
 
       {/* Login Modal */}
       {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} />
+        <AuthModal
+          mode="login"
+          onClose={() => setShowLoginModal(false)}
+          onSwitchMode={() => {
+            setShowLoginModal(false);
+            setShowSignupModal(true);
+          }}
+        />
+      )}
+
+      {/* Signup Modal */}
+      {showSignupModal && (
+        <AuthModal
+          mode="signup"
+          onClose={() => setShowSignupModal(false)}
+          onSwitchMode={() => {
+            setShowSignupModal(false);
+            setShowLoginModal(true);
+          }}
+        />
       )}
     </>
   );
 }
 
-function LoginModal({ onClose }: { onClose: () => void }) {
+interface AuthModalProps {
+  mode: 'login' | 'signup';
+  onClose: () => void;
+  onSwitchMode: () => void;
+}
+
+function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProps) {
   const { login } = useApp();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +108,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setIsLoading(false);
     onClose();
   };
+
+  const isLogin = mode === 'login';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -80,10 +132,12 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         </button>
 
         <h3 className="text-xl font-medium text-silver-800 dark:text-silver-100 mb-2">
-          Welcome back
+          {isLogin ? 'Welcome back' : 'Create your account'}
         </h3>
         <p className="text-sm text-silver-500 dark:text-silver-400 mb-6">
-          Enter your email to sync your reflections
+          {isLogin
+            ? 'Enter your email to sync your reflections'
+            : 'Start your mindfulness journey with Pulsero'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,13 +154,28 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             disabled={!email.trim() || isLoading}
             className={`btn-primary w-full ${(!email.trim() || isLoading) ? 'opacity-50' : ''}`}
           >
-            {isLoading ? 'Signing in...' : 'Continue'}
+            {isLoading
+              ? (isLogin ? 'Signing in...' : 'Creating account...')
+              : (isLogin ? 'Continue' : 'Get started')}
           </button>
         </form>
 
         <p className="mt-4 text-xs text-center text-silver-400 dark:text-silver-500">
           We'll send you a magic link
         </p>
+
+        <div className="mt-6 pt-4 border-t border-silver-200/50 dark:border-silver-700/50 text-center">
+          <span className="text-xs text-silver-400 dark:text-silver-500">
+            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+          </span>
+          <button
+            onClick={onSwitchMode}
+            className="text-xs font-medium text-lavender-600 dark:text-lavender-400
+                     hover:text-lavender-700 dark:hover:text-lavender-300"
+          >
+            {isLogin ? 'Sign up' : 'Log in'}
+          </button>
+        </div>
       </div>
     </div>
   );

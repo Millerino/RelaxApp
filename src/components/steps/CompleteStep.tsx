@@ -183,24 +183,25 @@ function getMoodLabel(mood: number): string {
   return labels[mood] || 'Okay';
 }
 
+// Softer mood gradients that blend with lavender theme
 function getMoodGradient(mood: number): string {
   const gradients: Record<number, string> = {
-    1: 'bg-gradient-to-br from-red-400 to-red-500 shadow-red-500/25',
-    2: 'bg-gradient-to-br from-orange-400 to-orange-500 shadow-orange-500/25',
-    3: 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-500/25',
-    4: 'bg-gradient-to-br from-lime-400 to-lime-500 shadow-lime-500/25',
-    5: 'bg-gradient-to-br from-green-400 to-green-500 shadow-green-500/25',
+    1: 'bg-gradient-to-br from-red-300 to-red-400 shadow-red-400/15',
+    2: 'bg-gradient-to-br from-orange-300 to-orange-400 shadow-orange-400/15',
+    3: 'bg-gradient-to-br from-amber-300 to-amber-400 shadow-amber-400/15',
+    4: 'bg-gradient-to-br from-lime-300 to-lime-400 shadow-lime-400/15',
+    5: 'bg-gradient-to-br from-emerald-300 to-emerald-400 shadow-emerald-400/15',
   };
   return gradients[mood] || gradients[3];
 }
 
 function getMoodTextColor(mood: number): string {
   const colors: Record<number, string> = {
-    1: 'text-red-600 dark:text-red-400',
-    2: 'text-orange-600 dark:text-orange-400',
-    3: 'text-amber-600 dark:text-amber-400',
-    4: 'text-lime-600 dark:text-lime-400',
-    5: 'text-green-600 dark:text-green-400',
+    1: 'text-red-500 dark:text-red-400',
+    2: 'text-orange-500 dark:text-orange-400',
+    3: 'text-amber-500 dark:text-amber-400',
+    4: 'text-lime-500 dark:text-lime-400',
+    5: 'text-emerald-500 dark:text-emerald-400',
   };
   return colors[mood] || colors[3];
 }

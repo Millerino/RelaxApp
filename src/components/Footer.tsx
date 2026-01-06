@@ -1,4 +1,8 @@
-export function Footer() {
+interface FooterProps {
+  onPricingClick?: () => void;
+}
+
+export function Footer({ onPricingClick }: FooterProps) {
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-30 px-6 py-4">
       <div className="max-w-4xl mx-auto flex justify-center items-center gap-6">
@@ -19,6 +23,15 @@ export function Footer() {
         >
           Support
         </a>
+        <span className="text-silver-300 dark:text-silver-700">·</span>
+        <button
+          onClick={onPricingClick}
+          className="text-xs text-silver-400 dark:text-silver-500
+                   hover:text-silver-600 dark:hover:text-silver-300
+                   transition-colors"
+        >
+          Pricing
+        </button>
         <span className="text-silver-300 dark:text-silver-700">·</span>
         <a
           href="#legal"
