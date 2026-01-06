@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply font-sans transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-md bg-white/30 dark:bg-silver-900/30
+           border border-white/20 dark:border-silver-800/30
+           rounded-2xl shadow-xl;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl font-medium
+           bg-gradient-to-r from-lavender-400 to-lavender-500
+           hover:from-lavender-500 hover:to-lavender-600
+           text-white shadow-lg shadow-lavender-500/25
+           transition-all duration-300 ease-out
+           hover:shadow-xl hover:shadow-lavender-500/30
+           active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl font-medium
+           bg-silver-100 dark:bg-silver-800
+           hover:bg-silver-200 dark:hover:bg-silver-700
+           text-silver-700 dark:text-silver-200
+           border border-silver-200 dark:border-silver-700
+           transition-all duration-300 ease-out
+           active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-white/50 dark:bg-silver-800/50
+           border border-silver-200 dark:border-silver-700
+           text-silver-900 dark:text-silver-100
+           placeholder-silver-400 dark:placeholder-silver-500
+           focus:outline-none focus:ring-2 focus:ring-lavender-400/50
+           transition-all duration-200;
+  }
+
+  .mood-option {
+    @apply p-4 rounded-2xl cursor-pointer
+           bg-white/40 dark:bg-silver-800/40
+           border-2 border-transparent
+           hover:border-lavender-300 dark:hover:border-lavender-600
+           hover:bg-white/60 dark:hover:bg-silver-800/60
+           transition-all duration-200 ease-out
+           active:scale-95;
+  }
+
+  .mood-option.selected {
+    @apply border-lavender-400 dark:border-lavender-500
+           bg-lavender-50/50 dark:bg-lavender-900/30
+           shadow-lg shadow-lavender-500/10;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-silver-300 dark:bg-silver-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-silver-400 dark:bg-silver-600;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  @apply transition-colors duration-200;
+}

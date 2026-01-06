@@ -1,0 +1,35 @@
+import { useApp } from '../../context/AppContext';
+
+export function WelcomeStep() {
+  const { setStep } = useApp();
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
+      <div className="text-center max-w-md px-6">
+        {/* Subtle decorative element */}
+        <div className="mb-8 flex justify-center">
+          <div className="w-16 h-1 bg-gradient-to-r from-transparent via-lavender-400 to-transparent rounded-full" />
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-light text-silver-800 dark:text-silver-100 mb-6 tracking-tight">
+          How was your day?
+        </h1>
+
+        <p className="text-lg text-silver-500 dark:text-silver-400 mb-12 font-light leading-relaxed">
+          Take a moment to reflect. It only takes a minute.
+        </p>
+
+        <button
+          onClick={() => setStep('mood')}
+          className="btn-primary text-lg px-10 py-4"
+        >
+          Begin
+        </button>
+
+        <p className="mt-8 text-sm text-silver-400 dark:text-silver-500">
+          No account needed to start
+        </p>
+      </div>
+    </div>
+  );
+}
