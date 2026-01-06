@@ -3,6 +3,12 @@ import type { Stripe } from '@stripe/stripe-js';
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
+// Debug: Log Stripe configuration status
+console.log('[Pulsero Debug] Stripe check:', {
+  hasStripeKey: !!stripePublishableKey,
+  keyPrefix: stripePublishableKey ? stripePublishableKey.substring(0, 10) + '...' : 'NOT SET',
+});
+
 let stripePromise: Promise<Stripe | null> | null = null;
 
 export const getStripe = () => {
