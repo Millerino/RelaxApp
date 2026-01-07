@@ -58,15 +58,15 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate">
+      {/* Backdrop - fully opaque to hide everything behind */}
       <div
-        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 dark:bg-black/80"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden">
+      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header with gradient */}
         <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood)}`}>
           <button
@@ -86,7 +86,7 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-6 overflow-y-auto flex-1">
           {isEditing ? (
             /* Edit Mode */
             <div className="space-y-6">

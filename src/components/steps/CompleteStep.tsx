@@ -89,35 +89,55 @@ export function CompleteStep() {
                   {/* Today's summary card */}
                   <div className="glass-card p-5 text-left">
                     <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Today's Summary</h3>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-silver-500 dark:text-silver-400">Mood</span>
-                      <span className={`text-base font-medium ${getMoodTextColor(todayEntry.mood)}`}>
-                        {getMoodLabel(todayEntry.mood)}
-                      </span>
+
+                    {/* Mood display - prominent and visual */}
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className={`w-14 h-14 rounded-2xl ${getMoodGradient(todayEntry.mood)}
+                                    flex items-center justify-center shadow-lg`}>
+                        <span className="text-2xl">{getMoodEmoji(todayEntry.mood)}</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide">Mood</p>
+                        <p className={`text-lg font-semibold ${getMoodTextColor(todayEntry.mood)}`}>
+                          {getMoodLabel(todayEntry.mood)}
+                        </p>
+                      </div>
                     </div>
 
+                    {/* Emotions - cleaner display */}
                     {todayEntry.emotions.length > 0 && (
-                      <div className="mb-3">
-                        <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Emotions felt</span>
-                        <div className="flex flex-wrap gap-1.5">
+                      <div className="mb-5">
+                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                          Emotions
+                        </p>
+                        <div className="flex flex-wrap gap-2">
                           {todayEntry.emotions.map(e => (
-                            <span key={e} className="px-2.5 py-1 rounded-full text-xs
-                                                   bg-lavender-100 dark:bg-lavender-900/40
-                                                   text-lavender-700 dark:text-lavender-300">
-                              {e}
+                            <span key={e} className="px-3 py-1.5 rounded-lg text-sm font-medium
+                                                   bg-lavender-50 dark:bg-lavender-900/30
+                                                   text-lavender-600 dark:text-lavender-300
+                                                   border border-lavender-200 dark:border-lavender-800">
+                              {e.charAt(0).toUpperCase() + e.slice(1)}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
 
+                    {/* Goals */}
                     {todayEntry.goals.length > 0 && (
                       <div>
-                        <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Tomorrow's focus</span>
-                        <ul className="space-y-1">
+                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                          Tomorrow's Focus
+                        </p>
+                        <ul className="space-y-2">
                           {todayEntry.goals.map(g => (
-                            <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-lavender-400" />
+                            <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-start gap-2.5">
+                              <span className="w-5 h-5 rounded-md bg-lavender-100 dark:bg-lavender-900/40
+                                             flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg className="w-3 h-3 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </span>
                               {g.text}
                             </li>
                           ))}
@@ -351,4 +371,15 @@ function getMoodTextColor(mood: number): string {
     5: 'text-emerald-500 dark:text-emerald-400',
   };
   return colors[mood] || colors[3];
+}
+
+function getMoodEmoji(mood: number): string {
+  const emojis: Record<number, string> = {
+    1: '😔',
+    2: '😕',
+    3: '😐',
+    4: '🙂',
+    5: '😊',
+  };
+  return emojis[mood] || emojis[3];
 }
