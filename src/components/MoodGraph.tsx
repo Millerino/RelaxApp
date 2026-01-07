@@ -200,17 +200,14 @@ export function MoodGraph({ entries }: MoodGraphProps) {
                 />
               )}
 
-              {/* Empty day indicator */}
+              {/* Empty day indicator - subtle dot instead of dashed circle */}
               {!day.entry && (
                 <circle
                   cx={x}
                   cy={padding.top + graphHeight / 2}
-                  r="3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeOpacity="0.2"
-                  strokeWidth="1"
-                  strokeDasharray="2,1"
+                  r="2"
+                  fill="currentColor"
+                  fillOpacity="0.15"
                 />
               )}
             </g>

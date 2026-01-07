@@ -161,36 +161,85 @@ export function CompleteStep() {
 
                 {/* Right column */}
                 <div className="space-y-6">
-                  {/* Quick Actions */}
-                  <div className="glass-card p-5">
-                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Quick Actions</h3>
-                    <button
-                      onClick={() => setShowBreathing(true)}
-                      className="w-full p-4 rounded-xl bg-lavender-50 dark:bg-lavender-900/20
-                               flex items-center gap-4 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-lavender-100 dark:bg-lavender-900/40
-                                    flex items-center justify-center">
-                        <svg className="w-6 h-6 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </div>
-                      <div className="text-left">
-                        <span className="text-sm font-medium text-silver-700 dark:text-silver-200 block">Breathing Exercise</span>
-                        <span className="text-xs text-silver-500 dark:text-silver-400">Calm your mind with guided breathing</span>
-                      </div>
-                    </button>
+                  {/* Quick Actions - Grid layout */}
+                  <div className="glass-card p-4">
+                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setShowBreathing(true)}
+                        className="p-3 rounded-xl bg-lavender-50 dark:bg-lavender-900/20
+                                 flex flex-col items-center gap-2 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-lavender-100 dark:bg-lavender-900/40
+                                      flex items-center justify-center">
+                          <svg className="w-5 h-5 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </div>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Breathe</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowAuraDetail(true)}
+                        className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20
+                                 flex flex-col items-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40
+                                      flex items-center justify-center">
+                          <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Your Aura</span>
+                      </button>
+
+                      <button
+                        onClick={handleNewEntry}
+                        className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20
+                                 flex flex-col items-center gap-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40
+                                      flex items-center justify-center">
+                          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </div>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">New Entry</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const event = new CustomEvent('openProfileEditor');
+                          window.dispatchEvent(event);
+                        }}
+                        className="p-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
+                                 flex flex-col items-center gap-2 hover:bg-silver-100 dark:hover:bg-silver-700/50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-silver-100 dark:bg-silver-700
+                                      flex items-center justify-center">
+                          <svg className="w-5 h-5 text-silver-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Profile</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Statistics */}
                   {state.entries.length >= 3 && (
                     <StatsCard entries={state.entries} />
                   )}
-
-                  {/* Daily Insight */}
-                  <DailyInsight entries={state.entries} />
                 </div>
+              </div>
+
+              {/* Daily Insight - Compact footer style */}
+              <div className="mt-6 px-2">
+                <DailyInsight entries={state.entries} compact />
               </div>
 
               {/* Footer */}
@@ -314,7 +363,7 @@ export function CompleteStep() {
   );
 }
 
-// Mini Aura Orb component for header
+// Mini Aura Orb component for header - with XP progress and better interactivity
 interface MiniAuraOrbProps {
   entries: DayEntry[];
   xp: number;
@@ -351,15 +400,22 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
     return 0.2;
   })();
 
-  // Get current stage
-  const currentStage = (() => {
+  // Get current and next stage
+  const getCurrentStageIndex = () => {
     for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
-      if (xp >= EVOLUTION_STAGES[i].minXP) {
-        return EVOLUTION_STAGES[i];
-      }
+      if (xp >= EVOLUTION_STAGES[i].minXP) return i;
     }
-    return EVOLUTION_STAGES[0];
-  })();
+    return 0;
+  };
+
+  const stageIndex = getCurrentStageIndex();
+  const currentStage = EVOLUTION_STAGES[stageIndex];
+  const nextStage = EVOLUTION_STAGES[stageIndex + 1];
+
+  // Progress to next stage
+  const progressToNext = nextStage
+    ? (xp - currentStage.minXP) / (nextStage.minXP - currentStage.minXP)
+    : 1;
 
   // Get color based on average recent mood
   const recentMoods = entries.slice(-7).map(e => e.mood);
@@ -376,55 +432,76 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   };
 
   const colors = getGradientColors();
-  const size = 80;
-  const opacity = 0.5 + vitality * 0.5;
+  const size = 72;
+  const opacity = 0.6 + vitality * 0.4;
 
   return (
     <button
       onClick={onClick}
-      className="relative group cursor-pointer"
-      title={`${currentStage.name} • ${xp} XP - Click for details`}
+      className="flex flex-col items-center gap-2 group cursor-pointer"
     >
-      {/* Outer glow */}
-      <div
-        className="absolute rounded-full animate-pulse"
-        style={{
-          width: size * 1.4,
-          height: size * 1.4,
-          background: `radial-gradient(circle, ${colors[0]}30, transparent 70%)`,
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          animationDuration: '3s',
-        }}
-      />
-
-      {/* Main orb */}
-      <div
-        className="relative rounded-full transition-all duration-300 group-hover:scale-110"
-        style={{
-          width: size,
-          height: size,
-          background: `radial-gradient(circle at 30% 30%, ${colors[0]}, ${colors[1]}, ${colors[2]})`,
-          boxShadow: `
-            0 0 ${20 * vitality}px ${colors[0]}60,
-            0 0 ${40 * vitality}px ${colors[1]}40,
-            inset 0 0 ${15 * vitality}px rgba(255,255,255,0.3)
-          `,
-          opacity,
-        }}
-      >
-        {/* Inner highlight */}
+      {/* Orb container with hover effects */}
+      <div className="relative">
+        {/* Outer glow - expands on hover */}
         <div
-          className="absolute inset-[15%] rounded-full"
-          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
+          className="absolute rounded-full transition-all duration-500 group-hover:scale-125"
+          style={{
+            width: size * 1.5,
+            height: size * 1.5,
+            background: `radial-gradient(circle, ${colors[0]}25, transparent 70%)`,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
         />
+
+        {/* Main orb - grows and bounces on hover */}
+        <div
+          className="relative rounded-full transition-all duration-300 ease-out
+                     group-hover:scale-110 group-hover:-translate-y-1"
+          style={{
+            width: size,
+            height: size,
+            background: `radial-gradient(circle at 30% 30%, ${colors[0]}, ${colors[1]}, ${colors[2]})`,
+            boxShadow: `
+              0 0 ${15 * vitality}px ${colors[0]}50,
+              0 0 ${30 * vitality}px ${colors[1]}30,
+              inset 0 0 ${12 * vitality}px rgba(255,255,255,0.3)
+            `,
+            opacity,
+          }}
+        >
+          {/* Inner highlight */}
+          <div
+            className="absolute inset-[15%] rounded-full"
+            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
+          />
+        </div>
       </div>
 
-      {/* Hover indicator */}
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="text-xs text-silver-500 dark:text-silver-400 whitespace-nowrap">
+      {/* Label and XP bar below orb */}
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-xs font-medium text-silver-600 dark:text-silver-300">
           {currentStage.name}
+        </span>
+
+        {/* XP Progress bar */}
+        <div className="flex items-center gap-2">
+          <div className="w-20 h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progressToNext * 100}%`,
+                background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]})`,
+              }}
+            />
+          </div>
+          <span className="text-[10px] text-silver-400 dark:text-silver-500">{xp} XP</span>
+        </div>
+
+        {/* Tap hint on hover */}
+        <span className="text-[10px] text-lavender-500 opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5">
+          Tap for details
         </span>
       </div>
     </button>

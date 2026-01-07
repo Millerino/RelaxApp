@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { AuthModal } from './AuthModal';
@@ -54,6 +54,20 @@ export function Header({ onNavigateHome }: HeaderProps) {
     setShowUserMenu(false);
     setShowEditProfile(true);
   };
+
+  // Listen for custom event to open profile editor (from Quick Actions)
+  useEffect(() => {
+    const handleOpenProfileEditor = () => {
+      if (user) {
+        setShowEditProfile(true);
+      }
+    };
+
+    window.addEventListener('openProfileEditor', handleOpenProfileEditor);
+    return () => {
+      window.removeEventListener('openProfileEditor', handleOpenProfileEditor);
+    };
+  }, [user]);
 
   return (
     <>

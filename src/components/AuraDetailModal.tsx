@@ -233,19 +233,6 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               ))}
             </div>
           </div>
-
-          {/* XP earning tips */}
-          <div className="bg-lavender-50 dark:bg-lavender-900/20 rounded-xl p-4">
-            <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2">How to earn XP</h4>
-            <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1">
-              <li>+10 XP - Log a daily reflection</li>
-              <li>+5 XP - Add 3+ emotions</li>
-              <li>+5 XP - Write a detailed reflection</li>
-              <li>+5 XP - Express gratitude</li>
-              <li>+5 XP - Set goals for tomorrow</li>
-              <li>+10 XP - Maintain your streak</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>

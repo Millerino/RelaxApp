@@ -3,6 +3,7 @@ import type { DayEntry } from '../types';
 
 interface DailyInsightProps {
   entries: DayEntry[];
+  compact?: boolean;
 }
 
 // 60+ unique insights to avoid repetition for at least 2 months
@@ -89,7 +90,7 @@ const INSIGHTS = [
   { text: "Writing before bed can reduce next-day anxiety by 50%.", category: "evening" },
 ];
 
-export function DailyInsight({ entries }: DailyInsightProps) {
+export function DailyInsight({ entries, compact = false }: DailyInsightProps) {
   // Get today's insight based on the date (ensures same insight all day)
   const todayInsight = useMemo(() => {
     const today = new Date();
@@ -171,6 +172,22 @@ export function DailyInsight({ entries }: DailyInsightProps) {
         );
     }
   };
+
+  // Compact mode - subtle one-liner at footer
+  if (compact) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-3 px-4
+                     bg-silver-50/50 dark:bg-silver-800/30 rounded-xl">
+        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-lavender-100 dark:bg-lavender-900/40
+                      flex items-center justify-center text-lavender-500">
+          {getCategoryIcon(todayInsight.category)}
+        </div>
+        <p className="text-xs text-silver-500 dark:text-silver-400 leading-relaxed truncate">
+          {personalizedInsight || todayInsight.text}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-4 border-l-4 border-lavender-400">
