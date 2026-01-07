@@ -8,6 +8,7 @@ import { DailyInsight } from '../DailyInsight';
 import { AuraDetailModal } from '../AuraDetailModal';
 import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
+import { JournalView } from '../JournalView';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -15,6 +16,8 @@ export function CompleteStep() {
   const { user } = useAuth();
   const [showBreathing, setShowBreathing] = useState(false);
   const [showAuraDetail, setShowAuraDetail] = useState(false);
+  const [showJournal, setShowJournal] = useState(false);
+  const [journalInitialDate, setJournalInitialDate] = useState<Date | undefined>(undefined);
 
   // Check if should show paywall
   if (shouldShowPaywall) {
@@ -161,18 +164,46 @@ export function CompleteStep() {
 
                 {/* Right column */}
                 <div className="space-y-6">
+                  {/* My Journal - Featured button */}
+                  <button
+                    onClick={() => {
+                      setJournalInitialDate(undefined);
+                      setShowJournal(true);
+                    }}
+                    className="w-full glass-card p-4 flex items-center gap-4 group
+                             hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all"
+                  >
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100
+                                  dark:from-amber-900/40 dark:to-orange-900/40
+                                  flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-medium text-silver-800 dark:text-silver-100">My Journal</h3>
+                      <p className="text-sm text-silver-500 dark:text-silver-400">
+                        Browse {state.entries.length} {state.entries.length === 1 ? 'entry' : 'entries'}
+                      </p>
+                    </div>
+                    <svg className="w-5 h-5 text-silver-400 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+
                   {/* Quick Actions - Grid layout */}
                   <div className="glass-card p-4">
                     <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={() => setShowBreathing(true)}
                         className="p-3 rounded-xl bg-lavender-50 dark:bg-lavender-900/20
                                  flex flex-col items-center gap-2 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full bg-lavender-100 dark:bg-lavender-900/40
+                        <div className="w-9 h-9 rounded-full bg-lavender-100 dark:bg-lavender-900/40
                                       flex items-center justify-center">
-                          <svg className="w-5 h-5 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-4 h-4 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
@@ -185,14 +216,14 @@ export function CompleteStep() {
                         className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20
                                  flex flex-col items-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40
+                        <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/40
                                       flex items-center justify-center">
-                          <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                                   d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                         </div>
-                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Your Aura</span>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Aura</span>
                       </button>
 
                       <button
@@ -200,32 +231,14 @@ export function CompleteStep() {
                         className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20
                                  flex flex-col items-center gap-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40
+                        <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/40
                                       flex items-center justify-center">
-                          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  d="M12 4v16m8-8H4" />
                           </svg>
                         </div>
-                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">New Entry</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          const event = new CustomEvent('openProfileEditor');
-                          window.dispatchEvent(event);
-                        }}
-                        className="p-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
-                                 flex flex-col items-center gap-2 hover:bg-silver-100 dark:hover:bg-silver-700/50 transition-colors"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-silver-100 dark:bg-silver-700
-                                      flex items-center justify-center">
-                          <svg className="w-5 h-5 text-silver-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Profile</span>
+                        <span className="text-xs font-medium text-silver-700 dark:text-silver-200">New</span>
                       </button>
                     </div>
                   </div>
@@ -346,6 +359,18 @@ export function CompleteStep() {
           entries={state.entries}
           xp={state.xp || 0}
           onClose={() => setShowAuraDetail(false)}
+        />
+      )}
+
+      {/* Journal View */}
+      {showJournal && (
+        <JournalView
+          entries={state.entries}
+          initialDate={journalInitialDate}
+          onClose={() => setShowJournal(false)}
+          onEditEntry={(entry) => {
+            updateEntry(entry);
+          }}
         />
       )}
     </>
