@@ -107,14 +107,15 @@ export function DayDetailModal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
 
-      {/* Navigation arrows - outside modal for cleaner look */}
+      {/* Navigation arrows - positioned outside modal on desktop, hidden on mobile */}
       {onNavigate && (
         <>
           {/* Previous day arrow */}
           <button
             onClick={() => canNavigatePrev && onNavigate('prev')}
             disabled={!canNavigatePrev}
-            className={`absolute left-4 md:left-8 z-10 p-3 rounded-full transition-all
+            className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
+                       hidden md:flex
                        ${canNavigatePrev
                          ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
                          : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
@@ -130,7 +131,8 @@ export function DayDetailModal({
           <button
             onClick={() => canNavigateNext && onNavigate('next')}
             disabled={!canNavigateNext}
-            className={`absolute right-4 md:right-8 z-10 p-3 rounded-full transition-all
+            className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
+                       hidden md:flex
                        ${canNavigateNext
                          ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
                          : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
@@ -163,18 +165,54 @@ export function DayDetailModal({
             </svg>
           </button>
 
-          {/* Date info */}
+          {/* Date info with mobile navigation */}
           <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
             <span className="px-2 py-0.5 bg-white/20 rounded-full">
               {isToday ? 'Today' : isPastDate ? 'Past' : 'Future'}
             </span>
             {onNavigate && (
-              <span className="text-white/60">Use ← → to navigate</span>
+              <span className="text-white/60 hidden md:inline">Use ← → to navigate</span>
             )}
           </div>
-          <h3 className="text-xl font-semibold text-white">
-            {formattedDate}
-          </h3>
+
+          {/* Date with mobile nav arrows */}
+          <div className="flex items-center justify-between pr-10">
+            <h3 className="text-xl font-semibold text-white">
+              {formattedDate}
+            </h3>
+
+            {/* Mobile navigation arrows */}
+            {onNavigate && (
+              <div className="flex items-center gap-1 md:hidden">
+                <button
+                  onClick={() => canNavigatePrev && onNavigate('prev')}
+                  disabled={!canNavigatePrev}
+                  className={`p-1.5 rounded-full transition-all ${
+                    canNavigatePrev
+                      ? 'bg-white/20 hover:bg-white/30 text-white'
+                      : 'text-white/30 cursor-not-allowed'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => canNavigateNext && onNavigate('next')}
+                  disabled={!canNavigateNext}
+                  className={`p-1.5 rounded-full transition-all ${
+                    canNavigateNext
+                      ? 'bg-white/20 hover:bg-white/30 text-white'
+                      : 'text-white/30 cursor-not-allowed'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content */}
