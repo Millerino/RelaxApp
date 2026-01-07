@@ -5,7 +5,7 @@ import { Calendar } from '../Calendar';
 import { StreakBadge } from '../StreakBadge';
 import { MoodGraph } from '../MoodGraph';
 import { DailyInsight } from '../DailyInsight';
-import { AuraOrb } from '../AuraOrb';
+import { AuraDetailModal } from '../AuraDetailModal';
 import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
 import type { DayEntry } from '../../types';
@@ -14,6 +14,7 @@ export function CompleteStep() {
   const { state, setStep, shouldShowPaywall, updateEntry } = useApp();
   const { user } = useAuth();
   const [showBreathing, setShowBreathing] = useState(false);
+  const [showAuraDetail, setShowAuraDetail] = useState(false);
 
   // Check if should show paywall
   if (shouldShowPaywall) {
@@ -64,14 +65,13 @@ export function CompleteStep() {
                   </div>
                 )}
 
-                {/* Success icon */}
+                {/* Mini Aura Orb - clickable */}
                 <div className="mb-6 flex justify-center">
-                  <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl
-                                ${getMoodGradient(todayEntry.mood)}`}>
-                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
+                  <MiniAuraOrb
+                    entries={state.entries}
+                    xp={state.xp || 0}
+                    onClick={() => setShowAuraDetail(true)}
+                  />
                 </div>
 
                 <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
@@ -90,11 +90,11 @@ export function CompleteStep() {
                   <div className="glass-card p-5 text-left">
                     <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Today's Summary</h3>
 
-                    {/* Mood display - prominent and visual */}
+                    {/* Mood display - clean and visual */}
                     <div className="flex items-center gap-4 mb-5">
-                      <div className={`w-14 h-14 rounded-2xl ${getMoodGradient(todayEntry.mood)}
-                                    flex items-center justify-center shadow-lg`}>
-                        <span className="text-2xl">{getMoodEmoji(todayEntry.mood)}</span>
+                      <div className={`w-12 h-12 rounded-xl ${getMoodGradient(todayEntry.mood)}
+                                    flex items-center justify-center shadow-md`}>
+                        <span className="text-lg font-bold text-white">{todayEntry.mood}</span>
                       </div>
                       <div>
                         <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide">Mood</p>
@@ -161,9 +161,6 @@ export function CompleteStep() {
 
                 {/* Right column */}
                 <div className="space-y-6">
-                  {/* Aura Orb */}
-                  <AuraOrb entries={state.entries} xp={state.xp || 0} />
-
                   {/* Quick Actions */}
                   <div className="glass-card p-5">
                     <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Quick Actions</h3>
@@ -210,6 +207,17 @@ export function CompleteStep() {
                 {streak > 0 && (
                   <div className="mb-6">
                     <StreakBadge streak={streak} showMessage={false} />
+                  </div>
+                )}
+
+                {/* Mini Aura Orb for returning users */}
+                {state.entries.length > 0 && (
+                  <div className="mb-6 flex justify-center">
+                    <MiniAuraOrb
+                      entries={state.entries}
+                      xp={state.xp || 0}
+                      onClick={() => setShowAuraDetail(true)}
+                    />
                   </div>
                 )}
 
@@ -262,9 +270,6 @@ export function CompleteStep() {
 
                   {/* Right column */}
                   <div className="space-y-6">
-                    {/* Aura Orb */}
-                    <AuraOrb entries={state.entries} xp={state.xp || 0} />
-
                     {/* Statistics */}
                     {state.entries.length >= 3 && (
                       <StatsCard entries={state.entries} />
@@ -296,7 +301,133 @@ export function CompleteStep() {
       {showBreathing && (
         <BreathingExercise onClose={() => setShowBreathing(false)} />
       )}
+
+      {/* Aura Detail Modal */}
+      {showAuraDetail && (
+        <AuraDetailModal
+          entries={state.entries}
+          xp={state.xp || 0}
+          onClose={() => setShowAuraDetail(false)}
+        />
+      )}
     </>
+  );
+}
+
+// Mini Aura Orb component for header
+interface MiniAuraOrbProps {
+  entries: DayEntry[];
+  xp: number;
+  onClick: () => void;
+}
+
+function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
+  const EVOLUTION_STAGES = [
+    { name: 'Spark', minXP: 0 },
+    { name: 'Ember', minXP: 50 },
+    { name: 'Flame', minXP: 150 },
+    { name: 'Blaze', minXP: 300 },
+    { name: 'Radiance', minXP: 500 },
+    { name: 'Aurora', minXP: 800 },
+    { name: 'Celestial', minXP: 1200 },
+  ];
+
+  // Calculate vitality based on days since last entry
+  const daysSinceLastEntry = (() => {
+    if (entries.length === 0) return Infinity;
+    const sortedEntries = [...entries].sort((a, b) => b.createdAt - a.createdAt);
+    const lastEntry = new Date(sortedEntries[0].date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    lastEntry.setHours(0, 0, 0, 0);
+    return Math.floor((today.getTime() - lastEntry.getTime()) / (1000 * 60 * 60 * 24));
+  })();
+
+  const vitality = (() => {
+    if (daysSinceLastEntry === 0) return 1;
+    if (daysSinceLastEntry === 1) return 0.9;
+    if (daysSinceLastEntry === 2) return 0.7;
+    if (daysSinceLastEntry === 3) return 0.4;
+    return 0.2;
+  })();
+
+  // Get current stage
+  const currentStage = (() => {
+    for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
+      if (xp >= EVOLUTION_STAGES[i].minXP) {
+        return EVOLUTION_STAGES[i];
+      }
+    }
+    return EVOLUTION_STAGES[0];
+  })();
+
+  // Get color based on average recent mood
+  const recentMoods = entries.slice(-7).map(e => e.mood);
+  const avgMood = recentMoods.length > 0
+    ? recentMoods.reduce((a, b) => a + b, 0) / recentMoods.length
+    : 3;
+
+  const getGradientColors = () => {
+    if (avgMood >= 4.5) return ['#34d399', '#10b981', '#059669'];
+    if (avgMood >= 4) return ['#a78bfa', '#8b5cf6', '#7c3aed'];
+    if (avgMood >= 3) return ['#a78bfa', '#818cf8', '#6366f1'];
+    if (avgMood >= 2) return ['#fbbf24', '#f59e0b', '#d97706'];
+    return ['#f87171', '#ef4444', '#dc2626'];
+  };
+
+  const colors = getGradientColors();
+  const size = 80;
+  const opacity = 0.5 + vitality * 0.5;
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative group cursor-pointer"
+      title={`${currentStage.name} • ${xp} XP - Click for details`}
+    >
+      {/* Outer glow */}
+      <div
+        className="absolute rounded-full animate-pulse"
+        style={{
+          width: size * 1.4,
+          height: size * 1.4,
+          background: `radial-gradient(circle, ${colors[0]}30, transparent 70%)`,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          animationDuration: '3s',
+        }}
+      />
+
+      {/* Main orb */}
+      <div
+        className="relative rounded-full transition-all duration-300 group-hover:scale-110"
+        style={{
+          width: size,
+          height: size,
+          background: `radial-gradient(circle at 30% 30%, ${colors[0]}, ${colors[1]}, ${colors[2]})`,
+          boxShadow: `
+            0 0 ${20 * vitality}px ${colors[0]}60,
+            0 0 ${40 * vitality}px ${colors[1]}40,
+            inset 0 0 ${15 * vitality}px rgba(255,255,255,0.3)
+          `,
+          opacity,
+        }}
+      >
+        {/* Inner highlight */}
+        <div
+          className="absolute inset-[15%] rounded-full"
+          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
+        />
+      </div>
+
+      {/* Hover indicator */}
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-xs text-silver-500 dark:text-silver-400 whitespace-nowrap">
+          {currentStage.name}
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -373,13 +504,3 @@ function getMoodTextColor(mood: number): string {
   return colors[mood] || colors[3];
 }
 
-function getMoodEmoji(mood: number): string {
-  const emojis: Record<number, string> = {
-    1: '😔',
-    2: '😕',
-    3: '😐',
-    4: '🙂',
-    5: '😊',
-  };
-  return emojis[mood] || emojis[3];
-}
