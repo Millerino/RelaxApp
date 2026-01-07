@@ -241,11 +241,6 @@ export function CompleteStep() {
               <div className="mt-6 px-2">
                 <DailyInsight entries={state.entries} compact />
               </div>
-
-              {/* Footer */}
-              <p className="text-sm text-silver-400 dark:text-silver-500 text-center mt-8">
-                {state.daysUsed} day{state.daysUsed !== 1 ? 's' : ''} of reflection • {state.xp || 0} XP
-              </p>
             </>
           ) : (
             /* No entry today - welcome back state */
@@ -335,12 +330,6 @@ export function CompleteStep() {
                 </div>
               )}
 
-              {/* Footer */}
-              {state.entries.length > 0 && (
-                <p className="text-sm text-silver-400 dark:text-silver-500 text-center mt-8">
-                  {state.xp || 0} XP earned
-                </p>
-              )}
 </>
           )}
         </div>

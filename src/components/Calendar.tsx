@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { DayEntry } from '../types';
 import { DayDetailModal } from './DayDetailModal';
 
@@ -39,10 +39,14 @@ export function Calendar({ entries, onSaveEntry }: Props) {
   today.setHours(0, 0, 0, 0);
 
   // Check if a day has an entry
-  const getEntry = (day: number): DayEntry | undefined => {
-    const dateStr = new Date(year, month, day).toDateString();
+  const getEntry = useCallback((day: number, m: number = month, y: number = year): DayEntry | undefined => {
+    const dateStr = new Date(y, m, day).toDateString();
     return entries.find(e => e.date === dateStr);
-  };
+  }, [entries, month, year]);
+
+  const getEntryForDate = useCallback((date: Date): DayEntry | undefined => {
+    return entries.find(e => e.date === date.toDateString());
+  }, [entries]);
 
   // Check if day is in the future
   const isFuture = (day: number): boolean => {
@@ -97,6 +101,40 @@ export function Calendar({ entries, onSaveEntry }: Props) {
     setSelectedEntry(null);
     setShowEmptyDay(false);
   };
+
+  // Navigate to previous/next day in modal
+  const handleNavigate = useCallback((direction: 'prev' | 'next') => {
+    if (!selectedDate) return;
+
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+
+    // Don't allow navigating to future dates
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    if (newDate > todayDate) return;
+
+    const entry = getEntryForDate(newDate);
+    setSelectedDate(newDate);
+
+    if (entry) {
+      setSelectedEntry(entry);
+      setShowEmptyDay(false);
+    } else {
+      setSelectedEntry(null);
+      setShowEmptyDay(true);
+    }
+  }, [selectedDate, getEntryForDate]);
+
+  // Check if can navigate
+  const canNavigatePrev = selectedDate ? true : false;
+  const canNavigateNext = selectedDate ? (() => {
+    const nextDate = new Date(selectedDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    return nextDate <= todayDate;
+  })() : false;
 
   const goToPrevMonth = () => {
     setCurrentMonth(new Date(year, month - 1, 1));
@@ -213,6 +251,9 @@ export function Calendar({ entries, onSaveEntry }: Props) {
             setSelectedEntry(entry);
             setShowEmptyDay(false);
           }}
+          onNavigate={handleNavigate}
+          canNavigatePrev={canNavigatePrev}
+          canNavigateNext={canNavigateNext}
         />
       )}
     </>

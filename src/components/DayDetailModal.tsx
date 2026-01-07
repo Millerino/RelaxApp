@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { DayEntry, MoodLevel } from '../types';
 
 interface DayDetailModalProps {
@@ -7,6 +7,9 @@ interface DayDetailModalProps {
   onClose: () => void;
   isEmpty: boolean;
   onSaveEntry?: (entry: DayEntry) => void;
+  onNavigate?: (direction: 'prev' | 'next') => void;
+  canNavigatePrev?: boolean;
+  canNavigateNext?: boolean;
 }
 
 const EMOTIONS = [
@@ -14,16 +17,49 @@ const EMOTIONS = [
   'Anxious', 'Stressed', 'Sad', 'Lonely', 'Frustrated', 'Tired'
 ];
 
-export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: DayDetailModalProps) {
+export function DayDetailModal({
+  entry,
+  date,
+  onClose,
+  isEmpty,
+  onSaveEntry,
+  onNavigate,
+  canNavigatePrev = true,
+  canNavigateNext = true
+}: DayDetailModalProps) {
   const [isEditing, setIsEditing] = useState(isEmpty);
   const [editMood, setEditMood] = useState<MoodLevel>(entry?.mood || 3);
   const [editEmotions, setEditEmotions] = useState<string[]>(entry?.emotions || []);
   const [editReflection, setEditReflection] = useState(entry?.reflection || '');
   const [editGratitude, setEditGratitude] = useState(entry?.gratitude || '');
 
+  // Reset form when entry changes (navigation)
+  useEffect(() => {
+    setEditMood(entry?.mood || 3);
+    setEditEmotions(entry?.emotions || []);
+    setEditReflection(entry?.reflection || '');
+    setEditGratitude(entry?.gratitude || '');
+    setIsEditing(isEmpty);
+  }, [entry, isEmpty, date]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft' && canNavigatePrev && onNavigate && !isEditing) {
+        onNavigate('prev');
+      } else if (e.key === 'ArrowRight' && canNavigateNext && onNavigate && !isEditing) {
+        onNavigate('next');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, onNavigate, canNavigatePrev, canNavigateNext, isEditing]);
+
   const formattedDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
-    year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
@@ -57,30 +93,86 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
     setIsEditing(false);
   };
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate">
-      {/* Backdrop - fully opaque to hide everything behind */}
-      <div
-        className="absolute inset-0 bg-black/60 dark:bg-black/80"
-        onClick={onClose}
-      />
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate"
+      onClick={handleBackdropClick}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
+
+      {/* Navigation arrows - outside modal for cleaner look */}
+      {onNavigate && (
+        <>
+          {/* Previous day arrow */}
+          <button
+            onClick={() => canNavigatePrev && onNavigate('prev')}
+            disabled={!canNavigatePrev}
+            className={`absolute left-4 md:left-8 z-10 p-3 rounded-full transition-all
+                       ${canNavigatePrev
+                         ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
+                         : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
+                       }`}
+            title="Previous day (←)"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Next day arrow */}
+          <button
+            onClick={() => canNavigateNext && onNavigate('next')}
+            disabled={!canNavigateNext}
+            className={`absolute right-4 md:right-8 z-10 p-3 rounded-full transition-all
+                       ${canNavigateNext
+                         ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
+                         : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
+                       }`}
+            title="Next day (→)"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </>
+      )}
 
       {/* Modal */}
-      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Header with gradient */}
-        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood)}`}>
+      <div
+        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-md
+                   animate-slide-up overflow-hidden max-h-[85vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood)} relative`}>
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30
-                     text-white transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30
+                     text-white transition-all hover:scale-110"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
-          <p className="text-white/80 text-sm mb-1">{isToday ? 'Today' : isPastDate ? 'Past reflection' : 'Future'}</p>
-          <h3 className="text-xl font-medium text-white">
+          {/* Date info */}
+          <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+            <span className="px-2 py-0.5 bg-white/20 rounded-full">
+              {isToday ? 'Today' : isPastDate ? 'Past' : 'Future'}
+            </span>
+            {onNavigate && (
+              <span className="text-white/60">Use ← → to navigate</span>
+            )}
+          </div>
+          <h3 className="text-xl font-semibold text-white">
             {formattedDate}
           </h3>
         </div>
@@ -89,7 +181,7 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
         <div className="p-6 overflow-y-auto flex-1">
           {isEditing ? (
             /* Edit Mode */
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Mood selector */}
               <div>
                 <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
@@ -100,10 +192,10 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                     <button
                       key={mood}
                       onClick={() => setEditMood(mood as MoodLevel)}
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold
-                               transition-all ${editMood === mood
-                                 ? `${getMoodBgColor(mood)} text-white scale-110 shadow-lg`
-                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-500 dark:text-silver-400 hover:scale-105'
+                      className={`flex-1 aspect-square max-w-[56px] rounded-xl flex items-center justify-center text-lg font-bold
+                               transition-all duration-200 ${editMood === mood
+                                 ? `${getMoodBgColor(mood)} text-white scale-105 shadow-lg ring-2 ring-offset-2 ring-offset-white dark:ring-offset-silver-900 ${getMoodRingColor(mood)}`
+                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-500 dark:text-silver-400 hover:scale-105 hover:bg-silver-200 dark:hover:bg-silver-700'
                                }`}
                     >
                       {mood}
@@ -126,9 +218,9 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                     <button
                       key={emotion}
                       onClick={() => toggleEmotion(emotion.toLowerCase())}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all
+                      className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200
                                ${editEmotions.includes(emotion.toLowerCase())
-                                 ? 'bg-lavender-500 text-white'
+                                 ? 'bg-lavender-500 text-white shadow-md'
                                  : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
                                }`}
                     >
@@ -150,7 +242,7 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm"
+                           resize-none text-sm transition-all"
                   rows={3}
                 />
               </div>
@@ -167,7 +259,7 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm"
+                           resize-none text-sm transition-all"
                   rows={2}
                 />
               </div>
@@ -177,14 +269,16 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                 {!isEmpty && (
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="flex-1 btn-secondary py-2.5 text-sm"
+                    className="flex-1 px-4 py-3 rounded-xl border border-silver-200 dark:border-silver-700
+                             text-silver-600 dark:text-silver-300 hover:bg-silver-50 dark:hover:bg-silver-800
+                             transition-all text-sm font-medium"
                   >
                     Cancel
                   </button>
                 )}
                 <button
                   onClick={handleSave}
-                  className="flex-1 btn-primary py-2.5 text-sm"
+                  className="flex-1 btn-primary py-3 text-sm"
                 >
                   Save reflection
                 </button>
@@ -194,14 +288,14 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
             /* View Mode */
             <div className="space-y-5">
               {/* Mood display */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 p-4 bg-silver-50 dark:bg-silver-800/30 rounded-xl">
                 <div className={`w-14 h-14 rounded-xl ${getMoodBgColor(entry.mood)}
                               flex items-center justify-center shadow-lg`}>
                   <span className="text-xl font-bold text-white">{entry.mood}</span>
                 </div>
                 <div>
-                  <p className="text-sm text-silver-500 dark:text-silver-400">Mood</p>
-                  <p className={`text-lg font-medium ${getMoodTextColor(entry.mood)}`}>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide">Mood</p>
+                  <p className={`text-lg font-semibold ${getMoodTextColor(entry.mood)}`}>
                     {getMoodLabel(entry.mood)}
                   </p>
                 </div>
@@ -210,14 +304,16 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
               {/* Emotions */}
               {entry.emotions.length > 0 && (
                 <div>
-                  <p className="text-sm text-silver-500 dark:text-silver-400 mb-2">Emotions felt</p>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Emotions felt
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {entry.emotions.map(e => (
                       <span key={e} className="px-3 py-1.5 rounded-full text-sm
                                              bg-lavender-100 dark:bg-lavender-900/50
                                              text-lavender-700 dark:text-lavender-300
                                              border border-lavender-200 dark:border-lavender-700/50">
-                        {e}
+                        {e.charAt(0).toUpperCase() + e.slice(1)}
                       </span>
                     ))}
                   </div>
@@ -227,7 +323,9 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
               {/* Reflection */}
               {entry.reflection && (
                 <div>
-                  <p className="text-sm text-silver-500 dark:text-silver-400 mb-2">Reflection</p>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Reflection
+                  </p>
                   <p className="text-silver-700 dark:text-silver-200 text-sm leading-relaxed
                               bg-silver-50 dark:bg-silver-800/50 rounded-xl p-4">
                     {entry.reflection}
@@ -238,7 +336,9 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
               {/* Gratitude */}
               {entry.gratitude && (
                 <div>
-                  <p className="text-sm text-silver-500 dark:text-silver-400 mb-2">Gratitude</p>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Gratitude
+                  </p>
                   <p className="text-silver-700 dark:text-silver-200 text-sm leading-relaxed
                               bg-silver-50 dark:bg-silver-800/50 rounded-xl p-4">
                     {entry.gratitude}
@@ -249,7 +349,9 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
               {/* Goals */}
               {entry.goals && entry.goals.length > 0 && (
                 <div>
-                  <p className="text-sm text-silver-500 dark:text-silver-400 mb-2">Goals set</p>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Goals set
+                  </p>
                   <ul className="space-y-2">
                     {entry.goals.map(g => (
                       <li key={g.id} className="flex items-center gap-2 text-sm text-silver-700 dark:text-silver-200">
@@ -261,29 +363,23 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                 </div>
               )}
 
-              {/* Action buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex-1 btn-secondary py-2.5 text-sm flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit
-                </button>
-                <button
-                  onClick={onClose}
-                  className="flex-1 btn-primary py-2.5 text-sm"
-                >
-                  Close
-                </button>
-              </div>
+              {/* Edit button */}
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full py-3 rounded-xl border border-silver-200 dark:border-silver-700
+                         text-silver-600 dark:text-silver-300 hover:bg-silver-50 dark:hover:bg-silver-800
+                         transition-all text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit this reflection
+              </button>
             </div>
           ) : (
             /* Empty state with add option */
-            <div className="text-center py-4">
+            <div className="text-center py-6">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-lavender-100 to-lavender-200
                             dark:from-lavender-900/50 dark:to-lavender-800/50
                             flex items-center justify-center">
@@ -292,19 +388,16 @@ export function DayDetailModal({ entry, date, onClose, isEmpty, onSaveEntry }: D
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
-              <h4 className="text-xl font-light text-silver-700 dark:text-silver-200 mb-2">
-                Add a reflection
+              <h4 className="text-xl font-medium text-silver-700 dark:text-silver-200 mb-2">
+                No reflection yet
               </h4>
-              <p className="text-silver-500 dark:text-silver-400 mb-6 text-sm leading-relaxed">
-                Log how you felt on this day. Past reflections help you understand your patterns over time.
+              <p className="text-silver-500 dark:text-silver-400 mb-6 text-sm leading-relaxed max-w-xs mx-auto">
+                Add how you felt on this day to track your emotional patterns over time.
               </p>
               <button
                 onClick={() => setIsEditing(true)}
-                className="btn-primary px-8 py-3 text-sm flex items-center justify-center gap-2 mx-auto"
+                className="btn-primary px-8 py-3 text-sm"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
                 Add reflection
               </button>
             </div>
@@ -333,6 +426,17 @@ function getMoodBgColor(mood: number): string {
     3: 'bg-gradient-to-br from-amber-400 to-amber-500',
     4: 'bg-gradient-to-br from-lime-400 to-lime-500',
     5: 'bg-gradient-to-br from-emerald-400 to-emerald-500',
+  };
+  return colors[mood] || colors[3];
+}
+
+function getMoodRingColor(mood: number): string {
+  const colors: Record<number, string> = {
+    1: 'ring-red-400',
+    2: 'ring-orange-400',
+    3: 'ring-amber-400',
+    4: 'ring-lime-400',
+    5: 'ring-emerald-400',
   };
   return colors[mood] || colors[3];
 }

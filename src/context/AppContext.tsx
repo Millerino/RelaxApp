@@ -17,6 +17,7 @@ interface AppContextType {
   skipLogin: () => void;
   subscribeToPremium: () => void;
   cancelSubscription: () => void;
+  clearAllData: () => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
 }
@@ -176,6 +177,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, profile }));
   };
 
+  const clearAllData = async (): Promise<void> => {
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEY);
+    // Reset state to initial
+    setState({
+      isOnboarded: false,
+      isLoggedIn: false,
+      isPremium: false,
+      daysUsed: 0,
+      entries: [],
+      currentStep: 'welcome',
+      xp: 0,
+    });
+    setCurrentEntry({});
+  };
+
   return (
     <AppContext.Provider value={{
       state,
@@ -192,6 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       skipLogin,
       subscribeToPremium,
       cancelSubscription,
+      clearAllData,
       currentEntry,
       shouldShowPaywall,
     }}>

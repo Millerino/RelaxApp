@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { UserProfile, WellnessGoal } from '../types';
+import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 
 interface ProfileEditorProps {
   profile: UserProfile | undefined;
@@ -25,6 +27,8 @@ const COUNTRIES = [
 ];
 
 export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) {
+  const { state, clearAllData } = useApp();
+  const { signOut } = useAuth();
   const [name, setName] = useState(profile?.name || '');
   const [birthday, setBirthday] = useState(profile?.birthday || '');
   const [gender, setGender] = useState<UserProfile['gender']>(profile?.gender);
@@ -33,6 +37,11 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     profile?.wellnessGoals || []
   );
   const [isSaving, setIsSaving] = useState(false);
+
+  // Delete account states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(1);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleGoal = (goal: WellnessGoal) => {
     setWellnessGoals(prev =>
@@ -62,7 +71,80 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     }, 300);
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteStep < 3) {
+      setDeleteStep(deleteStep + 1);
+      return;
+    }
+
+    // Final step - actually delete
+    setIsDeleting(true);
+    try {
+      // Clear all local data
+      await clearAllData();
+      // Sign out
+      await signOut();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setIsDeleting(false);
+    }
+  };
+
   const canSave = name.trim().length >= 2;
+
+  // Delete confirmation modal content based on step
+  const getDeleteContent = () => {
+    switch (deleteStep) {
+      case 1:
+        return {
+          title: 'Delete Account?',
+          icon: (
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          ),
+          message: 'Are you sure you want to delete your account? This action cannot be undone.',
+          warning: 'All your mood entries, reflections, and progress will be permanently deleted.',
+          buttonText: 'I understand, continue',
+          buttonClass: 'bg-amber-500 hover:bg-amber-600 text-white',
+        };
+      case 2:
+        return {
+          title: 'Final Warning',
+          icon: (
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+          ),
+          message: 'This is your second warning. Your data will be lost forever.',
+          warning: `You have ${state.entries?.length || 0} mood entries and ${state.xp || 0} XP that will be permanently deleted.`,
+          buttonText: 'Continue with deletion',
+          buttonClass: 'bg-orange-500 hover:bg-orange-600 text-white',
+        };
+      case 3:
+        return {
+          title: 'Delete Forever',
+          icon: (
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          ),
+          message: 'This is your FINAL chance to keep your account.',
+          warning: 'Clicking the button below will permanently delete your account and all associated data. There is no way to recover it.',
+          buttonText: 'Delete my account forever',
+          buttonClass: 'bg-red-600 hover:bg-red-700 text-white',
+        };
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -72,7 +154,105 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
         onClick={onClose}
       />
 
-      {/* Modal */}
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setDeleteStep(1);
+            }}
+          />
+          <div className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slide-up">
+            {state.isPremium ? (
+              /* Cannot delete with active subscription */
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-lavender-100 dark:bg-lavender-900/30 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-silver-800 dark:text-silver-100 text-center mb-2">
+                  Active Subscription
+                </h3>
+                <p className="text-sm text-silver-600 dark:text-silver-400 text-center mb-6">
+                  You cannot delete your account while you have an active Premium subscription.
+                  Please cancel your subscription first from the subscription management page.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteStep(1);
+                  }}
+                  className="w-full py-3 rounded-xl bg-lavender-500 text-white font-medium hover:bg-lavender-600 transition-colors"
+                >
+                  Understood
+                </button>
+              </>
+            ) : (
+              /* Delete confirmation steps */
+              <>
+                {getDeleteContent()?.icon}
+                <h3 className="text-lg font-semibold text-silver-800 dark:text-silver-100 text-center mb-2">
+                  {getDeleteContent()?.title}
+                </h3>
+                <p className="text-sm text-silver-600 dark:text-silver-400 text-center mb-3">
+                  {getDeleteContent()?.message}
+                </p>
+                <p className="text-xs text-red-500 dark:text-red-400 text-center mb-6 px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  {getDeleteContent()?.warning}
+                </p>
+
+                {/* Step indicator */}
+                <div className="flex justify-center gap-2 mb-6">
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        step <= deleteStep
+                          ? step === 3 ? 'bg-red-500' : step === 2 ? 'bg-orange-500' : 'bg-amber-500'
+                          : 'bg-silver-200 dark:bg-silver-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteStep(1);
+                    }}
+                    className="flex-1 py-3 rounded-xl border border-silver-200 dark:border-silver-700 text-silver-600 dark:text-silver-300 font-medium hover:bg-silver-50 dark:hover:bg-silver-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                    className={`flex-1 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${getDeleteContent()?.buttonClass}`}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Deleting...
+                      </>
+                    ) : (
+                      getDeleteContent()?.buttonText
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Main Modal */}
       <div className="relative glass-card p-0 w-full max-w-lg animate-slide-up overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-b border-silver-200/50 dark:border-silver-700/30 px-6 py-4 flex items-center justify-between">
@@ -193,6 +373,26 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
             </div>
             <p className="text-xs text-silver-400 mt-2">
               {wellnessGoals.length}/4 selected
+            </p>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="pt-4 border-t border-silver-200 dark:border-silver-700">
+            <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-3">Danger Zone</h3>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full py-3 px-4 rounded-xl border-2 border-red-200 dark:border-red-900/50
+                       text-red-600 dark:text-red-400 text-sm font-medium
+                       hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors
+                       flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete my profile and data
+            </button>
+            <p className="text-xs text-silver-400 dark:text-silver-500 mt-2 text-center">
+              This will permanently delete all your data and cannot be undone.
             </p>
           </div>
         </div>
