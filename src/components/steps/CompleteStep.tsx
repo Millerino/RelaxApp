@@ -50,202 +50,224 @@ export function CompleteStep() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-        <div className="text-center w-full max-w-md px-6">
+      <div className="flex flex-col items-center min-h-[60vh] animate-fade-in pt-4">
+        <div className="w-full max-w-5xl px-6">
           {/* Success state - today's entry exists */}
           {todayEntry ? (
             <>
-              {/* Streak badge at top */}
-              {streak > 0 && (
-                <div className="mb-6">
-                  <StreakBadge streak={streak} showMessage={true} />
-                </div>
-              )}
-
-              {/* Success icon */}
-              <div className="mb-6 flex justify-center">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl
-                              ${getMoodGradient(todayEntry.mood)}`}>
-                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-
-              <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
-                Today is captured
-              </h2>
-              <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
-                Well done taking time for yourself. See you tomorrow!
-              </p>
-
-              {/* Today's summary card */}
-              <div className="glass-card p-5 text-left mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-silver-500 dark:text-silver-400">Today's mood</span>
-                  <span className={`text-base font-medium ${getMoodTextColor(todayEntry.mood)}`}>
-                    {getMoodLabel(todayEntry.mood)}
-                  </span>
-                </div>
-
-                {todayEntry.emotions.length > 0 && (
-                  <div className="mb-3">
-                    <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Emotions felt</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {todayEntry.emotions.map(e => (
-                        <span key={e} className="px-2.5 py-1 rounded-full text-xs
-                                               bg-lavender-100 dark:bg-lavender-900/40
-                                               text-lavender-700 dark:text-lavender-300">
-                          {e}
-                        </span>
-                      ))}
-                    </div>
+              {/* Header section - centered */}
+              <div className="text-center mb-8">
+                {/* Streak badge at top */}
+                {streak > 0 && (
+                  <div className="mb-6">
+                    <StreakBadge streak={streak} showMessage={true} />
                   </div>
                 )}
 
-                {todayEntry.goals.length > 0 && (
-                  <div>
-                    <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Tomorrow's focus</span>
-                    <ul className="space-y-1">
-                      {todayEntry.goals.map(g => (
-                        <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-lavender-400" />
-                          {g.text}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Aura Orb */}
-              <div className="mb-6">
-                <AuraOrb entries={state.entries} xp={state.xp || 0} />
-              </div>
-
-              {/* Quick Actions */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={() => setShowBreathing(true)}
-                  className="flex-1 glass-card p-4 flex flex-col items-center gap-2
-                           hover:bg-lavender-50/50 dark:hover:bg-lavender-900/20 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-lavender-100 dark:bg-lavender-900/40
-                                flex items-center justify-center">
-                    <svg className="w-5 h-5 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                {/* Success icon */}
+                <div className="mb-6 flex justify-center">
+                  <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl
+                                ${getMoodGradient(todayEntry.mood)}`}>
+                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-xs text-silver-600 dark:text-silver-300">Breathe</span>
-                </button>
-              </div>
-
-              {/* 7-day Mood Graph */}
-              {state.entries.length >= 2 && (
-                <div className="glass-card p-5 mb-6">
-                  <MoodGraph entries={state.entries} />
                 </div>
-              )}
 
-              {/* Statistics */}
-              {state.entries.length >= 3 && (
-                <div className="mb-6">
-                  <StatsCard entries={state.entries} />
+                <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
+                  Today is captured
+                </h2>
+                <p className="text-silver-500 dark:text-silver-400 leading-relaxed">
+                  Well done taking time for yourself. See you tomorrow!
+                </p>
+              </div>
+
+              {/* Main content - 2 column grid on desktop */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left column */}
+                <div className="space-y-6">
+                  {/* Today's summary card */}
+                  <div className="glass-card p-5 text-left">
+                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Today's Summary</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-silver-500 dark:text-silver-400">Mood</span>
+                      <span className={`text-base font-medium ${getMoodTextColor(todayEntry.mood)}`}>
+                        {getMoodLabel(todayEntry.mood)}
+                      </span>
+                    </div>
+
+                    {todayEntry.emotions.length > 0 && (
+                      <div className="mb-3">
+                        <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Emotions felt</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {todayEntry.emotions.map(e => (
+                            <span key={e} className="px-2.5 py-1 rounded-full text-xs
+                                                   bg-lavender-100 dark:bg-lavender-900/40
+                                                   text-lavender-700 dark:text-lavender-300">
+                              {e}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {todayEntry.goals.length > 0 && (
+                      <div>
+                        <span className="text-sm text-silver-500 dark:text-silver-400 block mb-2">Tomorrow's focus</span>
+                        <ul className="space-y-1">
+                          {todayEntry.goals.map(g => (
+                            <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-lavender-400" />
+                              {g.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 7-day Mood Graph */}
+                  {state.entries.length >= 2 && (
+                    <div className="glass-card p-5">
+                      <MoodGraph entries={state.entries} />
+                    </div>
+                  )}
+
+                  {/* Calendar */}
+                  <div className="glass-card p-5">
+                    <Calendar entries={state.entries} onSaveEntry={updateEntry} />
+                  </div>
                 </div>
-              )}
 
-              {/* Daily Insight */}
-              <div className="mb-6">
-                <DailyInsight entries={state.entries} />
+                {/* Right column */}
+                <div className="space-y-6">
+                  {/* Aura Orb */}
+                  <AuraOrb entries={state.entries} xp={state.xp || 0} />
+
+                  {/* Quick Actions */}
+                  <div className="glass-card p-5">
+                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Quick Actions</h3>
+                    <button
+                      onClick={() => setShowBreathing(true)}
+                      className="w-full p-4 rounded-xl bg-lavender-50 dark:bg-lavender-900/20
+                               flex items-center gap-4 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-lavender-100 dark:bg-lavender-900/40
+                                    flex items-center justify-center">
+                        <svg className="w-6 h-6 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-sm font-medium text-silver-700 dark:text-silver-200 block">Breathing Exercise</span>
+                        <span className="text-xs text-silver-500 dark:text-silver-400">Calm your mind with guided breathing</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Statistics */}
+                  {state.entries.length >= 3 && (
+                    <StatsCard entries={state.entries} />
+                  )}
+
+                  {/* Daily Insight */}
+                  <DailyInsight entries={state.entries} />
+                </div>
               </div>
 
-              {/* Calendar */}
-              <div className="glass-card p-5 mb-6">
-                <Calendar entries={state.entries} onSaveEntry={updateEntry} />
-              </div>
-
-              <p className="text-sm text-silver-400 dark:text-silver-500">
+              {/* Footer */}
+              <p className="text-sm text-silver-400 dark:text-silver-500 text-center mt-8">
                 {state.daysUsed} day{state.daysUsed !== 1 ? 's' : ''} of reflection • {state.xp || 0} XP
               </p>
             </>
           ) : (
             /* No entry today - welcome back state */
             <>
-              {/* Show streak if returning user */}
-              {streak > 0 && (
-                <div className="mb-6">
-                  <StreakBadge streak={streak} showMessage={false} />
+              {/* Header section - centered */}
+              <div className="text-center mb-8">
+                {/* Show streak if returning user */}
+                {streak > 0 && (
+                  <div className="mb-6">
+                    <StreakBadge streak={streak} showMessage={false} />
+                  </div>
+                )}
+
+                {/* Personalized greeting */}
+                <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-2">
+                  {greeting}{userName ? `, ${userName}` : ''}
+                </h2>
+                <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
+                  Ready for today's reflection?
+                </p>
+
+                {/* Quick Actions - centered */}
+                <div className="flex gap-3 justify-center max-w-md mx-auto">
+                  <button
+                    onClick={handleNewEntry}
+                    className="flex-1 btn-primary py-4"
+                  >
+                    Begin today's entry
+                  </button>
+                  <button
+                    onClick={() => setShowBreathing(true)}
+                    className="p-4 glass-card hover:bg-lavender-50/50 dark:hover:bg-lavender-900/20 transition-colors"
+                    title="Breathing exercise"
+                  >
+                    <svg className="w-6 h-6 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
                 </div>
-              )}
-
-              {/* Personalized greeting */}
-              <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-2">
-                {greeting}{userName ? `, ${userName}` : ''}
-              </h2>
-              <p className="text-silver-500 dark:text-silver-400 mb-6 leading-relaxed">
-                Ready for today's reflection?
-              </p>
-
-              {/* Aura Orb for returning users */}
-              {state.entries.length > 0 && (
-                <div className="mb-6">
-                  <AuraOrb entries={state.entries} xp={state.xp || 0} />
-                </div>
-              )}
-
-              {/* Quick Actions */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={handleNewEntry}
-                  className="flex-1 btn-primary py-4"
-                >
-                  Begin today's entry
-                </button>
-                <button
-                  onClick={() => setShowBreathing(true)}
-                  className="p-4 glass-card hover:bg-lavender-50/50 dark:hover:bg-lavender-900/20 transition-colors"
-                  title="Breathing exercise"
-                >
-                  <svg className="w-6 h-6 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
               </div>
 
-              {/* 7-day Mood Graph for returning users */}
-              {state.entries.length >= 2 && (
-                <div className="glass-card p-5 mb-6">
-                  <MoodGraph entries={state.entries} />
+              {/* Main content - 2 column grid on desktop for returning users */}
+              {state.entries.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left column */}
+                  <div className="space-y-6">
+                    {/* 7-day Mood Graph */}
+                    {state.entries.length >= 2 && (
+                      <div className="glass-card p-5">
+                        <MoodGraph entries={state.entries} />
+                      </div>
+                    )}
+
+                    {/* Calendar */}
+                    <div className="glass-card p-5">
+                      <Calendar entries={state.entries} onSaveEntry={updateEntry} />
+                    </div>
+                  </div>
+
+                  {/* Right column */}
+                  <div className="space-y-6">
+                    {/* Aura Orb */}
+                    <AuraOrb entries={state.entries} xp={state.xp || 0} />
+
+                    {/* Statistics */}
+                    {state.entries.length >= 3 && (
+                      <StatsCard entries={state.entries} />
+                    )}
+
+                    {/* Daily Insight */}
+                    <DailyInsight entries={state.entries} />
+                  </div>
+                </div>
+              ) : (
+                /* New user - just show daily insight */
+                <div className="max-w-md mx-auto">
+                  <DailyInsight entries={state.entries} />
                 </div>
               )}
 
-              {/* Statistics for returning users */}
-              {state.entries.length >= 3 && (
-                <div className="mb-6">
-                  <StatsCard entries={state.entries} />
-                </div>
-              )}
-
-              {/* Daily Insight */}
-              <div className="mb-6">
-                <DailyInsight entries={state.entries} />
-              </div>
-
-              {/* Show calendar for returning users */}
+              {/* Footer */}
               {state.entries.length > 0 && (
-                <div className="glass-card p-5 mb-6">
-                  <Calendar entries={state.entries} onSaveEntry={updateEntry} />
-                </div>
-              )}
-
-              {state.entries.length > 0 && (
-                <p className="text-sm text-silver-400 dark:text-silver-500">
+                <p className="text-sm text-silver-400 dark:text-silver-500 text-center mt-8">
                   {state.xp || 0} XP earned
                 </p>
               )}
-            </>
+</>
           )}
         </div>
       </div>

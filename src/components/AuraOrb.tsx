@@ -1,9 +1,29 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { DayEntry } from '../types';
 
 interface AuraOrbProps {
   entries: DayEntry[];
   xp: number;
+}
+
+// Info tooltip component
+function InfoTooltip({ isVisible }: { isVisible: boolean }) {
+  if (!isVisible) return null;
+
+  return (
+    <div className="absolute right-0 top-8 w-64 p-4 glass-card shadow-xl z-50 text-left animate-fade-in">
+      <h5 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-2">About Your Aura</h5>
+      <p className="text-xs text-silver-600 dark:text-silver-400 mb-2">
+        Your Aura is a visual representation of your wellness journey. It grows and evolves as you log your reflections.
+      </p>
+      <div className="text-xs text-silver-500 dark:text-silver-400 space-y-1">
+        <p><strong>XP:</strong> Earn points by logging daily, adding emotions, reflections, and goals.</p>
+        <p><strong>Evolution:</strong> Your Aura evolves through 7 stages as you gain XP.</p>
+        <p><strong>Vitality:</strong> Log regularly to keep your Aura thriving. It dims after 2+ days without activity.</p>
+        <p><strong>Color:</strong> Changes based on your recent mood average.</p>
+      </div>
+    </div>
+  );
 }
 
 // XP thresholds for evolution stages
@@ -18,6 +38,8 @@ const EVOLUTION_STAGES = [
 ];
 
 export function AuraOrb({ entries, xp }: AuraOrbProps) {
+  const [showInfo, setShowInfo] = useState(false);
+
   // Calculate days since last entry
   const daysSinceLastEntry = useMemo(() => {
     if (entries.length === 0) return Infinity;
@@ -90,13 +112,30 @@ export function AuraOrb({ entries, xp }: AuraOrbProps) {
   return (
     <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
-            Your Aura
-          </h4>
-          <p className="text-xs text-silver-500 dark:text-silver-400">
-            {currentStage.name} • {xp} XP
-          </p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
+              Your Aura
+            </h4>
+            <p className="text-xs text-silver-500 dark:text-silver-400">
+              {currentStage.name} • {xp} XP
+            </p>
+          </div>
+          {/* Info button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              onBlur={() => setTimeout(() => setShowInfo(false), 150)}
+              className="p-1 text-silver-400 hover:text-silver-600 dark:hover:text-silver-300 transition-colors"
+              aria-label="Learn more about Your Aura"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <InfoTooltip isVisible={showInfo} />
+          </div>
         </div>
         {isDying && (
           <span className="text-xs text-amber-500 flex items-center gap-1">

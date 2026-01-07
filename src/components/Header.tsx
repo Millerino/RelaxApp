@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { AuthModal } from './AuthModal';
 import { SubscriptionModal } from './SubscriptionModal';
-import { ProfileSetup } from './ProfileSetup';
+import { ProfileEditor } from './ProfileEditor';
 
 interface HeaderProps {
   onNavigateHome?: () => void;
@@ -202,13 +202,13 @@ export function Header({ onNavigateHome }: HeaderProps) {
 
       {/* Edit Profile Modal */}
       {showEditProfile && (
-        <ProfileSetup
-          onComplete={(profile) => {
+        <ProfileEditor
+          profile={state.profile}
+          onSave={(profile) => {
             setProfile(profile);
             setShowEditProfile(false);
           }}
-          onSkip={() => setShowEditProfile(false)}
-          initialProfile={state.profile}
+          onClose={() => setShowEditProfile(false)}
         />
       )}
     </>
