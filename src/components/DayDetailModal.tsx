@@ -28,14 +28,14 @@ export function DayDetailModal({
   canNavigateNext = true
 }: DayDetailModalProps) {
   const [isEditing, setIsEditing] = useState(isEmpty);
-  const [editMood, setEditMood] = useState<MoodLevel>(entry?.mood || 3);
+  const [editMood, setEditMood] = useState<MoodLevel | null>(entry?.mood || null);
   const [editEmotions, setEditEmotions] = useState<string[]>(entry?.emotions || []);
   const [editReflection, setEditReflection] = useState(entry?.reflection || '');
   const [editGratitude, setEditGratitude] = useState(entry?.gratitude || '');
 
   // Reset form when entry changes (navigation)
   useEffect(() => {
-    setEditMood(entry?.mood || 3);
+    setEditMood(entry?.mood || null);
     setEditEmotions(entry?.emotions || []);
     setEditReflection(entry?.reflection || '');
     setEditGratitude(entry?.gratitude || '');
@@ -76,7 +76,7 @@ export function DayDetailModal({
   };
 
   const handleSave = () => {
-    if (!onSaveEntry) return;
+    if (!onSaveEntry || !editMood) return;
 
     const newEntry: DayEntry = {
       id: entry?.id || crypto.randomUUID(),
@@ -153,7 +153,7 @@ export function DayDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood)} relative`}>
+        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
           {/* Close button */}
           <button
             onClick={onClose}
@@ -244,6 +244,11 @@ export function DayDetailModal({
                   <span>Difficult</span>
                   <span>Great</span>
                 </div>
+                {!editMood && (
+                  <p className="text-xs text-sky-500 dark:text-sky-400 mt-2 text-center">
+                    Select how you felt on this day
+                  </p>
+                )}
               </div>
 
               {/* Emotions */}
@@ -316,7 +321,12 @@ export function DayDetailModal({
                 )}
                 <button
                   onClick={handleSave}
-                  className="flex-1 btn-primary py-3 text-sm"
+                  disabled={!editMood}
+                  className={`flex-1 py-3 text-sm rounded-xl font-medium transition-all ${
+                    editMood
+                      ? 'btn-primary'
+                      : 'bg-silver-200 dark:bg-silver-700 text-silver-400 dark:text-silver-500 cursor-not-allowed'
+                  }`}
                 >
                   Save reflection
                 </button>
@@ -479,7 +489,11 @@ function getMoodRingColor(mood: number): string {
   return colors[mood] || colors[3];
 }
 
-function getMoodHeaderGradient(mood: number): string {
+function getMoodHeaderGradient(mood: number | null): string {
+  if (!mood) {
+    // Icy blue gradient for unedited days
+    return 'bg-gradient-to-r from-sky-400 to-cyan-500';
+  }
   const gradients: Record<number, string> = {
     1: 'bg-gradient-to-r from-red-400 to-red-500',
     2: 'bg-gradient-to-r from-orange-400 to-orange-500',
@@ -487,7 +501,7 @@ function getMoodHeaderGradient(mood: number): string {
     4: 'bg-gradient-to-r from-lime-400 to-emerald-400',
     5: 'bg-gradient-to-r from-emerald-400 to-emerald-500',
   };
-  return gradients[mood] || 'bg-gradient-to-r from-lavender-400 to-lavender-500';
+  return gradients[mood] || 'bg-gradient-to-r from-sky-400 to-cyan-500';
 }
 
 function getMoodTextColor(mood: number): string {

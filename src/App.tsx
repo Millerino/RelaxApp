@@ -15,6 +15,7 @@ import { ProgressIndicator } from './components/ProgressIndicator';
 import { AuthModal } from './components/AuthModal';
 import { ProfileSetup } from './components/ProfileSetup';
 import { AIChat } from './components/AIChat';
+import { LandingPage } from './components/LandingPage';
 import {
   WelcomeStep,
   MoodStep,
@@ -104,12 +105,13 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 
 function AppShell() {
   const { state, setProfile } = useApp();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
 
@@ -118,8 +120,57 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
+  const handleShowAuth = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+  };
+
   // Check if we should prompt for profile setup (logged in but no profile)
   const shouldShowProfilePrompt = user && !state.profile && state.isOnboarded;
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-2 border-lavender-200 border-t-lavender-500 animate-spin" />
+      </div>
+    );
+  }
+
+  // Show landing page for non-logged-in users
+  if (!user) {
+    return (
+      <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
+        <Background />
+        <LampToggle />
+        <LandingPage
+          onShowAuth={handleShowAuth}
+          onShowPricing={() => setShowPricing(true)}
+          onShowFAQ={() => setShowFAQ(true)}
+          onShowSupport={() => setShowSupport(true)}
+          onShowLegal={() => setShowLegal(true)}
+        />
+
+        {/* Modals */}
+        {showPricing && (
+          <Pricing
+            onClose={() => setShowPricing(false)}
+            onLoginClick={handleLoginFromPricing}
+          />
+        )}
+        {showFAQ && <FAQModal onClose={() => setShowFAQ(false)} />}
+        {showSupport && <SupportModal onClose={() => setShowSupport(false)} />}
+        {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            initialMode={authMode}
+          />
+        )}
+        <CookieConsent />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
