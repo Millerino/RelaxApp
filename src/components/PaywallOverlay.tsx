@@ -45,15 +45,15 @@ export function PaywallOverlay({ onShowAuth }: PaywallOverlayProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
       {/* Greyed out backdrop - blocks entire UI */}
-      <div className="absolute inset-0 bg-silver-900/80 dark:bg-black/85 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-black/80 dark:bg-black/90" />
 
-      {/* Content */}
-      <div className="relative w-full max-w-md animate-fade-in">
-        <div className="bg-white/95 dark:bg-silver-900/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 md:p-10">
+      {/* Content - no animation to ensure immediate visibility */}
+      <div className="relative w-full max-w-md">
+        <div className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl p-8 md:p-10 border border-silver-200/50 dark:border-silver-700/50">
           {/* Soft glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-lavender-400/20 to-lavender-500/20 rounded-2xl blur-xl" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-lavender-400/20 to-lavender-500/20 rounded-2xl blur-xl -z-10" />
 
           <div className="relative">
             {/* Icon */}
@@ -103,7 +103,7 @@ export function PaywallOverlay({ onShowAuth }: PaywallOverlayProps) {
             {/* Pricing */}
             <div className="text-center mb-6">
               <div className="inline-flex items-baseline gap-1">
-                <span className="text-4xl font-light text-silver-800 dark:text-silver-100">$3.99</span>
+                <span className="text-4xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
                 <span className="text-silver-500 dark:text-silver-400">/month</span>
               </div>
               <p className="text-xs text-silver-400 dark:text-silver-500 mt-1">

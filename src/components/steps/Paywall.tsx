@@ -35,7 +35,7 @@ export function Paywall() {
         {/* Pricing card */}
         <div className="glass-card p-8 mb-8">
           <div className="flex items-baseline justify-center gap-1 mb-4">
-            <span className="text-5xl font-light text-silver-800 dark:text-silver-100">$3.99</span>
+            <span className="text-5xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
             <span className="text-silver-500 dark:text-silver-400">/month</span>
           </div>
 
