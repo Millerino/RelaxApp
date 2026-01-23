@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -105,7 +105,7 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile, shouldShowPaywall } = useApp();
+  const { state, setProfile, shouldShowPaywall, checkSubscriptionStatus } = useApp();
   const { user, isLoading } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -115,6 +115,13 @@ function AppShell() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+
+  // Check subscription status when user logs in
+  useEffect(() => {
+    if (user?.id) {
+      checkSubscriptionStatus(user.id);
+    }
+  }, [user?.id, checkSubscriptionStatus]);
 
   const handleLoginFromPricing = () => {
     setShowPricing(false);

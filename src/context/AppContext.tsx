@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface AppContextType {
   state: UserState;
@@ -18,6 +19,7 @@ interface AppContextType {
   subscribeToPremium: () => void;
   cancelSubscription: () => void;
   clearAllData: () => Promise<void>;
+  checkSubscriptionStatus: (userId: string) => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
 }
@@ -155,6 +157,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, isPremium: false }));
   };
 
+  // Check subscription status from Supabase
+  const checkSubscriptionStatus = useCallback(async (userId: string) => {
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows returned (user has no subscription)
+        console.error('Error checking subscription:', error);
+        return;
+      }
+
+      const isPremium = data?.status === 'active';
+      setState(prev => ({ ...prev, isPremium }));
+    } catch (err) {
+      console.error('Error checking subscription status:', err);
+    }
+  }, []);
+
   const updateEntry = (entry: DayEntry) => {
     setState(prev => {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
@@ -212,6 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       subscribeToPremium,
       cancelSubscription,
       clearAllData,
+      checkSubscriptionStatus,
       currentEntry,
       shouldShowPaywall,
     }}>
