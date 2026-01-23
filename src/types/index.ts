@@ -3,6 +3,7 @@ export interface DayEntry {
   date: string;
   mood: MoodLevel;
   emotions: string[];
+  activities?: string[];
   reflection: string;
   gratitude: string;
   goals: Goal[];

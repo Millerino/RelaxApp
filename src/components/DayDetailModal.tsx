@@ -17,6 +17,26 @@ const EMOTIONS = [
   'Anxious', 'Stressed', 'Sad', 'Lonely', 'Frustrated', 'Tired'
 ];
 
+// Daylio-inspired activities - what you were doing
+const ACTIVITIES = [
+  { id: 'work', label: 'Work', icon: '💼' },
+  { id: 'exercise', label: 'Exercise', icon: '🏃' },
+  { id: 'family', label: 'Family', icon: '👨‍👩‍👧' },
+  { id: 'friends', label: 'Friends', icon: '👥' },
+  { id: 'dating', label: 'Dating', icon: '💕' },
+  { id: 'reading', label: 'Reading', icon: '📚' },
+  { id: 'gaming', label: 'Gaming', icon: '🎮' },
+  { id: 'movies', label: 'Movies', icon: '🎬' },
+  { id: 'music', label: 'Music', icon: '🎵' },
+  { id: 'cooking', label: 'Cooking', icon: '🍳' },
+  { id: 'shopping', label: 'Shopping', icon: '🛒' },
+  { id: 'cleaning', label: 'Cleaning', icon: '🧹' },
+  { id: 'travel', label: 'Travel', icon: '✈️' },
+  { id: 'nature', label: 'Nature', icon: '🌳' },
+  { id: 'meditation', label: 'Meditation', icon: '🧘' },
+  { id: 'sleep', label: 'Good Sleep', icon: '😴' },
+];
+
 export function DayDetailModal({
   entry,
   date,
@@ -30,6 +50,7 @@ export function DayDetailModal({
   const [isEditing, setIsEditing] = useState(isEmpty);
   const [editMood, setEditMood] = useState<MoodLevel>(entry?.mood || 3);
   const [editEmotions, setEditEmotions] = useState<string[]>(entry?.emotions || []);
+  const [editActivities, setEditActivities] = useState<string[]>(entry?.activities || []);
   const [editReflection, setEditReflection] = useState(entry?.reflection || '');
   const [editGratitude, setEditGratitude] = useState(entry?.gratitude || '');
 
@@ -37,6 +58,7 @@ export function DayDetailModal({
   useEffect(() => {
     setEditMood(entry?.mood || 3);
     setEditEmotions(entry?.emotions || []);
+    setEditActivities(entry?.activities || []);
     setEditReflection(entry?.reflection || '');
     setEditGratitude(entry?.gratitude || '');
     setIsEditing(isEmpty);
@@ -75,6 +97,14 @@ export function DayDetailModal({
     );
   };
 
+  const toggleActivity = (activityId: string) => {
+    setEditActivities(prev =>
+      prev.includes(activityId)
+        ? prev.filter(a => a !== activityId)
+        : [...prev, activityId]
+    );
+  };
+
   const handleSave = () => {
     if (!onSaveEntry) return;
 
@@ -83,6 +113,7 @@ export function DayDetailModal({
       date: date.toDateString(),
       mood: editMood,
       emotions: editEmotions,
+      activities: editActivities,
       reflection: editReflection,
       gratitude: editGratitude,
       goals: entry?.goals || [],
@@ -107,17 +138,17 @@ export function DayDetailModal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
 
-      {/* Navigation arrows - positioned outside modal on desktop, hidden on mobile */}
+      {/* Desktop Navigation arrows - positioned outside modal, hidden on mobile */}
       {onNavigate && (
         <>
-          {/* Previous day arrow */}
+          {/* Previous day arrow - desktop only */}
           <button
             onClick={() => canNavigatePrev && onNavigate('prev')}
             disabled={!canNavigatePrev}
-            className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
-                       hidden md:flex
+            className={`absolute left-4 lg:left-[calc(50%-280px)] top-1/2 -translate-y-1/2 z-10
+                       hidden md:flex items-center gap-2 px-3 py-2 rounded-xl transition-all
                        ${canNavigatePrev
-                         ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
+                         ? 'bg-white/95 dark:bg-silver-800/95 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-105 shadow-lg backdrop-blur-sm'
                          : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
                        }`}
             title="Previous day (←)"
@@ -125,20 +156,22 @@ export function DayDetailModal({
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
+            <span className="text-sm font-medium hidden lg:inline">Previous</span>
           </button>
 
-          {/* Next day arrow */}
+          {/* Next day arrow - desktop only */}
           <button
             onClick={() => canNavigateNext && onNavigate('next')}
             disabled={!canNavigateNext}
-            className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
-                       hidden md:flex
+            className={`absolute right-4 lg:right-[calc(50%-280px)] top-1/2 -translate-y-1/2 z-10
+                       hidden md:flex items-center gap-2 px-3 py-2 rounded-xl transition-all
                        ${canNavigateNext
-                         ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
+                         ? 'bg-white/95 dark:bg-silver-800/95 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-105 shadow-lg backdrop-blur-sm'
                          : 'bg-white/30 dark:bg-silver-800/30 text-silver-400 dark:text-silver-600 cursor-not-allowed'
                        }`}
             title="Next day (→)"
           >
+            <span className="text-sm font-medium hidden lg:inline">Next</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -165,7 +198,7 @@ export function DayDetailModal({
             </svg>
           </button>
 
-          {/* Date info with mobile navigation */}
+          {/* Date info */}
           <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
             <span className="px-2 py-0.5 bg-white/20 rounded-full">
               {isToday ? 'Today' : isPastDate ? 'Past' : 'Future'}
@@ -175,44 +208,10 @@ export function DayDetailModal({
             )}
           </div>
 
-          {/* Date with mobile nav arrows */}
-          <div className="flex items-center justify-between pr-10">
-            <h3 className="text-xl font-semibold text-white">
-              {formattedDate}
-            </h3>
-
-            {/* Mobile navigation arrows */}
-            {onNavigate && (
-              <div className="flex items-center gap-1 md:hidden">
-                <button
-                  onClick={() => canNavigatePrev && onNavigate('prev')}
-                  disabled={!canNavigatePrev}
-                  className={`p-1.5 rounded-full transition-all ${
-                    canNavigatePrev
-                      ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'text-white/30 cursor-not-allowed'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => canNavigateNext && onNavigate('next')}
-                  disabled={!canNavigateNext}
-                  className={`p-1.5 rounded-full transition-all ${
-                    canNavigateNext
-                      ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'text-white/30 cursor-not-allowed'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Date title */}
+          <h3 className="text-xl font-semibold text-white pr-10">
+            {formattedDate}
+          </h3>
         </div>
 
         {/* Content */}
@@ -263,6 +262,29 @@ export function DayDetailModal({
                                }`}
                     >
                       {emotion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Activities - Daylio-inspired */}
+              <div>
+                <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
+                  What were you doing?
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {ACTIVITIES.map(activity => (
+                    <button
+                      key={activity.id}
+                      onClick={() => toggleActivity(activity.id)}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-xl text-xs transition-all duration-200
+                               ${editActivities.includes(activity.id)
+                                 ? 'bg-emerald-500 text-white shadow-md scale-105'
+                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
+                               }`}
+                    >
+                      <span className="text-lg">{activity.icon}</span>
+                      <span className="truncate w-full text-center">{activity.label}</span>
                     </button>
                   ))}
                 </div>
@@ -358,6 +380,30 @@ export function DayDetailModal({
                 </div>
               )}
 
+              {/* Activities */}
+              {entry.activities && entry.activities.length > 0 && (
+                <div>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Activities
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {entry.activities.map(actId => {
+                      const activity = ACTIVITIES.find(a => a.id === actId);
+                      if (!activity) return null;
+                      return (
+                        <span key={actId} className="px-3 py-1.5 rounded-xl text-sm flex items-center gap-1.5
+                                                    bg-emerald-100 dark:bg-emerald-900/50
+                                                    text-emerald-700 dark:text-emerald-300
+                                                    border border-emerald-200 dark:border-emerald-700/50">
+                          <span>{activity.icon}</span>
+                          {activity.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Reflection */}
               {entry.reflection && (
                 <div>
@@ -441,6 +487,47 @@ export function DayDetailModal({
             </div>
           )}
         </div>
+
+        {/* Mobile Navigation Bar - Bottom positioned */}
+        {onNavigate && (
+          <div className="md:hidden border-t border-silver-200 dark:border-silver-700 bg-silver-50 dark:bg-silver-800/50">
+            <div className="flex items-center justify-between px-4 py-3">
+              <button
+                onClick={() => canNavigatePrev && onNavigate('prev')}
+                disabled={!canNavigatePrev}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
+                  canNavigatePrev
+                    ? 'bg-white dark:bg-silver-700 text-silver-700 dark:text-silver-200 hover:bg-silver-100 dark:hover:bg-silver-600 shadow-sm'
+                    : 'text-silver-300 dark:text-silver-600 cursor-not-allowed'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm font-medium">Prev</span>
+              </button>
+
+              <span className="text-xs text-silver-400 dark:text-silver-500">
+                Swipe or tap arrows
+              </span>
+
+              <button
+                onClick={() => canNavigateNext && onNavigate('next')}
+                disabled={!canNavigateNext}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
+                  canNavigateNext
+                    ? 'bg-white dark:bg-silver-700 text-silver-700 dark:text-silver-200 hover:bg-silver-100 dark:hover:bg-silver-600 shadow-sm'
+                    : 'text-silver-300 dark:text-silver-600 cursor-not-allowed'
+                }`}
+              >
+                <span className="text-sm font-medium">Next</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -106,6 +106,50 @@ export function StatsCard({ entries }: StatsCardProps) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
 
+    // Activity correlations - which activities are associated with higher moods
+    const activityMoods: Record<string, { total: number; count: number }> = {};
+    entries.forEach(e => {
+      if (e.activities) {
+        e.activities.forEach(activity => {
+          if (!activityMoods[activity]) {
+            activityMoods[activity] = { total: 0, count: 0 };
+          }
+          activityMoods[activity].total += e.mood;
+          activityMoods[activity].count++;
+        });
+      }
+    });
+
+    const activityCorrelations = Object.entries(activityMoods)
+      .map(([activity, data]) => ({
+        activity,
+        avgMood: data.total / data.count,
+        count: data.count,
+      }))
+      .filter(a => a.count >= 2) // Only show activities done at least twice
+      .sort((a, b) => b.avgMood - a.avgMood);
+
+    const happyActivities = activityCorrelations.slice(0, 3);
+
+    // Mood trend - comparing last 7 days to previous 7 days
+    const sortedByDate = [...entries].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const last7 = sortedByDate.slice(0, 7);
+    const prev7 = sortedByDate.slice(7, 14);
+
+    let moodTrend: 'improving' | 'declining' | 'stable' | null = null;
+    if (last7.length >= 3 && prev7.length >= 3) {
+      const last7Avg = last7.reduce((sum, e) => sum + e.mood, 0) / last7.length;
+      const prev7Avg = prev7.reduce((sum, e) => sum + e.mood, 0) / prev7.length;
+      const diff = last7Avg - prev7Avg;
+
+      if (diff > 0.3) moodTrend = 'improving';
+      else if (diff < -0.3) moodTrend = 'declining';
+      else moodTrend = 'stable';
+    }
+
     return {
       totalEntries,
       avgMood,
@@ -115,6 +159,8 @@ export function StatsCard({ entries }: StatsCardProps) {
       bestDay,
       worstDay,
       topEmotions,
+      happyActivities,
+      moodTrend,
     };
   }, [entries]);
 
@@ -133,6 +179,28 @@ export function StatsCard({ entries }: StatsCardProps) {
     if (mood >= 3) return 'bg-amber-400';
     if (mood >= 2) return 'bg-orange-400';
     return 'bg-red-400';
+  };
+
+  const getActivityIcon = (activity: string): string => {
+    const icons: Record<string, string> = {
+      work: '💼',
+      exercise: '🏃',
+      family: '👨‍👩‍👧',
+      friends: '👥',
+      dating: '💕',
+      reading: '📚',
+      gaming: '🎮',
+      movies: '🎬',
+      music: '🎵',
+      cooking: '🍳',
+      shopping: '🛒',
+      cleaning: '🧹',
+      travel: '✈️',
+      nature: '🌳',
+      meditation: '🧘',
+      sleep: '😴',
+    };
+    return icons[activity] || '✨';
   };
 
   return (
@@ -205,6 +273,90 @@ export function StatsCard({ entries }: StatsCardProps) {
                 Hardest: {stats.worstDay.name} ({stats.worstDay.avg.toFixed(1)})
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Mood Trend */}
+      {stats.moodTrend && (
+        <div className="glass-card p-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              stats.moodTrend === 'improving'
+                ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                : stats.moodTrend === 'declining'
+                  ? 'bg-orange-100 dark:bg-orange-900/30'
+                  : 'bg-silver-100 dark:bg-silver-800'
+            }`}>
+              {stats.moodTrend === 'improving' && (
+                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              )}
+              {stats.moodTrend === 'declining' && (
+                <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              )}
+              {stats.moodTrend === 'stable' && (
+                <svg className="w-5 h-5 text-silver-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                stats.moodTrend === 'improving'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : stats.moodTrend === 'declining'
+                    ? 'text-orange-600 dark:text-orange-400'
+                    : 'text-silver-600 dark:text-silver-300'
+              }`}>
+                {stats.moodTrend === 'improving' && 'Mood improving'}
+                {stats.moodTrend === 'declining' && 'Mood declining'}
+                {stats.moodTrend === 'stable' && 'Mood stable'}
+              </p>
+              <p className="text-xs text-silver-500 dark:text-silver-400">
+                Compared to last week
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Happy Activities - Daylio-inspired correlation */}
+      {stats.happyActivities.length > 0 && (
+        <div className="glass-card p-4">
+          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">
+            Activities that boost your mood
+          </h4>
+          <div className="space-y-2">
+            {stats.happyActivities.map(({ activity, avgMood, count }) => (
+              <div key={activity} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30
+                              flex items-center justify-center">
+                  <span className="text-sm">
+                    {getActivityIcon(activity)}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-silver-600 dark:text-silver-300 capitalize">
+                      {activity} <span className="text-xs text-silver-400">({count}x)</span>
+                    </span>
+                    <span className={`text-xs font-medium ${getMoodColor(avgMood)}`}>
+                      {avgMood.toFixed(1)} avg
+                    </span>
+                  </div>
+                  <div className="h-1 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden mt-1">
+                    <div
+                      className={`h-full rounded-full ${getMoodBarColor(avgMood)}`}
+                      style={{ width: `${(avgMood / 5) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import { DailyInsight } from '../DailyInsight';
 import { AuraDetailModal } from '../AuraDetailModal';
 import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
+import { YearInPixels } from '../YearInPixels';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -157,6 +158,13 @@ export function CompleteStep() {
                   <div className="glass-card p-5">
                     <Calendar entries={state.entries} onSaveEntry={updateEntry} />
                   </div>
+
+                  {/* Year in Pixels - only show if user has entries */}
+                  {state.entries.length >= 5 && (
+                    <div className="glass-card p-5">
+                      <YearInPixels entries={state.entries} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Right column */}
@@ -310,6 +318,13 @@ export function CompleteStep() {
                     <div className="glass-card p-5">
                       <Calendar entries={state.entries} onSaveEntry={updateEntry} />
                     </div>
+
+                    {/* Year in Pixels - only show if user has entries */}
+                    {state.entries.length >= 5 && (
+                      <div className="glass-card p-5">
+                        <YearInPixels entries={state.entries} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Right column */}
