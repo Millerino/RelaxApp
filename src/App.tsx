@@ -16,6 +16,7 @@ import { AuthModal } from './components/AuthModal';
 import { ProfileSetup } from './components/ProfileSetup';
 import { AIChat } from './components/AIChat';
 import { LandingPage } from './components/LandingPage';
+import { PaywallOverlay } from './components/PaywallOverlay';
 import {
   WelcomeStep,
   MoodStep,
@@ -104,7 +105,7 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile } = useApp();
+  const { state, setProfile, shouldShowPaywall } = useApp();
   const { user, isLoading } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -254,6 +255,16 @@ function AppShell() {
 
       {/* Cookie Consent Banner */}
       <CookieConsent />
+
+      {/* Fullscreen Paywall Overlay - shows when free trial is over */}
+      {shouldShowPaywall && (
+        <PaywallOverlay
+          onShowAuth={() => {
+            setAuthMode('login');
+            setShowAuthModal(true);
+          }}
+        />
+      )}
     </div>
   );
 }

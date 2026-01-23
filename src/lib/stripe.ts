@@ -26,7 +26,7 @@ export const getStripe = () => {
 
 export const isStripeConfigured = !!stripePublishableKey;
 
-// Stripe Payment Link for Pulsero Monthly ($4.99/month)
+// Stripe Payment Link for Pulsero Monthly ($3.99/month)
 export const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/fZu00icuRaAV5xB8EH9R606';
 
 // Stripe Customer Portal - Users can manage subscriptions here

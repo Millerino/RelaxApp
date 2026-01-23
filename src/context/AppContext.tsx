@@ -64,7 +64,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium && !state.isLoggedIn;
+  // Show paywall when user has used 3+ days and is NOT premium
+  // Note: Premium status is synced from Stripe via Supabase user metadata
+  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium;
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));
