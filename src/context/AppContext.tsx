@@ -158,24 +158,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Check subscription status from Supabase
+  // Checks both 'subscriptions' table (for Stripe) and 'profiles' table (for manual override)
   const checkSubscriptionStatus = useCallback(async (userId: string) => {
     if (!supabase) return;
 
     try {
-      const { data, error } = await supabase
+      // Check 1: Look in subscriptions table (Stripe webhook sets this)
+      const { data: subData } = await supabase
         .from('subscriptions')
         .select('status')
         .eq('user_id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows returned (user has no subscription)
-        console.error('Error checking subscription:', error);
+      if (subData?.status === 'active') {
+        setState(prev => ({ ...prev, isPremium: true }));
         return;
       }
 
-      const isPremium = data?.status === 'active';
-      setState(prev => ({ ...prev, isPremium }));
+      // Check 2: Look in profiles table for is_premium flag (manual override)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_premium')
+        .eq('id', userId)
+        .single();
+
+      if (profileData?.is_premium === true) {
+        setState(prev => ({ ...prev, isPremium: true }));
+        return;
+      }
+
+      // No premium status found
+      setState(prev => ({ ...prev, isPremium: false }));
     } catch (err) {
       console.error('Error checking subscription status:', err);
     }
