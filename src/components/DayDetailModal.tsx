@@ -28,14 +28,15 @@ export function DayDetailModal({
   canNavigateNext = true
 }: DayDetailModalProps) {
   const [isEditing, setIsEditing] = useState(isEmpty);
-  const [editMood, setEditMood] = useState<MoodLevel>(entry?.mood || 3);
+  // Don't pre-select mood for empty days - keep it null until user selects
+  const [editMood, setEditMood] = useState<MoodLevel | null>(entry?.mood || null);
   const [editEmotions, setEditEmotions] = useState<string[]>(entry?.emotions || []);
   const [editReflection, setEditReflection] = useState(entry?.reflection || '');
   const [editGratitude, setEditGratitude] = useState(entry?.gratitude || '');
 
   // Reset form when entry changes (navigation)
   useEffect(() => {
-    setEditMood(entry?.mood || 3);
+    setEditMood(entry?.mood || null);
     setEditEmotions(entry?.emotions || []);
     setEditReflection(entry?.reflection || '');
     setEditGratitude(entry?.gratitude || '');
@@ -76,7 +77,7 @@ export function DayDetailModal({
   };
 
   const handleSave = () => {
-    if (!onSaveEntry) return;
+    if (!onSaveEntry || editMood === null) return;
 
     const newEntry: DayEntry = {
       id: entry?.id || crypto.randomUUID(),
@@ -152,8 +153,8 @@ export function DayDetailModal({
                    animate-slide-up overflow-hidden max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood)} relative`}>
+        {/* Header - icy blue for empty/no mood selected, otherwise mood color */}
+        <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
           {/* Close button */}
           <button
             onClick={onClose}
@@ -233,7 +234,7 @@ export function DayDetailModal({
                       className={`flex-1 aspect-square max-w-[56px] rounded-xl flex items-center justify-center text-lg font-bold
                                transition-all duration-200 ${editMood === mood
                                  ? `${getMoodBgColor(mood)} text-white scale-105 shadow-lg ring-2 ring-offset-2 ring-offset-white dark:ring-offset-silver-900 ${getMoodRingColor(mood)}`
-                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-500 dark:text-silver-400 hover:scale-105 hover:bg-silver-200 dark:hover:bg-silver-700'
+                                 : 'bg-gradient-to-br from-slate-100 to-cyan-50 dark:from-slate-800 dark:to-cyan-900/30 text-slate-500 dark:text-slate-400 hover:scale-105 hover:from-cyan-100 hover:to-sky-100 dark:hover:from-cyan-900/40 dark:hover:to-sky-900/40 border border-cyan-200/50 dark:border-cyan-700/30'
                                }`}
                     >
                       {mood}
@@ -244,6 +245,11 @@ export function DayDetailModal({
                   <span>Difficult</span>
                   <span>Great</span>
                 </div>
+                {editMood === null && (
+                  <p className="text-xs text-cyan-500 dark:text-cyan-400 mt-2 text-center">
+                    Select your mood to continue
+                  </p>
+                )}
               </div>
 
               {/* Emotions */}
@@ -316,7 +322,12 @@ export function DayDetailModal({
                 )}
                 <button
                   onClick={handleSave}
-                  className="flex-1 btn-primary py-3 text-sm"
+                  disabled={editMood === null}
+                  className={`flex-1 py-3 text-sm rounded-xl font-medium transition-all
+                            ${editMood === null
+                              ? 'bg-silver-200 dark:bg-silver-700 text-silver-400 dark:text-silver-500 cursor-not-allowed'
+                              : 'btn-primary'
+                            }`}
                 >
                   Save reflection
                 </button>
@@ -479,7 +490,11 @@ function getMoodRingColor(mood: number): string {
   return colors[mood] || colors[3];
 }
 
-function getMoodHeaderGradient(mood: number): string {
+function getMoodHeaderGradient(mood: number | null): string {
+  if (mood === null) {
+    // Icy frosty blue for empty/unselected mood
+    return 'bg-gradient-to-r from-cyan-400 to-sky-500';
+  }
   const gradients: Record<number, string> = {
     1: 'bg-gradient-to-r from-red-400 to-red-500',
     2: 'bg-gradient-to-r from-orange-400 to-orange-500',
@@ -487,7 +502,7 @@ function getMoodHeaderGradient(mood: number): string {
     4: 'bg-gradient-to-r from-lime-400 to-emerald-400',
     5: 'bg-gradient-to-r from-emerald-400 to-emerald-500',
   };
-  return gradients[mood] || 'bg-gradient-to-r from-lavender-400 to-lavender-500';
+  return gradients[mood] || 'bg-gradient-to-r from-cyan-400 to-sky-500';
 }
 
 function getMoodTextColor(mood: number): string {

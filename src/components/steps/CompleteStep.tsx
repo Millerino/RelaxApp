@@ -8,6 +8,9 @@ import { DailyInsight } from '../DailyInsight';
 import { AuraDetailModal } from '../AuraDetailModal';
 import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
+import { AuthModal } from '../AuthModal';
+import { DayDetailModal } from '../DayDetailModal';
+import { QuickNotes } from '../QuickNotes';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -15,6 +18,9 @@ export function CompleteStep() {
   const { user } = useAuth();
   const [showBreathing, setShowBreathing] = useState(false);
   const [showAuraDetail, setShowAuraDetail] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [showTodayEditor, setShowTodayEditor] = useState(false);
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   if (shouldShowPaywall && !user) {
@@ -46,7 +52,7 @@ export function CompleteStep() {
   }, []);
 
   const handleNewEntry = () => {
-    setStep('welcome');
+    setStep('mood');
   };
 
   return (
@@ -82,13 +88,51 @@ export function CompleteStep() {
                 </p>
               </div>
 
+              {/* Signup prompt for non-logged-in users */}
+              {!user && (
+                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-lavender-500/10 to-lavender-600/10 border border-lavender-300/30 dark:border-lavender-700/30">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-center sm:text-left">
+                      <p className="text-sm font-medium text-silver-700 dark:text-silver-200">
+                        Save your progress
+                      </p>
+                      <p className="text-xs text-silver-500 dark:text-silver-400">
+                        Create a free account to keep your entries safe
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-lavender-500 text-white hover:bg-lavender-600 transition-colors"
+                      >
+                        Sign up free
+                      </button>
+                      <button
+                        onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg text-lavender-600 dark:text-lavender-400 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+                      >
+                        Log in
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Main content - 2 column grid on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left column */}
                 <div className="space-y-6">
-                  {/* Today's summary card */}
-                  <div className="glass-card p-5 text-left">
-                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Today's Summary</h3>
+                  {/* Today's summary card - clickable to edit */}
+                  <button
+                    onClick={() => setShowTodayEditor(true)}
+                    className="glass-card p-5 text-left w-full hover:ring-2 hover:ring-lavender-400/50 transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200">Today's Summary</h3>
+                      <span className="text-xs text-lavender-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Tap to edit
+                      </span>
+                    </div>
 
                     {/* Mood display - clean and visual */}
                     <div className="flex items-center gap-4 mb-5">
@@ -144,7 +188,7 @@ export function CompleteStep() {
                         </ul>
                       </div>
                     )}
-                  </div>
+                  </button>
 
                   {/* 7-day Mood Graph */}
                   {state.entries.length >= 2 && (
@@ -229,6 +273,9 @@ export function CompleteStep() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Quick Notes */}
+                  <QuickNotes />
 
                   {/* Statistics */}
                   {state.entries.length >= 3 && (
@@ -348,6 +395,28 @@ export function CompleteStep() {
           onClose={() => setShowAuraDetail(false)}
         />
       )}
+
+      {/* Auth Modal for signup prompt */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          initialMode={authMode}
+        />
+      )}
+
+      {/* Today's Entry Editor */}
+      {showTodayEditor && (
+        <DayDetailModal
+          entry={todayEntry || null}
+          date={new Date()}
+          onClose={() => setShowTodayEditor(false)}
+          isEmpty={!todayEntry}
+          onSaveEntry={(entry: DayEntry) => {
+            updateEntry(entry);
+            setShowTodayEditor(false);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -361,13 +430,13 @@ interface MiniAuraOrbProps {
 
 function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   const EVOLUTION_STAGES = [
-    { name: 'Spark', minXP: 0 },
-    { name: 'Ember', minXP: 50 },
-    { name: 'Flame', minXP: 150 },
-    { name: 'Blaze', minXP: 300 },
-    { name: 'Radiance', minXP: 500 },
-    { name: 'Aurora', minXP: 800 },
-    { name: 'Celestial', minXP: 1200 },
+    { name: 'Spark', minXP: 0, emoji: '✨' },
+    { name: 'Ember', minXP: 50, emoji: '🔥' },
+    { name: 'Flame', minXP: 150, emoji: '💫' },
+    { name: 'Blaze', minXP: 300, emoji: '⚡' },
+    { name: 'Radiance', minXP: 500, emoji: '🌟' },
+    { name: 'Aurora', minXP: 800, emoji: '🌈' },
+    { name: 'Celestial', minXP: 1200, emoji: '👑' },
   ];
 
   // Calculate vitality based on days since last entry
@@ -389,6 +458,13 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
     return 0.2;
   })();
 
+  const vitalityLabel = (() => {
+    if (vitality >= 0.9) return 'Thriving';
+    if (vitality >= 0.7) return 'Healthy';
+    if (vitality >= 0.4) return 'Fading';
+    return 'Dormant';
+  })();
+
   // Get current and next stage
   const getCurrentStageIndex = () => {
     for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
@@ -405,6 +481,8 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   const progressToNext = nextStage
     ? (xp - currentStage.minXP) / (nextStage.minXP - currentStage.minXP)
     : 1;
+
+  const xpToNext = nextStage ? nextStage.minXP - xp : 0;
 
   // Get color based on average recent mood
   const recentMoods = entries.slice(-7).map(e => e.mood);
@@ -427,13 +505,88 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-2 group cursor-pointer"
+      className="flex flex-col items-center gap-2 group cursor-pointer relative"
     >
+      {/* Hover card with evolution details - appears on hover */}
+      <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full
+                     opacity-0 group-hover:opacity-100 pointer-events-none
+                     transition-all duration-300 ease-out z-20
+                     group-hover:-translate-y-[calc(100%+8px)]">
+        <div className="bg-white dark:bg-silver-800 rounded-xl shadow-xl p-3 w-48
+                       border border-silver-200 dark:border-silver-700">
+          {/* Stage progression dots */}
+          <div className="flex justify-between items-center mb-3 px-1">
+            {EVOLUTION_STAGES.map((stage, i) => (
+              <div
+                key={stage.name}
+                className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px]
+                          transition-all duration-300 ${
+                  i < stageIndex
+                    ? 'bg-lavender-500 text-white'
+                    : i === stageIndex
+                    ? 'ring-2 ring-lavender-400 ring-offset-1 ring-offset-white dark:ring-offset-silver-800'
+                    : 'bg-silver-200 dark:bg-silver-700'
+                }`}
+                style={i === stageIndex ? {
+                  background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`,
+                } : {}}
+                title={stage.name}
+              >
+                {i <= stageIndex && <span>{stage.emoji}</span>}
+              </div>
+            ))}
+          </div>
+
+          {/* Current stage info */}
+          <div className="text-center mb-2">
+            <span className="text-lg">{currentStage.emoji}</span>
+            <p className="text-sm font-medium text-silver-800 dark:text-silver-100">
+              {currentStage.name}
+            </p>
+          </div>
+
+          {/* Progress to next */}
+          {nextStage && (
+            <div className="mb-2">
+              <div className="flex justify-between text-[10px] text-silver-500 dark:text-silver-400 mb-1">
+                <span>Next: {nextStage.name}</span>
+                <span>{xpToNext} XP to go</span>
+              </div>
+              <div className="h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${progressToNext * 100}%`,
+                    background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]})`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Vitality indicator */}
+          <div className="flex items-center justify-between text-[10px] pt-1 border-t border-silver-100 dark:border-silver-700">
+            <span className="text-silver-500 dark:text-silver-400">Vitality</span>
+            <span className={`font-medium ${
+              vitality >= 0.7 ? 'text-emerald-500' :
+              vitality >= 0.4 ? 'text-amber-500' : 'text-red-400'
+            }`}>
+              {vitalityLabel} ({Math.round(vitality * 100)}%)
+            </span>
+          </div>
+
+          {/* Arrow pointing down */}
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3
+                         bg-white dark:bg-silver-800 rotate-45
+                         border-r border-b border-silver-200 dark:border-silver-700" />
+        </div>
+      </div>
+
       {/* Orb container with hover effects */}
       <div className="relative">
         {/* Outer glow - expands on hover */}
         <div
-          className="absolute rounded-full transition-all duration-500 group-hover:scale-125"
+          className="absolute rounded-full transition-all duration-500 group-hover:scale-150"
           style={{
             width: size * 1.5,
             height: size * 1.5,
@@ -444,10 +597,23 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
           }}
         />
 
-        {/* Main orb - grows and bounces on hover */}
+        {/* Second glow ring on hover */}
+        <div
+          className="absolute rounded-full transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-125"
+          style={{
+            width: size * 1.8,
+            height: size * 1.8,
+            background: `radial-gradient(circle, ${colors[1]}15, transparent 70%)`,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+
+        {/* Main orb - grows, bounces, and pulses on hover */}
         <div
           className="relative rounded-full transition-all duration-300 ease-out
-                     group-hover:scale-110 group-hover:-translate-y-1"
+                     group-hover:scale-115 group-hover:-translate-y-1 group-hover:animate-pulse"
           style={{
             width: size,
             height: size,
@@ -470,13 +636,14 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
 
       {/* Label and XP bar below orb */}
       <div className="flex flex-col items-center gap-1">
-        <span className="text-xs font-medium text-silver-600 dark:text-silver-300">
+        <span className="text-xs font-medium text-silver-600 dark:text-silver-300 group-hover:text-lavender-500 transition-colors">
           {currentStage.name}
         </span>
 
         {/* XP Progress bar */}
         <div className="flex items-center gap-2">
-          <div className="w-20 h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
+          <div className="w-20 h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden
+                        group-hover:h-2 transition-all">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -485,13 +652,10 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
               }}
             />
           </div>
-          <span className="text-[10px] text-silver-400 dark:text-silver-500">{xp} XP</span>
+          <span className="text-[10px] text-silver-400 dark:text-silver-500 group-hover:text-silver-600 dark:group-hover:text-silver-300 transition-colors">
+            {xp} XP
+          </span>
         </div>
-
-        {/* Tap hint on hover */}
-        <span className="text-[10px] text-lavender-500 opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5">
-          Tap for details
-        </span>
       </div>
     </button>
   );

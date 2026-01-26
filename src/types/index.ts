@@ -44,6 +44,12 @@ export interface NotificationPreferences {
   weeklyInsights: boolean;
 }
 
+export interface QuickNote {
+  id: string;
+  text: string;
+  createdAt: number;
+}
+
 export interface UserState {
   isOnboarded: boolean;
   isLoggedIn: boolean;
@@ -54,6 +60,7 @@ export interface UserState {
   email?: string;
   profile?: UserProfile;
   xp: number;
+  quickNotes?: QuickNote[];
 }
 
 export type OnboardingStep =
