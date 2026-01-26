@@ -199,7 +199,7 @@ export function CompleteStep() {
 
                   {/* Calendar */}
                   <div className="glass-card p-5">
-                    <Calendar entries={state.entries} onSaveEntry={updateEntry} />
+                    <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
                   </div>
                 </div>
 
@@ -355,7 +355,7 @@ export function CompleteStep() {
 
                     {/* Calendar */}
                     <div className="glass-card p-5">
-                      <Calendar entries={state.entries} onSaveEntry={updateEntry} />
+                      <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
                     </div>
                   </div>
 

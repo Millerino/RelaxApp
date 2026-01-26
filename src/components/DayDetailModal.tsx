@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { DayEntry, MoodLevel } from '../types';
+import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
 
 interface DayDetailModalProps {
   entry: DayEntry | null;
@@ -10,11 +10,32 @@ interface DayDetailModalProps {
   onNavigate?: (direction: 'prev' | 'next') => void;
   canNavigatePrev?: boolean;
   canNavigateNext?: boolean;
+  quickNotes?: QuickNote[];
 }
 
 const EMOTIONS = [
   'Happy', 'Grateful', 'Calm', 'Energetic', 'Hopeful', 'Proud',
   'Anxious', 'Stressed', 'Sad', 'Lonely', 'Frustrated', 'Tired'
+];
+
+const ACTIVITIES = [
+  { emoji: '🏃', label: 'Exercise' },
+  { emoji: '🧘', label: 'Meditate' },
+  { emoji: '📚', label: 'Reading' },
+  { emoji: '👥', label: 'Social' },
+  { emoji: '🎮', label: 'Gaming' },
+  { emoji: '🎵', label: 'Music' },
+  { emoji: '🍳', label: 'Cooking' },
+  { emoji: '🌿', label: 'Nature' },
+  { emoji: '💼', label: 'Work' },
+  { emoji: '😴', label: 'Rest' },
+  { emoji: '🎨', label: 'Creative' },
+  { emoji: '🛒', label: 'Shopping' },
+];
+
+const DEFAULT_FEELINGS = [
+  { name: 'Happiness', color: 'emerald' },
+  { name: 'Energy', color: 'amber' },
 ];
 
 export function DayDetailModal({
@@ -25,21 +46,31 @@ export function DayDetailModal({
   onSaveEntry,
   onNavigate,
   canNavigatePrev = true,
-  canNavigateNext = true
+  canNavigateNext = true,
+  quickNotes = []
 }: DayDetailModalProps) {
   const [isEditing, setIsEditing] = useState(isEmpty);
-  // Don't pre-select mood for empty days - keep it null until user selects
   const [editMood, setEditMood] = useState<MoodLevel | null>(entry?.mood || null);
   const [editEmotions, setEditEmotions] = useState<string[]>(entry?.emotions || []);
   const [editReflection, setEditReflection] = useState(entry?.reflection || '');
   const [editGratitude, setEditGratitude] = useState(entry?.gratitude || '');
+  const [editActivities, setEditActivities] = useState<string[]>(entry?.activities || []);
+  const [editFeelings, setEditFeelings] = useState<FeelingLevel[]>(
+    entry?.feelingLevels || DEFAULT_FEELINGS.map(f => ({ name: f.name, value: 50 }))
+  );
+  const [hoveredFeeling, setHoveredFeeling] = useState<string | null>(null);
 
-  // Reset form when entry changes (navigation)
+  // Filter notes for this day
+  const dayNotes = quickNotes.filter(n => n.date === date.toDateString());
+
+  // Reset form when entry changes
   useEffect(() => {
     setEditMood(entry?.mood || null);
     setEditEmotions(entry?.emotions || []);
     setEditReflection(entry?.reflection || '');
     setEditGratitude(entry?.gratitude || '');
+    setEditActivities(entry?.activities || []);
+    setEditFeelings(entry?.feelingLevels || DEFAULT_FEELINGS.map(f => ({ name: f.name, value: 50 })));
     setIsEditing(isEmpty);
   }, [entry, isEmpty, date]);
 
@@ -76,6 +107,20 @@ export function DayDetailModal({
     );
   };
 
+  const toggleActivity = (activity: string) => {
+    setEditActivities(prev =>
+      prev.includes(activity)
+        ? prev.filter(a => a !== activity)
+        : [...prev, activity]
+    );
+  };
+
+  const updateFeeling = (name: string, value: number) => {
+    setEditFeelings(prev =>
+      prev.map(f => f.name === name ? { ...f, value } : f)
+    );
+  };
+
   const handleSave = () => {
     if (!onSaveEntry || editMood === null) return;
 
@@ -87,6 +132,8 @@ export function DayDetailModal({
       reflection: editReflection,
       gratitude: editGratitude,
       goals: entry?.goals || [],
+      activities: editActivities,
+      feelingLevels: editFeelings,
       createdAt: entry?.createdAt || Date.now(),
     };
 
@@ -100,6 +147,12 @@ export function DayDetailModal({
     }
   };
 
+  const getFeelingColor = (value: number) => {
+    if (value >= 70) return { bg: 'bg-emerald-500', glow: 'shadow-emerald-400/50', text: 'text-emerald-500' };
+    if (value >= 40) return { bg: 'bg-amber-400', glow: 'shadow-amber-400/30', text: 'text-amber-500' };
+    return { bg: 'bg-rose-400', glow: 'shadow-rose-400/30', text: 'text-rose-400' };
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate"
@@ -108,14 +161,13 @@ export function DayDetailModal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
 
-      {/* Navigation arrows - positioned outside modal on desktop, hidden on mobile */}
+      {/* Navigation arrows - positioned with more space from modal */}
       {onNavigate && (
         <>
-          {/* Previous day arrow */}
           <button
             onClick={() => canNavigatePrev && onNavigate('prev')}
             disabled={!canNavigatePrev}
-            className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
+            className={`absolute left-4 lg:left-12 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full transition-all
                        hidden md:flex
                        ${canNavigatePrev
                          ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
@@ -128,11 +180,10 @@ export function DayDetailModal({
             </svg>
           </button>
 
-          {/* Next day arrow */}
           <button
             onClick={() => canNavigateNext && onNavigate('next')}
             disabled={!canNavigateNext}
-            className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 rounded-full transition-all
+            className={`absolute right-4 lg:right-12 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full transition-all
                        hidden md:flex
                        ${canNavigateNext
                          ? 'bg-white/90 dark:bg-silver-800/90 text-silver-700 dark:text-silver-200 hover:bg-white dark:hover:bg-silver-700 hover:scale-110 shadow-lg'
@@ -147,15 +198,14 @@ export function DayDetailModal({
         </>
       )}
 
-      {/* Modal */}
+      {/* Modal - larger width */}
       <div
-        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-md
-                   animate-slide-up overflow-hidden max-h-[85vh] flex flex-col"
+        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-lg
+                   animate-slide-up overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - icy blue for empty/no mood selected, otherwise mood color */}
+        {/* Header */}
         <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30
@@ -166,32 +216,28 @@ export function DayDetailModal({
             </svg>
           </button>
 
-          {/* Date info with mobile navigation */}
           <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
             <span className="px-2 py-0.5 bg-white/20 rounded-full">
               {isToday ? 'Today' : isPastDate ? 'Past' : 'Future'}
             </span>
             {onNavigate && (
-              <span className="text-white/60 hidden md:inline">Use ← → to navigate</span>
+              <span className="text-white/60 hidden md:inline">Use arrow keys to navigate</span>
             )}
           </div>
 
-          {/* Date with mobile nav arrows */}
-          <div className="flex items-center justify-between pr-10">
+          <div className="flex items-center justify-between pr-12">
             <h3 className="text-xl font-semibold text-white">
               {formattedDate}
             </h3>
 
-            {/* Mobile navigation arrows */}
+            {/* Mobile navigation */}
             {onNavigate && (
               <div className="flex items-center gap-1 md:hidden">
                 <button
                   onClick={() => canNavigatePrev && onNavigate('prev')}
                   disabled={!canNavigatePrev}
                   className={`p-1.5 rounded-full transition-all ${
-                    canNavigatePrev
-                      ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'text-white/30 cursor-not-allowed'
+                    canNavigatePrev ? 'bg-white/20 hover:bg-white/30 text-white' : 'text-white/30 cursor-not-allowed'
                   }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -202,9 +248,7 @@ export function DayDetailModal({
                   onClick={() => canNavigateNext && onNavigate('next')}
                   disabled={!canNavigateNext}
                   className={`p-1.5 rounded-full transition-all ${
-                    canNavigateNext
-                      ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'text-white/30 cursor-not-allowed'
+                    canNavigateNext ? 'bg-white/20 hover:bg-white/30 text-white' : 'text-white/30 cursor-not-allowed'
                   }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -219,8 +263,7 @@ export function DayDetailModal({
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1">
           {isEditing ? (
-            /* Edit Mode */
-            <div className="space-y-5">
+            <div className="space-y-6">
               {/* Mood selector */}
               <div>
                 <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
@@ -250,6 +293,83 @@ export function DayDetailModal({
                     Select your mood to continue
                   </p>
                 )}
+              </div>
+
+              {/* Feeling Bars */}
+              <div>
+                <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
+                  How's your...
+                </label>
+                <div className="space-y-4">
+                  {editFeelings.map((feeling) => {
+                    const colors = getFeelingColor(feeling.value);
+                    const isHovered = hoveredFeeling === feeling.name;
+                    return (
+                      <div key={feeling.name} className="relative">
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-silver-600 dark:text-silver-300 font-medium">{feeling.name}</span>
+                          <span className={`font-medium transition-colors ${colors.text}`}>
+                            {feeling.value >= 70 ? 'High' : feeling.value >= 40 ? 'Medium' : 'Low'}
+                          </span>
+                        </div>
+                        <div
+                          className="relative h-8 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer group"
+                          onMouseEnter={() => setHoveredFeeling(feeling.name)}
+                          onMouseLeave={() => setHoveredFeeling(null)}
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const percent = Math.round((x / rect.width) * 100);
+                            updateFeeling(feeling.name, Math.max(0, Math.min(100, percent)));
+                          }}
+                        >
+                          {/* Fill bar */}
+                          <div
+                            className={`absolute inset-y-0 left-0 ${colors.bg} transition-all duration-200 rounded-full
+                                      ${isHovered ? `shadow-lg ${colors.glow}` : ''}`}
+                            style={{ width: `${feeling.value}%` }}
+                          />
+                          {/* Hover indicator */}
+                          {isHovered && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                          )}
+                          {/* Thumb */}
+                          <div
+                            className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-md
+                                      transition-all duration-200 flex items-center justify-center
+                                      ${isHovered ? 'scale-110' : ''}`}
+                            style={{ left: `calc(${feeling.value}% - 12px)` }}
+                          >
+                            <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Activities */}
+              <div>
+                <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
+                  What did you do today?
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {ACTIVITIES.map(activity => (
+                    <button
+                      key={activity.label}
+                      onClick={() => toggleActivity(activity.label.toLowerCase())}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-200
+                               ${editActivities.includes(activity.label.toLowerCase())
+                                 ? 'bg-lavender-500 text-white shadow-md scale-105'
+                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 hover:scale-105'
+                               }`}
+                    >
+                      <span>{activity.emoji}</span>
+                      <span>{activity.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Emotions */}
@@ -350,6 +470,53 @@ export function DayDetailModal({
                 </div>
               </div>
 
+              {/* Feeling Levels */}
+              {entry.feelingLevels && entry.feelingLevels.length > 0 && (
+                <div>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Feeling Levels
+                  </p>
+                  <div className="space-y-2">
+                    {entry.feelingLevels.map(feeling => {
+                      const colors = getFeelingColor(feeling.value);
+                      return (
+                        <div key={feeling.name} className="flex items-center gap-3">
+                          <span className="text-sm text-silver-600 dark:text-silver-300 w-20">{feeling.name}</span>
+                          <div className="flex-1 h-2 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
+                            <div className={`h-full ${colors.bg} rounded-full`} style={{ width: `${feeling.value}%` }} />
+                          </div>
+                          <span className={`text-xs font-medium ${colors.text} w-12 text-right`}>
+                            {feeling.value}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Activities */}
+              {entry.activities && entry.activities.length > 0 && (
+                <div>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Activities
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {entry.activities.map(a => {
+                      const activity = ACTIVITIES.find(act => act.label.toLowerCase() === a);
+                      return (
+                        <span key={a} className="px-3 py-1.5 rounded-full text-sm
+                                               bg-amber-100 dark:bg-amber-900/30
+                                               text-amber-700 dark:text-amber-300
+                                               border border-amber-200 dark:border-amber-700/50">
+                          {activity?.emoji} {a.charAt(0).toUpperCase() + a.slice(1)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Emotions */}
               {entry.emotions.length > 0 && (
                 <div>
@@ -364,6 +531,23 @@ export function DayDetailModal({
                                              border border-lavender-200 dark:border-lavender-700/50">
                         {e.charAt(0).toUpperCase() + e.slice(1)}
                       </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Notes for this day */}
+              {dayNotes.length > 0 && (
+                <div>
+                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                    Quick Notes
+                  </p>
+                  <div className="space-y-2">
+                    {dayNotes.map(note => (
+                      <div key={note.id} className="flex items-start gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        {note.emoji && <span>{note.emoji}</span>}
+                        <p className="text-sm text-amber-900 dark:text-amber-100">{note.text}</p>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -395,23 +579,6 @@ export function DayDetailModal({
                 </div>
               )}
 
-              {/* Goals */}
-              {entry.goals && entry.goals.length > 0 && (
-                <div>
-                  <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
-                    Goals set
-                  </p>
-                  <ul className="space-y-2">
-                    {entry.goals.map(g => (
-                      <li key={g.id} className="flex items-center gap-2 text-sm text-silver-700 dark:text-silver-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-lavender-400" />
-                        {g.text}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Edit button */}
               <button
                 onClick={() => setIsEditing(true)}
@@ -427,12 +594,12 @@ export function DayDetailModal({
               </button>
             </div>
           ) : (
-            /* Empty state with add option */
+            /* Empty state */
             <div className="text-center py-6">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-lavender-100 to-lavender-200
-                            dark:from-lavender-900/50 dark:to-lavender-800/50
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-100 to-sky-200
+                            dark:from-cyan-900/50 dark:to-sky-800/50
                             flex items-center justify-center">
-                <svg className="w-10 h-10 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-10 h-10 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -492,7 +659,6 @@ function getMoodRingColor(mood: number): string {
 
 function getMoodHeaderGradient(mood: number | null): string {
   if (mood === null) {
-    // Icy frosty blue for empty/unselected mood
     return 'bg-gradient-to-r from-cyan-400 to-sky-500';
   }
   const gradients: Record<number, string> = {
