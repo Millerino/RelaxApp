@@ -1,13 +1,14 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { DayEntry } from '../types';
+import type { DayEntry, QuickNote } from '../types';
 import { DayDetailModal } from './DayDetailModal';
 
 interface Props {
   entries: DayEntry[];
   onSaveEntry?: (entry: DayEntry) => void;
+  quickNotes?: QuickNote[];
 }
 
-export function Calendar({ entries, onSaveEntry }: Props) {
+export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DayEntry | null>(null);
   const [showEmptyDay, setShowEmptyDay] = useState(false);
@@ -244,6 +245,7 @@ export function Calendar({ entries, onSaveEntry }: Props) {
           onNavigate={handleNavigate}
           canNavigatePrev={canNavigatePrev}
           canNavigateNext={canNavigateNext}
+          quickNotes={quickNotes}
         />
       )}
     </>

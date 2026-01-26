@@ -20,8 +20,10 @@ interface AppContextType {
   clearAllData: () => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
-  addQuickNote: (text: string) => void;
+  addQuickNote: (text: string, date?: string) => void;
   deleteQuickNote: (id: string) => void;
+  updateQuickNoteEmoji: (id: string, emoji: string) => void;
+  getNotesForDate: (date: string) => QuickNote[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -179,10 +181,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, profile }));
   };
 
-  const addQuickNote = (text: string) => {
+  const addQuickNote = (text: string, date?: string) => {
     const note: QuickNote = {
       id: crypto.randomUUID(),
       text,
+      date: date || new Date().toDateString(),
       createdAt: Date.now(),
     };
     setState(prev => ({
@@ -196,6 +199,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...prev,
       quickNotes: (prev.quickNotes || []).filter(n => n.id !== id),
     }));
+  };
+
+  const updateQuickNoteEmoji = (id: string, emoji: string) => {
+    setState(prev => ({
+      ...prev,
+      quickNotes: (prev.quickNotes || []).map(n =>
+        n.id === id ? { ...n, emoji } : n
+      ),
+    }));
+  };
+
+  const getNotesForDate = (date: string): QuickNote[] => {
+    return (state.quickNotes || []).filter(n => n.date === date);
   };
 
   const clearAllData = async (): Promise<void> => {
@@ -235,6 +251,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       shouldShowPaywall,
       addQuickNote,
       deleteQuickNote,
+      updateQuickNoteEmoji,
+      getNotesForDate,
     }}>
       {children}
     </AppContext.Provider>
