@@ -10,6 +10,7 @@ import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
 import { AuthModal } from '../AuthModal';
 import { DayDetailModal } from '../DayDetailModal';
+import { QuickNotes } from '../QuickNotes';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -272,6 +273,9 @@ export function CompleteStep() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Quick Notes */}
+                  <QuickNotes />
 
                   {/* Statistics */}
                   {state.entries.length >= 3 && (

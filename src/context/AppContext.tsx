@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile } from '../types';
+import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
 
 interface AppContextType {
   state: UserState;
@@ -20,6 +20,8 @@ interface AppContextType {
   clearAllData: () => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
+  addQuickNote: (text: string) => void;
+  deleteQuickNote: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -177,6 +179,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, profile }));
   };
 
+  const addQuickNote = (text: string) => {
+    const note: QuickNote = {
+      id: crypto.randomUUID(),
+      text,
+      createdAt: Date.now(),
+    };
+    setState(prev => ({
+      ...prev,
+      quickNotes: [...(prev.quickNotes || []), note],
+    }));
+  };
+
+  const deleteQuickNote = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      quickNotes: (prev.quickNotes || []).filter(n => n.id !== id),
+    }));
+  };
+
   const clearAllData = async (): Promise<void> => {
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEY);
@@ -212,6 +233,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearAllData,
       currentEntry,
       shouldShowPaywall,
+      addQuickNote,
+      deleteQuickNote,
     }}>
       {children}
     </AppContext.Provider>
