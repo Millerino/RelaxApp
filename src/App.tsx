@@ -14,7 +14,6 @@ import { CookieConsent } from './components/CookieConsent';
 import { ProgressIndicator } from './components/ProgressIndicator';
 import { AuthModal } from './components/AuthModal';
 import { ProfileSetup } from './components/ProfileSetup';
-import { AIChat } from './components/AIChat';
 import { AuthCallback } from './components/AuthCallback';
 import {
   WelcomeStep,
@@ -112,7 +111,6 @@ function AppShell() {
   const [showLegal, setShowLegal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
   const [isAuthCallback, setIsAuthCallback] = useState(
     window.location.pathname === '/auth/callback'
   );
@@ -159,23 +157,6 @@ function AppShell() {
         />
       </main>
 
-      {/* AI Chat floating button - only show when user has entries */}
-      {state.entries.length > 0 && (
-        <button
-          onClick={() => setShowAIChat(true)}
-          className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full
-                   bg-gradient-to-br from-lavender-400 to-lavender-500
-                   shadow-lg shadow-lavender-500/30 hover:shadow-xl hover:shadow-lavender-500/40
-                   flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-          aria-label="Open AI Chat"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-      )}
-
       {/* Modals */}
       {showPricing && (
         <Pricing
@@ -214,15 +195,6 @@ function AppShell() {
             setShowProfileSetup(false);
           }}
           initialProfile={state.profile}
-        />
-      )}
-
-      {/* AI Chat Modal */}
-      {showAIChat && (
-        <AIChat
-          entries={state.entries}
-          userName={state.profile?.name}
-          onClose={() => setShowAIChat(false)}
         />
       )}
 
