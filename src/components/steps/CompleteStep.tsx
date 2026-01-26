@@ -16,8 +16,8 @@ export function CompleteStep() {
   const [showBreathing, setShowBreathing] = useState(false);
   const [showAuraDetail, setShowAuraDetail] = useState(false);
 
-  // Check if should show paywall
-  if (shouldShowPaywall) {
+  // Check if should show paywall (but not if user is authenticated via Supabase)
+  if (shouldShowPaywall && !user) {
     return null; // Will be handled by parent
   }
 
