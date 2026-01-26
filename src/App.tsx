@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -36,12 +36,24 @@ interface AppContentProps {
 
 function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: AppContentProps) {
   const { state, shouldShowPaywall, setStep } = useApp();
+  const { user } = useAuth();
   const { currentStep, isOnboarded } = state;
+
+  // Redirect logged-in users to dashboard, logged-out users to welcome
+  useEffect(() => {
+    if (user && isOnboarded && currentStep === 'welcome') {
+      // Logged-in user with history - go to dashboard
+      setStep('complete');
+    } else if (!user && currentStep === 'complete' && !isOnboarded) {
+      // Logged-out user trying to see complete - go to welcome
+      setStep('welcome');
+    }
+  }, [user, isOnboarded, currentStep, setStep]);
 
   // Handle logo click - go to home/complete based on state
   const handleNavigateHome = () => {
-    if (isOnboarded) {
-      // Returning user - go to complete screen
+    if (user || isOnboarded) {
+      // Returning user or logged in - go to complete screen
       setStep('complete');
     } else {
       // New user - go to welcome
@@ -117,19 +129,24 @@ function AppShell() {
 
   const handleAuthComplete = useCallback(() => {
     setIsAuthCallback(false);
-    // Navigate to complete step if user is onboarded, otherwise welcome
-    if (state.isOnboarded) {
-      setStep('complete');
-    }
-  }, [state.isOnboarded, setStep]);
+    // Always navigate to complete step for authenticated users
+    setStep('complete');
+  }, [setStep]);
 
   const handleLoginFromPricing = () => {
     setShowPricing(false);
     setShowAuthModal(true);
   };
 
-  // Check if we should prompt for profile setup (logged in but no profile)
-  const shouldShowProfilePrompt = user && !state.profile && state.isOnboarded;
+  // Auto-create minimal profile for logged-in users without one (no modal needed)
+  useEffect(() => {
+    if (user && !state.profile) {
+      setProfile({
+        name: user.email?.split('@')[0] || 'Friend',
+        createdAt: Date.now(),
+      });
+    }
+  }, [user, state.profile, setProfile]);
 
   // Handle auth callback route
   if (isAuthCallback) {
@@ -171,29 +188,20 @@ function AppShell() {
         <AuthModal
           onClose={() => {
             setShowAuthModal(false);
-            // Show profile setup after successful auth if needed
-            if (user && !state.profile) {
-              setShowProfileSetup(true);
-            }
+            // Go to dashboard after login
+            setStep('complete');
           }}
         />
       )}
 
-      {/* Profile Setup Modal */}
-      {(showProfileSetup || shouldShowProfilePrompt) && (
+      {/* Profile Setup Modal - only shown when explicitly triggered */}
+      {showProfileSetup && (
         <ProfileSetup
           onComplete={(profile) => {
             setProfile(profile);
             setShowProfileSetup(false);
           }}
-          onSkip={() => {
-            // Set a minimal profile to stop prompting
-            setProfile({
-              name: user?.email?.split('@')[0] || 'Friend',
-              createdAt: Date.now(),
-            });
-            setShowProfileSetup(false);
-          }}
+          onSkip={() => setShowProfileSetup(false)}
           initialProfile={state.profile}
         />
       )}
