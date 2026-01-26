@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -15,6 +15,7 @@ import { ProgressIndicator } from './components/ProgressIndicator';
 import { AuthModal } from './components/AuthModal';
 import { ProfileSetup } from './components/ProfileSetup';
 import { AIChat } from './components/AIChat';
+import { AuthCallback } from './components/AuthCallback';
 import {
   WelcomeStep,
   MoodStep,
@@ -103,7 +104,7 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile } = useApp();
+  const { state, setProfile, setStep } = useApp();
   const { user } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -112,6 +113,17 @@ function AppShell() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [isAuthCallback, setIsAuthCallback] = useState(
+    window.location.pathname === '/auth/callback'
+  );
+
+  const handleAuthComplete = useCallback(() => {
+    setIsAuthCallback(false);
+    // Navigate to complete step if user is onboarded, otherwise welcome
+    if (state.isOnboarded) {
+      setStep('complete');
+    }
+  }, [state.isOnboarded, setStep]);
 
   const handleLoginFromPricing = () => {
     setShowPricing(false);
@@ -120,6 +132,19 @@ function AppShell() {
 
   // Check if we should prompt for profile setup (logged in but no profile)
   const shouldShowProfilePrompt = user && !state.profile && state.isOnboarded;
+
+  // Handle auth callback route
+  if (isAuthCallback) {
+    return (
+      <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
+        <Background />
+        <LampToggle />
+        <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
+          <AuthCallback onComplete={handleAuthComplete} />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
