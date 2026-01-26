@@ -8,6 +8,8 @@ import { DailyInsight } from '../DailyInsight';
 import { AuraDetailModal } from '../AuraDetailModal';
 import { StatsCard } from '../StatsCard';
 import { BreathingExercise } from '../BreathingExercise';
+import { AuthModal } from '../AuthModal';
+import { DayDetailModal } from '../DayDetailModal';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -15,6 +17,9 @@ export function CompleteStep() {
   const { user } = useAuth();
   const [showBreathing, setShowBreathing] = useState(false);
   const [showAuraDetail, setShowAuraDetail] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [showTodayEditor, setShowTodayEditor] = useState(false);
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   if (shouldShowPaywall && !user) {
@@ -46,7 +51,7 @@ export function CompleteStep() {
   }, []);
 
   const handleNewEntry = () => {
-    setStep('welcome');
+    setStep('mood');
   };
 
   return (
@@ -82,13 +87,51 @@ export function CompleteStep() {
                 </p>
               </div>
 
+              {/* Signup prompt for non-logged-in users */}
+              {!user && (
+                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-lavender-500/10 to-lavender-600/10 border border-lavender-300/30 dark:border-lavender-700/30">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-center sm:text-left">
+                      <p className="text-sm font-medium text-silver-700 dark:text-silver-200">
+                        Save your progress
+                      </p>
+                      <p className="text-xs text-silver-500 dark:text-silver-400">
+                        Create a free account to keep your entries safe
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-lavender-500 text-white hover:bg-lavender-600 transition-colors"
+                      >
+                        Sign up free
+                      </button>
+                      <button
+                        onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg text-lavender-600 dark:text-lavender-400 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+                      >
+                        Log in
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Main content - 2 column grid on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left column */}
                 <div className="space-y-6">
-                  {/* Today's summary card */}
-                  <div className="glass-card p-5 text-left">
-                    <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Today's Summary</h3>
+                  {/* Today's summary card - clickable to edit */}
+                  <button
+                    onClick={() => setShowTodayEditor(true)}
+                    className="glass-card p-5 text-left w-full hover:ring-2 hover:ring-lavender-400/50 transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200">Today's Summary</h3>
+                      <span className="text-xs text-lavender-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Tap to edit
+                      </span>
+                    </div>
 
                     {/* Mood display - clean and visual */}
                     <div className="flex items-center gap-4 mb-5">
@@ -144,7 +187,7 @@ export function CompleteStep() {
                         </ul>
                       </div>
                     )}
-                  </div>
+                  </button>
 
                   {/* 7-day Mood Graph */}
                   {state.entries.length >= 2 && (
@@ -346,6 +389,28 @@ export function CompleteStep() {
           entries={state.entries}
           xp={state.xp || 0}
           onClose={() => setShowAuraDetail(false)}
+        />
+      )}
+
+      {/* Auth Modal for signup prompt */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          initialMode={authMode}
+        />
+      )}
+
+      {/* Today's Entry Editor */}
+      {showTodayEditor && (
+        <DayDetailModal
+          entry={todayEntry || null}
+          date={new Date()}
+          onClose={() => setShowTodayEditor(false)}
+          isEmpty={!todayEntry}
+          onSaveEntry={(entry: DayEntry) => {
+            updateEntry(entry);
+            setShowTodayEditor(false);
+          }}
         />
       )}
     </>

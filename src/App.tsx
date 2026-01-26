@@ -37,26 +37,28 @@ interface AppContentProps {
 function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: AppContentProps) {
   const { state, shouldShowPaywall, setStep } = useApp();
   const { user } = useAuth();
-  const { currentStep, isOnboarded } = state;
+  const { currentStep, isOnboarded, entries } = state;
 
-  // Redirect logged-in users to dashboard, logged-out users to welcome
+  // Smart routing based on auth status and history
   useEffect(() => {
-    if (user && isOnboarded && currentStep === 'welcome') {
-      // Logged-in user with history - go to dashboard
+    // Logged-in user: go to dashboard if on welcome
+    if (user && currentStep === 'welcome' && entries.length > 0) {
       setStep('complete');
-    } else if (!user && currentStep === 'complete' && !isOnboarded) {
-      // Logged-out user trying to see complete - go to welcome
+    }
+    // Not logged-in user on complete with no entries: go to welcome
+    else if (!user && currentStep === 'complete' && entries.length === 0) {
       setStep('welcome');
     }
-  }, [user, isOnboarded, currentStep, setStep]);
+  }, [user, currentStep, entries.length, setStep]);
 
-  // Handle logo click - go to home/complete based on state
+  // Handle logo click
   const handleNavigateHome = () => {
-    if (user || isOnboarded) {
-      // Returning user or logged in - go to complete screen
+    if (user && entries.length > 0) {
+      setStep('complete');
+    } else if (!user && entries.length > 0) {
+      // Non-logged-in user with local entries - show limited dashboard
       setStep('complete');
     } else {
-      // New user - go to welcome
       setStep('welcome');
     }
   };

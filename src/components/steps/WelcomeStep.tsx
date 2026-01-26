@@ -1,9 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function WelcomeStep() {
-  const { setStep } = useApp();
+  const { setStep, state } = useApp();
+  const { user } = useAuth();
   const [showInfo, setShowInfo] = useState(false);
+
+  // If user is logged in with entries, redirect to dashboard
+  useEffect(() => {
+    if (user && state.entries.length > 0) {
+      setStep('complete');
+    }
+  }, [user, state.entries.length, setStep]);
 
   const handleOrbClick = () => {
     setShowInfo(true);
