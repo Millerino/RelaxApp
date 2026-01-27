@@ -112,9 +112,10 @@ export function QuickNotes() {
             )}
           </div>
 
-          {/* Today's notes */}
+          {/* Today's notes - fixed height with scroll */}
           {todayNotes.length > 0 && (
-            <div className="space-y-2 pt-3 border-t border-slate-200/60 dark:border-slate-700/50">
+            <div className="pt-3 border-t border-slate-200/60 dark:border-slate-700/50">
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
               {todayNotes.slice().reverse().map((note) => (
                 <div
                   key={note.id}
@@ -182,6 +183,13 @@ export function QuickNotes() {
                   </button>
                 </div>
               ))}
+              </div>
+              {/* Show more indicator */}
+              {todayNotes.length > 3 && (
+                <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2 pt-1 border-t border-slate-200/40 dark:border-slate-700/40">
+                  Scroll to see more thoughts
+                </p>
+              )}
             </div>
           )}
 

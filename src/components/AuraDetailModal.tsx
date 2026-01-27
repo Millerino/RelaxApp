@@ -239,7 +239,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                         {/* Hover tooltip */}
                         {isHovered && (
                           <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10
-                                        bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-44
+                                        bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-52
                                         border border-silver-200 dark:border-silver-700
                                         animate-fade-in">
                             <div className="text-center">
