@@ -260,10 +260,10 @@ export function DayDetailModal({
         </>
       )}
 
-      {/* Modal - wider with more space for content */}
+      {/* Modal - much wider for comfortable editing */}
       <div
-        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-md lg:max-w-lg
-                   animate-slide-up overflow-hidden max-h-[90vh] flex flex-col mx-12 lg:mx-20"
+        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-lg md:max-w-xl lg:max-w-2xl
+                   animate-slide-up overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
