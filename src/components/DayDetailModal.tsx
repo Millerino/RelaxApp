@@ -20,17 +20,13 @@ const EMOTIONS = [
 
 const ACTIVITIES = [
   { emoji: '🏃', label: 'Exercise' },
-  { emoji: '🧘', label: 'Meditate' },
-  { emoji: '📚', label: 'Reading' },
+  { emoji: '🚶', label: 'Walk' },
   { emoji: '👥', label: 'Social' },
-  { emoji: '🎮', label: 'Gaming' },
-  { emoji: '🎵', label: 'Music' },
-  { emoji: '🍳', label: 'Cooking' },
-  { emoji: '🌿', label: 'Nature' },
-  { emoji: '💼', label: 'Work' },
   { emoji: '😴', label: 'Rest' },
+  { emoji: '💼', label: 'Work' },
   { emoji: '🎨', label: 'Creative' },
-  { emoji: '🛒', label: 'Shopping' },
+  { emoji: '🌿', label: 'Nature' },
+  { emoji: '🧘', label: 'Meditate' },
 ];
 
 const DEFAULT_FEELINGS = [
@@ -59,6 +55,54 @@ export function DayDetailModal({
     entry?.feelingLevels || DEFAULT_FEELINGS.map(f => ({ name: f.name, value: 50 }))
   );
   const [hoveredFeeling, setHoveredFeeling] = useState<string | null>(null);
+  const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
+
+  // Handle drag for feeling sliders
+  const handleFeelingDrag = (e: React.MouseEvent | React.TouchEvent, feelingName: string) => {
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const x = clientX - rect.left;
+    const percent = Math.round((x / rect.width) * 100);
+    updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
+  };
+
+  const handleFeelingMouseDown = (e: React.MouseEvent, feelingName: string) => {
+    setDraggingFeeling(feelingName);
+    handleFeelingDrag(e, feelingName);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = moveEvent.clientX - rect.left;
+      const percent = Math.round((x / rect.width) * 100);
+      updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
+    };
+
+    const handleMouseUp = () => {
+      setDraggingFeeling(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleFeelingTouchStart = (e: React.TouchEvent, feelingName: string) => {
+    setDraggingFeeling(feelingName);
+    handleFeelingDrag(e, feelingName);
+  };
+
+  const handleFeelingTouchMove = (e: React.TouchEvent, feelingName: string) => {
+    if (draggingFeeling === feelingName) {
+      handleFeelingDrag(e, feelingName);
+    }
+  };
+
+  const handleFeelingTouchEnd = () => {
+    setDraggingFeeling(null);
+  };
 
   // Filter notes for this day
   const dayNotes = quickNotes.filter(n => n.date === date.toDateString());
@@ -148,9 +192,27 @@ export function DayDetailModal({
   };
 
   const getFeelingColor = (value: number) => {
-    if (value >= 70) return { bg: 'bg-emerald-500', glow: 'shadow-emerald-400/50', text: 'text-emerald-500' };
-    if (value >= 40) return { bg: 'bg-amber-400', glow: 'shadow-amber-400/30', text: 'text-amber-500' };
-    return { bg: 'bg-rose-400', glow: 'shadow-rose-400/30', text: 'text-rose-400' };
+    // High: lightly glowing green - positive reinforcement
+    if (value >= 70) return {
+      bg: 'bg-gradient-to-r from-emerald-400 to-emerald-500',
+      glow: 'shadow-emerald-400/40',
+      text: 'text-emerald-500 dark:text-emerald-400',
+      shimmer: 'from-emerald-300/30 via-emerald-200/50 to-emerald-300/30'
+    };
+    // Mid: neutral muted lavender tone
+    if (value >= 40) return {
+      bg: 'bg-gradient-to-r from-slate-400 to-lavender-400',
+      glow: 'shadow-lavender-400/20',
+      text: 'text-slate-500 dark:text-slate-400',
+      shimmer: 'from-lavender-300/20 via-lavender-200/40 to-lavender-300/20'
+    };
+    // Low: soft desaturated rose - gentle, not punishing
+    return {
+      bg: 'bg-gradient-to-r from-slate-400 to-rose-300',
+      glow: 'shadow-rose-300/20',
+      text: 'text-rose-400 dark:text-rose-300',
+      shimmer: 'from-rose-200/20 via-rose-100/30 to-rose-200/20'
+    };
   };
 
   return (
@@ -308,45 +370,59 @@ export function DayDetailModal({
                   {editFeelings.map((feeling) => {
                     const colors = getFeelingColor(feeling.value);
                     const isHovered = hoveredFeeling === feeling.name;
+                    const isDragging = draggingFeeling === feeling.name;
                     return (
                       <div key={feeling.name} className="relative">
                         <div className="flex justify-between text-xs mb-1.5">
                           <span className="text-silver-600 dark:text-silver-300 font-medium">{feeling.name}</span>
                           <span className={`font-medium transition-colors ${colors.text}`}>
-                            {feeling.value >= 70 ? 'High' : feeling.value >= 40 ? 'Medium' : 'Low'}
+                            {feeling.value >= 70 ? 'High' : feeling.value >= 40 ? 'Neutral' : 'Low'}
                           </span>
                         </div>
                         <div
-                          className="relative h-8 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer group"
+                          className={`relative h-8 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer
+                                    select-none touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                           onMouseEnter={() => setHoveredFeeling(feeling.name)}
-                          onMouseLeave={() => setHoveredFeeling(null)}
-                          onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const percent = Math.round((x / rect.width) * 100);
-                            updateFeeling(feeling.name, Math.max(0, Math.min(100, percent)));
-                          }}
+                          onMouseLeave={() => !isDragging && setHoveredFeeling(null)}
+                          onMouseDown={(e) => handleFeelingMouseDown(e, feeling.name)}
+                          onTouchStart={(e) => handleFeelingTouchStart(e, feeling.name)}
+                          onTouchMove={(e) => handleFeelingTouchMove(e, feeling.name)}
+                          onTouchEnd={handleFeelingTouchEnd}
                         >
                           {/* Fill bar */}
                           <div
-                            className={`absolute inset-y-0 left-0 ${colors.bg} transition-all duration-200 rounded-full
-                                      ${isHovered ? `shadow-lg ${colors.glow}` : ''}`}
+                            className={`absolute inset-y-0 left-0 ${colors.bg} rounded-full
+                                      transition-[width] duration-75 ease-out
+                                      ${(isHovered || isDragging) ? `shadow-lg ${colors.glow}` : ''}`}
                             style={{ width: `${feeling.value}%` }}
                           />
-                          {/* Hover indicator */}
-                          {isHovered && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                          {/* Dopamine shimmer on hover */}
+                          {(isHovered || isDragging) && (
+                            <div
+                              className={`absolute inset-0 bg-gradient-to-r ${colors.shimmer}
+                                        animate-[shimmer_1.5s_ease-in-out_infinite]`}
+                              style={{
+                                backgroundSize: '200% 100%',
+                                animation: 'shimmer 1.5s ease-in-out infinite',
+                              }}
+                            />
                           )}
                           {/* Thumb */}
                           <div
-                            className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-md
-                                      transition-all duration-200 flex items-center justify-center
-                                      ${isHovered ? 'scale-110' : ''}`}
-                            style={{ left: `calc(${feeling.value}% - 12px)` }}
+                            className={`absolute top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white
+                                      shadow-md transition-transform duration-100 flex items-center justify-center
+                                      ${(isHovered || isDragging) ? 'scale-110 shadow-lg' : ''}`}
+                            style={{ left: `calc(${feeling.value}% - 14px)` }}
                           >
-                            <div className={`w-2 h-2 rounded-full ${colors.bg}`} />
+                            <div className={`w-2.5 h-2.5 rounded-full ${colors.bg}`} />
                           </div>
                         </div>
+                        {/* Optional: subtle feedback text */}
+                        {isDragging && (
+                          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-silver-400 dark:text-silver-500">
+                            {feeling.value}%
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -363,10 +439,10 @@ export function DayDetailModal({
                     <button
                       key={activity.label}
                       onClick={() => toggleActivity(activity.label.toLowerCase())}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-200
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-300
                                ${editActivities.includes(activity.label.toLowerCase())
-                                 ? 'bg-lavender-500 text-white shadow-md scale-105'
-                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 hover:scale-105'
+                                 ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300 shadow-sm shadow-lavender-300/30 dark:shadow-lavender-500/20 ring-1 ring-lavender-300 dark:ring-lavender-600'
+                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
                                }`}
                     >
                       <span>{activity.emoji}</span>
@@ -386,9 +462,9 @@ export function DayDetailModal({
                     <button
                       key={emotion}
                       onClick={() => toggleEmotion(emotion.toLowerCase())}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200
+                      className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300
                                ${editEmotions.includes(emotion.toLowerCase())
-                                 ? 'bg-lavender-500 text-white shadow-md'
+                                 ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300 shadow-sm shadow-lavender-300/30 dark:shadow-lavender-500/20 ring-1 ring-lavender-300 dark:ring-lavender-600'
                                  : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
                                }`}
                     >
@@ -548,9 +624,10 @@ export function DayDetailModal({
                   </p>
                   <div className="space-y-2">
                     {dayNotes.map(note => (
-                      <div key={note.id} className="flex items-start gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                        {note.emoji && <span>{note.emoji}</span>}
-                        <p className="text-sm text-amber-900 dark:text-amber-100">{note.text}</p>
+                      <div key={note.id} className="flex items-start gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg
+                                                   border border-slate-200/60 dark:border-slate-700/50">
+                        {note.emoji && <span className="text-base">{note.emoji}</span>}
+                        <p className="text-sm text-slate-700 dark:text-slate-200">{note.text}</p>
                       </div>
                     ))}
                   </div>

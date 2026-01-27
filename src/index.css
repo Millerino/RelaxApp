@@ -95,3 +95,13 @@
 * {
   @apply transition-colors duration-200;
 }
+
+/* Shimmer animation for feeling sliders */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

@@ -80,12 +80,6 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
   const size = currentStage.size * vitality;
   const opacity = 0.4 + vitality * 0.6;
 
-  // Get XP needed for a specific stage
-  const getXPToStage = (stageIndex: number) => {
-    if (stageIndex <= currentStage.index) return 0;
-    return EVOLUTION_STAGES[stageIndex].minXP - xp;
-  };
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate">
       {/* Backdrop */}
@@ -108,7 +102,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
             </svg>
           </button>
           <h3 className="text-xl font-medium text-white">Your Aura</h3>
-          <p className="text-white/80 text-sm">{currentStage.name} • {xp} XP</p>
+          <p className="text-white/80 text-sm">{currentStage.name}</p>
         </div>
 
         <div className="overflow-y-auto flex-1">
@@ -178,15 +172,15 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               </p>
             </div>
 
-            {/* Progress to next stage */}
+            {/* Progress to next stage - subtle, no explicit numbers */}
             {nextStage && (
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-medium text-silver-700 dark:text-silver-200">
-                    Next: {nextStage.name}
+                    Growing toward {nextStage.name}
                   </span>
-                  <span className="text-silver-500 dark:text-silver-400">
-                    {nextStage.minXP - xp} XP to go
+                  <span className="text-silver-500 dark:text-silver-400 text-xs">
+                    {progressToNext < 0.3 ? 'Just beginning' : progressToNext < 0.6 ? 'Making progress' : 'Almost there'}
                   </span>
                 </div>
                 <div className="h-2 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
@@ -201,21 +195,19 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               </div>
             )}
 
-            {/* Stats grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-3 text-center">
-                <p className="text-2xl font-semibold text-silver-800 dark:text-silver-100">{xp}</p>
-                <p className="text-xs text-silver-500 dark:text-silver-400">Total XP</p>
-              </div>
+            {/* Stats grid - softer language */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-3 text-center">
                 <p className="text-2xl font-semibold text-silver-800 dark:text-silver-100">{entries.length}</p>
-                <p className="text-xs text-silver-500 dark:text-silver-400">Entries</p>
+                <p className="text-xs text-silver-500 dark:text-silver-400">
+                  {entries.length === 1 ? 'Reflection' : 'Reflections'}
+                </p>
               </div>
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-3 text-center">
                 <p className="text-2xl font-semibold text-silver-800 dark:text-silver-100">
-                  {Math.round(vitality * 100)}%
+                  {vitality >= 0.9 ? 'Vibrant' : vitality >= 0.7 ? 'Steady' : vitality >= 0.4 ? 'Resting' : 'Quiet'}
                 </p>
-                <p className="text-xs text-silver-500 dark:text-silver-400">Vitality</p>
+                <p className="text-xs text-silver-500 dark:text-silver-400">Presence</p>
               </div>
             </div>
 
@@ -236,7 +228,6 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                     const isReached = index <= currentStage.index;
                     const isCurrent = index === currentStage.index;
                     const isHovered = hoveredStage === index;
-                    const xpNeeded = getXPToStage(index);
 
                     return (
                       <div
@@ -280,18 +271,18 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                                 {stage.description}
                               </p>
                               {!isReached && (
-                                <p className="text-xs font-medium text-lavender-500 mt-2">
-                                  {xpNeeded} XP to unlock
+                                <p className="text-xs text-silver-400 dark:text-silver-500 mt-2 italic">
+                                  Still ahead on your journey
                                 </p>
                               )}
                               {isReached && !isCurrent && (
-                                <p className="text-xs text-emerald-500 mt-2">
-                                  Achieved
+                                <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-2">
+                                  You've been here
                                 </p>
                               )}
                               {isCurrent && (
-                                <p className="text-xs text-lavender-500 mt-2">
-                                  Current level
+                                <p className="text-xs text-lavender-500 dark:text-lavender-400 mt-2">
+                                  Where you are now
                                 </p>
                               )}
                             </div>
@@ -362,11 +353,11 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                                 style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
                               />
                             )}
-                            {/* XP label for locked stages */}
+                            {/* Subtle indicator for locked stages - no explicit numbers */}
                             {!isReached && (
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <span className="text-[8px] text-silver-400 dark:text-silver-500">
-                                  {stage.minXP}
+                                  ···
                                 </span>
                               </div>
                             )}
@@ -389,18 +380,30 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               </div>
             </div>
 
-            {/* Tips to level up */}
+            {/* Tips to nurture your aura - softer language */}
             {nextStage && (
               <div className="bg-gradient-to-br from-lavender-50 to-lavender-100/50 dark:from-lavender-900/20 dark:to-lavender-800/20
                             rounded-xl p-4 border border-lavender-200/50 dark:border-lavender-700/30">
                 <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2">
-                  How to grow your aura
+                  Ways to nurture your aura
                 </h4>
-                <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1">
-                  <li>• Log daily for +10 XP base</li>
-                  <li>• Add 3+ emotions for +5 XP</li>
-                  <li>• Write longer reflections for +5 XP</li>
-                  <li>• Maintain streaks for bonus XP</li>
+                <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1.5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-lavender-400">·</span>
+                    <span>Show up and reflect, even briefly</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-lavender-400">·</span>
+                    <span>Name what you're feeling</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-lavender-400">·</span>
+                    <span>Write about what matters to you</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-lavender-400">·</span>
+                    <span>Return when you can — your aura remembers</span>
+                  </li>
                 </ul>
               </div>
             )}
