@@ -260,9 +260,11 @@ export function DayDetailModal({
         </>
       )}
 
-      {/* Modal - very wide for comfortable editing */}
+      {/* Modal - extra wide for comfortable editing (min 600px on desktop) */}
       <div
-        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-2xl lg:max-w-3xl
+        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl
+                   w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[800px] xl:w-[900px]
+                   max-w-[900px]
                    animate-slide-up overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -326,21 +328,21 @@ export function DayDetailModal({
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        {/* Content - generous padding for comfortable editing */}
+        <div className="p-6 md:p-8 lg:p-10 overflow-y-auto flex-1">
           {isEditing ? (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Mood selector */}
               <div>
                 <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
                   How were you feeling?
                 </label>
-                <div className="flex justify-between gap-2">
+                <div className="flex justify-center gap-3 md:gap-4">
                   {[1, 2, 3, 4, 5].map((mood) => (
                     <button
                       key={mood}
                       onClick={() => setEditMood(mood as MoodLevel)}
-                      className={`flex-1 aspect-square max-w-[56px] rounded-xl flex items-center justify-center text-lg font-bold
+                      className={`w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-lg md:text-xl font-bold
                                transition-all duration-200 ${editMood === mood
                                  ? `${getMoodBgColor(mood)} text-white scale-105 shadow-lg ring-2 ring-offset-2 ring-offset-white dark:ring-offset-silver-900 ${getMoodRingColor(mood)}`
                                  : 'bg-gradient-to-br from-slate-100 to-cyan-50 dark:from-slate-800 dark:to-cyan-900/30 text-slate-500 dark:text-slate-400 hover:scale-105 hover:from-cyan-100 hover:to-sky-100 dark:hover:from-cyan-900/40 dark:hover:to-sky-900/40 border border-cyan-200/50 dark:border-cyan-700/30'
