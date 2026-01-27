@@ -8,13 +8,13 @@ interface AuraDetailModalProps {
 }
 
 const EVOLUTION_STAGES = [
-  { name: 'Spark', minXP: 0, size: 60, rings: 1, glow: 'low', description: 'The beginning of your journey', emoji: '✨', color: '#94a3b8' },
-  { name: 'Ember', minXP: 50, size: 70, rings: 2, glow: 'low', description: 'Your aura is taking shape', emoji: '🔥', color: '#f97316' },
-  { name: 'Flame', minXP: 150, size: 80, rings: 2, glow: 'medium', description: 'Growing stronger each day', emoji: '💫', color: '#eab308' },
-  { name: 'Blaze', minXP: 300, size: 90, rings: 3, glow: 'medium', description: 'A powerful presence', emoji: '⚡', color: '#f59e0b' },
-  { name: 'Radiance', minXP: 500, size: 100, rings: 3, glow: 'high', description: 'Shining bright', emoji: '🌟', color: '#a78bfa' },
-  { name: 'Aurora', minXP: 800, size: 110, rings: 4, glow: 'high', description: 'A magnificent display', emoji: '🌈', color: '#8b5cf6' },
-  { name: 'Celestial', minXP: 1200, size: 120, rings: 4, glow: 'max', description: 'The pinnacle of wellness', emoji: '👑', color: '#6366f1' },
+  { name: 'Spark', minXP: 0, size: 60, rings: 1, glow: 'low', description: 'The beginning of your journey', colors: ['#cbd5e1', '#94a3b8', '#64748b'], orbSize: 16, glowIntensity: 0.2 },
+  { name: 'Ember', minXP: 50, size: 70, rings: 2, glow: 'low', description: 'Your aura is taking shape', colors: ['#fcd34d', '#f97316', '#ea580c'], orbSize: 18, glowIntensity: 0.3 },
+  { name: 'Flame', minXP: 150, size: 80, rings: 2, glow: 'medium', description: 'Growing stronger each day', colors: ['#fde047', '#eab308', '#ca8a04'], orbSize: 20, glowIntensity: 0.4 },
+  { name: 'Blaze', minXP: 300, size: 90, rings: 3, glow: 'medium', description: 'A powerful presence', colors: ['#fbbf24', '#f59e0b', '#d97706'], orbSize: 22, glowIntensity: 0.5 },
+  { name: 'Radiance', minXP: 500, size: 100, rings: 3, glow: 'high', description: 'Shining bright', colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'], orbSize: 24, glowIntensity: 0.6 },
+  { name: 'Aurora', minXP: 800, size: 110, rings: 4, glow: 'high', description: 'A magnificent display', colors: ['#a5b4fc', '#818cf8', '#6366f1'], orbSize: 26, glowIntensity: 0.75 },
+  { name: 'Celestial', minXP: 1200, size: 120, rings: 4, glow: 'max', description: 'The pinnacle of wellness', colors: ['#e9d5ff', '#c084fc', '#a855f7'], orbSize: 30, glowIntensity: 1 },
 ];
 
 export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) {
@@ -224,9 +224,9 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Evolution Journey</h4>
               <div className="relative">
                 {/* Connection line */}
-                <div className="absolute top-4 left-4 right-4 h-0.5 bg-silver-200 dark:bg-silver-700" />
+                <div className="absolute top-5 left-4 right-4 h-0.5 bg-silver-200 dark:bg-silver-700" />
                 <div
-                  className="absolute top-4 left-4 h-0.5 bg-gradient-to-r from-lavender-400 to-lavender-500 transition-all duration-500"
+                  className="absolute top-5 left-4 h-0.5 bg-gradient-to-r from-lavender-400 to-lavender-500 transition-all duration-500"
                   style={{ width: `${(currentStage.index / (EVOLUTION_STAGES.length - 1)) * 100}%` }}
                 />
 
@@ -247,13 +247,33 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                       >
                         {/* Hover tooltip */}
                         {isHovered && (
-                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-10
-                                        bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-40
+                          <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10
+                                        bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-44
                                         border border-silver-200 dark:border-silver-700
                                         animate-fade-in">
                             <div className="text-center">
-                              <span className="text-2xl">{stage.emoji}</span>
-                              <p className="text-sm font-medium text-silver-800 dark:text-silver-100 mt-1">
+                              {/* Mini aura orb in tooltip */}
+                              <div className="flex justify-center mb-2">
+                                <div
+                                  className="relative rounded-full"
+                                  style={{
+                                    width: stage.orbSize * 1.5,
+                                    height: stage.orbSize * 1.5,
+                                    background: `radial-gradient(circle at 30% 30%, ${stage.colors[0]}, ${stage.colors[1]}, ${stage.colors[2]})`,
+                                    boxShadow: `
+                                      0 0 ${8 * stage.glowIntensity}px ${stage.colors[0]}80,
+                                      0 0 ${16 * stage.glowIntensity}px ${stage.colors[1]}60,
+                                      0 0 ${24 * stage.glowIntensity}px ${stage.colors[2]}40
+                                    `,
+                                  }}
+                                >
+                                  <div
+                                    className="absolute inset-[15%] rounded-full"
+                                    style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.5), transparent 60%)' }}
+                                  />
+                                </div>
+                              </div>
+                              <p className="text-sm font-medium text-silver-800 dark:text-silver-100">
                                 {stage.name}
                               </p>
                               <p className="text-xs text-silver-500 dark:text-silver-400 mt-0.5">
@@ -266,7 +286,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                               )}
                               {isReached && !isCurrent && (
                                 <p className="text-xs text-emerald-500 mt-2">
-                                  Achieved!
+                                  Achieved
                                 </p>
                               )}
                               {isCurrent && (
@@ -282,40 +302,79 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                           </div>
                         )}
 
-                        {/* Stage circle */}
+                        {/* Mini Aura Orb */}
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
+                          className={`relative flex items-center justify-center
                                     transition-all duration-300 cursor-pointer
-                                    ${isCurrent
-                                      ? 'ring-2 ring-lavender-400 ring-offset-2 ring-offset-white dark:ring-offset-silver-900 scale-110'
-                                      : isHovered ? 'scale-110' : ''
-                                    }
-                                    ${isReached
-                                      ? 'shadow-lg'
-                                      : 'border-2 border-dashed border-silver-300 dark:border-silver-600'
-                                    }`}
-                          style={{
-                            background: isReached
-                              ? `linear-gradient(135deg, ${stage.color}dd, ${stage.color})`
-                              : 'transparent',
-                            boxShadow: isReached && isHovered
-                              ? `0 0 20px ${stage.color}60`
-                              : isReached
-                              ? `0 0 10px ${stage.color}40`
-                              : 'none',
-                          }}
+                                    ${isCurrent ? 'scale-125' : isHovered ? 'scale-115' : ''}`}
+                          style={{ width: 40, height: 40 }}
                         >
-                          {isReached ? (
-                            <span className="text-white text-xs">{stage.emoji}</span>
-                          ) : (
-                            <span className="text-silver-400 dark:text-silver-500 text-[10px]">
-                              {stage.minXP}
-                            </span>
+                          {/* Outer glow ring for reached stages */}
+                          {isReached && stage.glowIntensity >= 0.4 && (
+                            <div
+                              className={`absolute rounded-full ${isHovered || isCurrent ? 'animate-pulse' : ''}`}
+                              style={{
+                                width: stage.orbSize * 1.8,
+                                height: stage.orbSize * 1.8,
+                                background: `radial-gradient(circle, ${stage.colors[0]}30, transparent 70%)`,
+                                animationDuration: '2s',
+                              }}
+                            />
                           )}
+                          {/* Second glow ring for high-level stages */}
+                          {isReached && stage.glowIntensity >= 0.6 && (
+                            <div
+                              className={`absolute rounded-full ${isHovered || isCurrent ? 'animate-pulse' : ''}`}
+                              style={{
+                                width: stage.orbSize * 1.4,
+                                height: stage.orbSize * 1.4,
+                                background: `radial-gradient(circle, ${stage.colors[1]}40, transparent 70%)`,
+                                animationDuration: '1.5s',
+                              }}
+                            />
+                          )}
+                          {/* The orb itself */}
+                          <div
+                            className={`relative rounded-full transition-all duration-500
+                                      ${isCurrent ? 'ring-2 ring-white/60 dark:ring-white/40' : ''}`}
+                            style={{
+                              width: isReached ? stage.orbSize : 14,
+                              height: isReached ? stage.orbSize : 14,
+                              background: isReached
+                                ? `radial-gradient(circle at 30% 30%, ${stage.colors[0]}, ${stage.colors[1]}, ${stage.colors[2]})`
+                                : 'transparent',
+                              border: !isReached ? '2px dashed rgba(148, 163, 184, 0.5)' : 'none',
+                              boxShadow: isReached
+                                ? `
+                                    0 0 ${6 * stage.glowIntensity * (isHovered ? 2 : 1)}px ${stage.colors[0]}80,
+                                    0 0 ${12 * stage.glowIntensity * (isHovered ? 2 : 1)}px ${stage.colors[1]}60,
+                                    0 0 ${18 * stage.glowIntensity * (isHovered ? 2 : 1)}px ${stage.colors[2]}40,
+                                    inset 0 0 ${4 * stage.glowIntensity}px rgba(255,255,255,0.3)
+                                  `
+                                : 'none',
+                              transform: isHovered && isReached ? 'scale(1.15)' : 'scale(1)',
+                            }}
+                          >
+                            {/* Inner highlight */}
+                            {isReached && (
+                              <div
+                                className="absolute inset-[15%] rounded-full"
+                                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
+                              />
+                            )}
+                            {/* XP label for locked stages */}
+                            {!isReached && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-[8px] text-silver-400 dark:text-silver-500">
+                                  {stage.minXP}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Stage name */}
-                        <span className={`text-[10px] mt-1.5 text-center transition-colors
+                        <span className={`text-[10px] mt-1 text-center transition-colors
                                        ${isReached
                                          ? 'text-silver-700 dark:text-silver-200 font-medium'
                                          : 'text-silver-400 dark:text-silver-500'
@@ -334,8 +393,8 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
             {nextStage && (
               <div className="bg-gradient-to-br from-lavender-50 to-lavender-100/50 dark:from-lavender-900/20 dark:to-lavender-800/20
                             rounded-xl p-4 border border-lavender-200/50 dark:border-lavender-700/30">
-                <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2 flex items-center gap-2">
-                  <span>💡</span> Level up faster
+                <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2">
+                  How to grow your aura
                 </h4>
                 <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1">
                   <li>• Log daily for +10 XP base</li>
