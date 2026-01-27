@@ -437,20 +437,28 @@ export function DayDetailModal({
                   What did you do today?
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {ACTIVITIES.map(activity => (
-                    <button
-                      key={activity.label}
-                      onClick={() => toggleActivity(activity.label.toLowerCase())}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-300
-                               ${editActivities.includes(activity.label.toLowerCase())
-                                 ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300 shadow-sm shadow-lavender-300/30 dark:shadow-lavender-500/20 ring-1 ring-lavender-300 dark:ring-lavender-600'
-                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
-                               }`}
-                    >
-                      <span>{activity.emoji}</span>
-                      <span>{activity.label}</span>
-                    </button>
-                  ))}
+                  {ACTIVITIES.map(activity => {
+                    const isSelected = editActivities.includes(activity.label.toLowerCase());
+                    return (
+                      <button
+                        key={activity.label}
+                        onClick={() => toggleActivity(activity.label.toLowerCase())}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                                 ${isSelected
+                                   ? 'bg-lavender-500 dark:bg-lavender-600 text-white shadow-md shadow-lavender-500/30 dark:shadow-lavender-600/30 ring-2 ring-lavender-400 dark:ring-lavender-500'
+                                   : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 border border-silver-200 dark:border-silver-700'
+                                 }`}
+                      >
+                        {isSelected && (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        <span>{activity.emoji}</span>
+                        <span>{activity.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -460,19 +468,27 @@ export function DayDetailModal({
                   What emotions did you feel?
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {EMOTIONS.map(emotion => (
-                    <button
-                      key={emotion}
-                      onClick={() => toggleEmotion(emotion.toLowerCase())}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300
-                               ${editEmotions.includes(emotion.toLowerCase())
-                                 ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300 shadow-sm shadow-lavender-300/30 dark:shadow-lavender-500/20 ring-1 ring-lavender-300 dark:ring-lavender-600'
-                                 : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
-                               }`}
-                    >
-                      {emotion}
-                    </button>
-                  ))}
+                  {EMOTIONS.map(emotion => {
+                    const isSelected = editEmotions.includes(emotion.toLowerCase());
+                    return (
+                      <button
+                        key={emotion}
+                        onClick={() => toggleEmotion(emotion.toLowerCase())}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                                 ${isSelected
+                                   ? 'bg-lavender-500 dark:bg-lavender-600 text-white shadow-md shadow-lavender-500/30 dark:shadow-lavender-600/30 ring-2 ring-lavender-400 dark:ring-lavender-500'
+                                   : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 border border-silver-200 dark:border-silver-700'
+                                 }`}
+                      >
+                        {isSelected && (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        {emotion}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -618,13 +634,13 @@ export function DayDetailModal({
                 </div>
               )}
 
-              {/* Quick Notes for this day */}
+              {/* Quick Notes for this day - fixed height with scroll */}
               {dayNotes.length > 0 && (
                 <div>
                   <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
-                    Quick Notes
+                    Quick Notes ({dayNotes.length})
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                     {dayNotes.map(note => (
                       <div key={note.id} className="flex items-start gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg
                                                    border border-slate-200/60 dark:border-slate-700/50">

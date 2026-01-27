@@ -214,12 +214,12 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
             {/* Evolution stages - Interactive */}
             <div>
               <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-4">Evolution Journey</h4>
-              <div className="relative">
+              <div className="relative px-2">
                 {/* Connection line */}
-                <div className="absolute top-5 left-4 right-4 h-0.5 bg-silver-200 dark:bg-silver-700" />
+                <div className="absolute top-5 left-6 right-6 h-0.5 bg-silver-200 dark:bg-silver-700" />
                 <div
-                  className="absolute top-5 left-4 h-0.5 bg-gradient-to-r from-lavender-400 to-lavender-500 transition-all duration-500"
-                  style={{ width: `${(currentStage.index / (EVOLUTION_STAGES.length - 1)) * 100}%` }}
+                  className="absolute top-5 left-6 h-0.5 bg-gradient-to-r from-lavender-400 to-lavender-500 transition-all duration-500"
+                  style={{ width: `calc(${(currentStage.index / (EVOLUTION_STAGES.length - 1)) * 100}% - 8px)` }}
                 />
 
                 {/* Stages */}
@@ -228,6 +228,15 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                     const isReached = index <= currentStage.index;
                     const isCurrent = index === currentStage.index;
                     const isHovered = hoveredStage === index;
+                    const isFirst = index === 0;
+                    const isLast = index === EVOLUTION_STAGES.length - 1;
+
+                    // Position tooltip: left-align for first, right-align for last, center for others
+                    const tooltipPosition = isFirst
+                      ? 'left-0'
+                      : isLast
+                      ? 'right-0'
+                      : 'left-1/2 -translate-x-1/2';
 
                     return (
                       <div
@@ -238,10 +247,10 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                       >
                         {/* Hover tooltip */}
                         {isHovered && (
-                          <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10
+                          <div className={`absolute bottom-full mb-3 ${tooltipPosition} z-10
                                         bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-52
                                         border border-silver-200 dark:border-silver-700
-                                        animate-fade-in">
+                                        animate-fade-in`}>
                             <div className="text-center">
                               {/* Mini aura orb in tooltip */}
                               <div className="flex justify-center mb-2">
@@ -286,10 +295,11 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                                 </p>
                               )}
                             </div>
-                            {/* Tooltip arrow */}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2
+                            {/* Tooltip arrow - positioned based on tooltip alignment */}
+                            <div className={`absolute -bottom-1 w-2 h-2
                                           bg-white dark:bg-silver-800 rotate-45
-                                          border-r border-b border-silver-200 dark:border-silver-700" />
+                                          border-r border-b border-silver-200 dark:border-silver-700
+                                          ${isFirst ? 'left-4' : isLast ? 'right-4' : 'left-1/2 -translate-x-1/2'}`} />
                           </div>
                         )}
 
