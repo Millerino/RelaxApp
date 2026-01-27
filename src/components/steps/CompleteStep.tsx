@@ -11,6 +11,7 @@ import { BreathingExercise } from '../BreathingExercise';
 import { AuthModal } from '../AuthModal';
 import { DayDetailModal } from '../DayDetailModal';
 import { QuickNotes } from '../QuickNotes';
+import { PatternInsight } from '../PatternInsight';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -277,6 +278,11 @@ export function CompleteStep() {
                   {/* Quick Notes */}
                   <QuickNotes />
 
+                  {/* Pattern Insight - occasional, language only */}
+                  {state.entries.length >= 5 && (
+                    <PatternInsight entries={state.entries} />
+                  )}
+
                   {/* Statistics */}
                   {state.entries.length >= 3 && (
                     <StatsCard entries={state.entries} />
@@ -430,13 +436,13 @@ interface MiniAuraOrbProps {
 
 function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   const EVOLUTION_STAGES = [
-    { name: 'Spark', minXP: 0, emoji: '✨' },
-    { name: 'Ember', minXP: 50, emoji: '🔥' },
-    { name: 'Flame', minXP: 150, emoji: '💫' },
-    { name: 'Blaze', minXP: 300, emoji: '⚡' },
-    { name: 'Radiance', minXP: 500, emoji: '🌟' },
-    { name: 'Aurora', minXP: 800, emoji: '🌈' },
-    { name: 'Celestial', minXP: 1200, emoji: '👑' },
+    { name: 'Spark', minXP: 0, colors: ['#cbd5e1', '#94a3b8', '#64748b'] },
+    { name: 'Ember', minXP: 50, colors: ['#fcd34d', '#f97316', '#ea580c'] },
+    { name: 'Flame', minXP: 150, colors: ['#fde047', '#eab308', '#ca8a04'] },
+    { name: 'Blaze', minXP: 300, colors: ['#fbbf24', '#f59e0b', '#d97706'] },
+    { name: 'Radiance', minXP: 500, colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'] },
+    { name: 'Aurora', minXP: 800, colors: ['#a5b4fc', '#818cf8', '#6366f1'] },
+    { name: 'Celestial', minXP: 1200, colors: ['#e9d5ff', '#c084fc', '#a855f7'] },
   ];
 
   // Calculate vitality based on days since last entry
@@ -482,8 +488,6 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
     ? (xp - currentStage.minXP) / (nextStage.minXP - currentStage.minXP)
     : 1;
 
-  const xpToNext = nextStage ? nextStage.minXP - xp : 0;
-
   // Get color based on average recent mood
   const recentMoods = entries.slice(-7).map(e => e.mood);
   const avgMood = recentMoods.length > 0
@@ -514,43 +518,41 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
                      group-hover:-translate-y-[calc(100%+8px)]">
         <div className="bg-white dark:bg-silver-800 rounded-xl shadow-xl p-3 w-48
                        border border-silver-200 dark:border-silver-700">
-          {/* Stage progression dots */}
+          {/* Stage progression - mini orbs instead of emojis */}
           <div className="flex justify-between items-center mb-3 px-1">
             {EVOLUTION_STAGES.map((stage, i) => (
               <div
                 key={stage.name}
-                className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px]
-                          transition-all duration-300 ${
-                  i < stageIndex
-                    ? 'bg-lavender-500 text-white'
-                    : i === stageIndex
-                    ? 'ring-2 ring-lavender-400 ring-offset-1 ring-offset-white dark:ring-offset-silver-800'
-                    : 'bg-silver-200 dark:bg-silver-700'
+                className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                  i === stageIndex ? 'ring-2 ring-lavender-400 ring-offset-1 ring-offset-white dark:ring-offset-silver-800 scale-110' : ''
                 }`}
-                style={i === stageIndex ? {
-                  background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`,
-                } : {}}
+                style={{
+                  background: i <= stageIndex
+                    ? `radial-gradient(circle at 30% 30%, ${stage.colors[0]}, ${stage.colors[1]})`
+                    : 'transparent',
+                  border: i > stageIndex ? '1px dashed rgba(148, 163, 184, 0.5)' : 'none',
+                  boxShadow: i <= stageIndex ? `0 0 4px ${stage.colors[0]}60` : 'none',
+                }}
                 title={stage.name}
-              >
-                {i <= stageIndex && <span>{stage.emoji}</span>}
-              </div>
+              />
             ))}
           </div>
 
           {/* Current stage info */}
           <div className="text-center mb-2">
-            <span className="text-lg">{currentStage.emoji}</span>
             <p className="text-sm font-medium text-silver-800 dark:text-silver-100">
               {currentStage.name}
             </p>
+            <p className="text-xs text-silver-500 dark:text-silver-400">
+              {vitalityLabel}
+            </p>
           </div>
 
-          {/* Progress to next */}
+          {/* Progress to next - softer language */}
           {nextStage && (
             <div className="mb-2">
               <div className="flex justify-between text-[10px] text-silver-500 dark:text-silver-400 mb-1">
-                <span>Next: {nextStage.name}</span>
-                <span>{xpToNext} XP to go</span>
+                <span>Growing toward {nextStage.name}</span>
               </div>
               <div className="h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
                 <div
@@ -564,16 +566,10 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
             </div>
           )}
 
-          {/* Vitality indicator */}
-          <div className="flex items-center justify-between text-[10px] pt-1 border-t border-silver-100 dark:border-silver-700">
-            <span className="text-silver-500 dark:text-silver-400">Vitality</span>
-            <span className={`font-medium ${
-              vitality >= 0.7 ? 'text-emerald-500' :
-              vitality >= 0.4 ? 'text-amber-500' : 'text-red-400'
-            }`}>
-              {vitalityLabel} ({Math.round(vitality * 100)}%)
-            </span>
-          </div>
+          {/* Tap to explore */}
+          <p className="text-[10px] text-center text-lavender-500 dark:text-lavender-400 pt-1 border-t border-silver-100 dark:border-silver-700">
+            Tap to explore your journey
+          </p>
 
           {/* Arrow pointing down */}
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3
@@ -634,27 +630,22 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
         </div>
       </div>
 
-      {/* Label and XP bar below orb */}
+      {/* Label below orb - no explicit XP */}
       <div className="flex flex-col items-center gap-1">
         <span className="text-xs font-medium text-silver-600 dark:text-silver-300 group-hover:text-lavender-500 transition-colors">
           {currentStage.name}
         </span>
 
-        {/* XP Progress bar */}
-        <div className="flex items-center gap-2">
-          <div className="w-20 h-1.5 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden
-                        group-hover:h-2 transition-all">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${progressToNext * 100}%`,
-                background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]})`,
-              }}
-            />
-          </div>
-          <span className="text-[10px] text-silver-400 dark:text-silver-500 group-hover:text-silver-600 dark:group-hover:text-silver-300 transition-colors">
-            {xp} XP
-          </span>
+        {/* Subtle progress indicator - no numbers */}
+        <div className="w-16 h-1 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden
+                      group-hover:h-1.5 transition-all">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${progressToNext * 100}%`,
+              background: `linear-gradient(90deg, ${colors[0]}, ${colors[1]})`,
+            }}
+          />
         </div>
       </div>
     </button>
