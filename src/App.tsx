@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -14,7 +14,6 @@ import { CookieConsent } from './components/CookieConsent';
 import { ProgressIndicator } from './components/ProgressIndicator';
 import { AuthModal } from './components/AuthModal';
 import { ProfileSetup } from './components/ProfileSetup';
-import { AIChat } from './components/AIChat';
 import { AuthCallback } from './components/AuthCallback';
 import {
   WelcomeStep,
@@ -37,15 +36,29 @@ interface AppContentProps {
 
 function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: AppContentProps) {
   const { state, shouldShowPaywall, setStep } = useApp();
-  const { currentStep, isOnboarded } = state;
+  const { user } = useAuth();
+  const { currentStep, isOnboarded, entries } = state;
 
-  // Handle logo click - go to home/complete based on state
+  // Smart routing based on auth status and history
+  useEffect(() => {
+    // Logged-in user: go to dashboard if on welcome
+    if (user && currentStep === 'welcome' && entries.length > 0) {
+      setStep('complete');
+    }
+    // Not logged-in user on complete with no entries: go to welcome
+    else if (!user && currentStep === 'complete' && entries.length === 0) {
+      setStep('welcome');
+    }
+  }, [user, currentStep, entries.length, setStep]);
+
+  // Handle logo click
   const handleNavigateHome = () => {
-    if (isOnboarded) {
-      // Returning user - go to complete screen
+    if (user && entries.length > 0) {
+      setStep('complete');
+    } else if (!user && entries.length > 0) {
+      // Non-logged-in user with local entries - show limited dashboard
       setStep('complete');
     } else {
-      // New user - go to welcome
       setStep('welcome');
     }
   };
@@ -112,26 +125,30 @@ function AppShell() {
   const [showLegal, setShowLegal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
   const [isAuthCallback, setIsAuthCallback] = useState(
     window.location.pathname === '/auth/callback'
   );
 
   const handleAuthComplete = useCallback(() => {
     setIsAuthCallback(false);
-    // Navigate to complete step if user is onboarded, otherwise welcome
-    if (state.isOnboarded) {
-      setStep('complete');
-    }
-  }, [state.isOnboarded, setStep]);
+    // Always navigate to complete step for authenticated users
+    setStep('complete');
+  }, [setStep]);
 
   const handleLoginFromPricing = () => {
     setShowPricing(false);
     setShowAuthModal(true);
   };
 
-  // Check if we should prompt for profile setup (logged in but no profile)
-  const shouldShowProfilePrompt = user && !state.profile && state.isOnboarded;
+  // Auto-create minimal profile for logged-in users without one (no modal needed)
+  useEffect(() => {
+    if (user && !state.profile) {
+      setProfile({
+        name: user.email?.split('@')[0] || 'Friend',
+        createdAt: Date.now(),
+      });
+    }
+  }, [user, state.profile, setProfile]);
 
   // Handle auth callback route
   if (isAuthCallback) {
@@ -159,23 +176,6 @@ function AppShell() {
         />
       </main>
 
-      {/* AI Chat floating button - only show when user has entries */}
-      {state.entries.length > 0 && (
-        <button
-          onClick={() => setShowAIChat(true)}
-          className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full
-                   bg-gradient-to-br from-lavender-400 to-lavender-500
-                   shadow-lg shadow-lavender-500/30 hover:shadow-xl hover:shadow-lavender-500/40
-                   flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-          aria-label="Open AI Chat"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-      )}
-
       {/* Modals */}
       {showPricing && (
         <Pricing
@@ -190,39 +190,21 @@ function AppShell() {
         <AuthModal
           onClose={() => {
             setShowAuthModal(false);
-            // Show profile setup after successful auth if needed
-            if (user && !state.profile) {
-              setShowProfileSetup(true);
-            }
+            // Go to dashboard after login
+            setStep('complete');
           }}
         />
       )}
 
-      {/* Profile Setup Modal */}
-      {(showProfileSetup || shouldShowProfilePrompt) && (
+      {/* Profile Setup Modal - only shown when explicitly triggered */}
+      {showProfileSetup && (
         <ProfileSetup
           onComplete={(profile) => {
             setProfile(profile);
             setShowProfileSetup(false);
           }}
-          onSkip={() => {
-            // Set a minimal profile to stop prompting
-            setProfile({
-              name: user?.email?.split('@')[0] || 'Friend',
-              createdAt: Date.now(),
-            });
-            setShowProfileSetup(false);
-          }}
+          onSkip={() => setShowProfileSetup(false)}
           initialProfile={state.profile}
-        />
-      )}
-
-      {/* AI Chat Modal */}
-      {showAIChat && (
-        <AIChat
-          entries={state.entries}
-          userName={state.profile?.name}
-          onClose={() => setShowAIChat(false)}
         />
       )}
 

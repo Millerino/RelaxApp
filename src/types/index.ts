@@ -7,9 +7,17 @@ export interface DayEntry {
   gratitude: string;
   goals: Goal[];
   createdAt: number;
+  activities?: string[];
+  quickNotes?: QuickNote[];
+  feelingLevels?: FeelingLevel[];
 }
 
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
+
+export interface FeelingLevel {
+  name: string;
+  value: number; // 0-100
+}
 
 export interface Goal {
   id: string;
@@ -26,6 +34,7 @@ export interface UserProfile {
   wellnessGoals?: WellnessGoal[];
   notificationPreferences?: NotificationPreferences;
   createdAt: number;
+  trackedFeelings?: string[];
 }
 
 export type WellnessGoal =
@@ -44,6 +53,14 @@ export interface NotificationPreferences {
   weeklyInsights: boolean;
 }
 
+export interface QuickNote {
+  id: string;
+  text: string;
+  emoji?: string;
+  date: string;
+  createdAt: number;
+}
+
 export interface UserState {
   isOnboarded: boolean;
   isLoggedIn: boolean;
@@ -54,6 +71,7 @@ export interface UserState {
   email?: string;
   profile?: UserProfile;
   xp: number;
+  quickNotes?: QuickNote[];
 }
 
 export type OnboardingStep =

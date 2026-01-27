@@ -43,6 +43,8 @@ export function Header({ onNavigateHome }: HeaderProps) {
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+    // Reset to welcome page on logout
+    setStep('welcome');
   };
 
   const handleManageSubscription = () => {
@@ -213,7 +215,11 @@ export function Header({ onNavigateHome }: HeaderProps) {
       {/* Auth Modal */}
       {showAuthModal && (
         <AuthModal
-          onClose={() => setShowAuthModal(false)}
+          onClose={() => {
+            setShowAuthModal(false);
+            // After login, redirect to dashboard
+            setStep('complete');
+          }}
           initialMode={authMode}
         />
       )}
