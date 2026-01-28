@@ -310,7 +310,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                 title="Click to change avatar"
               >
                 {selectedAvatar
-                  ? <span className="text-4xl leading-none">{ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.emoji}</span>
+                  ? <span className="text-[2.5rem] leading-none">{ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.emoji}</span>
                   : <span className="text-white text-2xl font-medium">{name.charAt(0).toUpperCase() || '?'}</span>
                 }
               </button>
@@ -350,7 +350,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                         type="button"
                         onClick={() => { setSelectedAvatar(animal.id); setShowAvatarPicker(false); }}
                         className={`w-12 h-12 rounded-full bg-gradient-to-br ${animal.bg}
-                                  flex items-center justify-center text-2xl
+                                  flex items-center justify-center text-[1.75rem]
                                   ${selectedAvatar === animal.id ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
                                   transition-all`}
                         title={animal.label}

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
+import { useAuth } from './AuthContext';
 
 interface AppContextType {
   state: UserState;
@@ -54,10 +55,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<UserState>(getInitialState);
   const [currentEntry, setCurrentEntry] = useState<Partial<DayEntry>>({});
 
+  // Get premium status from AuthContext (Supabase)
+  const { isPremium: authIsPremium } = useAuth();
+
   // Persist state to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
+
+  // Sync premium status from Supabase to local state
+  useEffect(() => {
+    if (authIsPremium && !state.isPremium) {
+      setState(prev => ({ ...prev, isPremium: true }));
+    }
+  }, [authIsPremium, state.isPremium]);
 
   // Check if today's entry already exists
   useEffect(() => {
@@ -68,7 +79,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium && !state.isLoggedIn;
+  // Check premium from both local state AND Supabase
+  const isPremiumActive = state.isPremium || authIsPremium;
+  const shouldShowPaywall = state.daysUsed >= 3 && !isPremiumActive && !state.isLoggedIn;
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));

@@ -123,7 +123,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
                                   : 'bg-lavender-200 dark:bg-lavender-800'
                                 }`}>
                     {avatarData ? (
-                      <span className="text-base leading-none">{avatarData.emoji}</span>
+                      <span className="text-xl leading-none">{avatarData.emoji}</span>
                     ) : (
                       <span className="text-lavender-600 dark:text-lavender-300 text-xs font-medium">
                         {initials}

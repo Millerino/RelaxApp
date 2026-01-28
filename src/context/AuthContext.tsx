@@ -7,10 +7,12 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isConfigured: boolean;
+  isPremium: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +21,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
+
+  // Fetch user profile from Supabase
+  const fetchProfile = async (userId: string) => {
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_premium')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (data) {
+        setIsPremium(data.is_premium ?? false);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  };
 
   useEffect(() => {
     if (!supabase) {
@@ -30,6 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
       setIsLoading(false);
     });
 
@@ -39,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setIsPremium(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -100,10 +141,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         isLoading,
         isConfigured: isSupabaseConfigured,
+        isPremium,
         signUp,
         signIn,
         signOut,
         signInWithGoogle,
+        refreshProfile,
       }}
     >
       {children}
