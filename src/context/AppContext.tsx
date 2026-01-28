@@ -56,19 +56,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentEntry, setCurrentEntry] = useState<Partial<DayEntry>>({});
 
   // Get premium status from AuthContext (Supabase)
-  const { isPremium: authIsPremium } = useAuth();
+  const { isPremium: authIsPremium, user } = useAuth();
 
   // Persist state to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
-  // Sync premium status from Supabase to local state
+  // Sync premium status from Supabase - Supabase is source of truth for logged-in users
   useEffect(() => {
-    if (authIsPremium && !state.isPremium) {
-      setState(prev => ({ ...prev, isPremium: true }));
+    // Only sync if user is logged in - Supabase is the source of truth
+    if (user) {
+      if (authIsPremium !== state.isPremium) {
+        setState(prev => ({ ...prev, isPremium: authIsPremium }));
+      }
     }
-  }, [authIsPremium, state.isPremium]);
+  }, [authIsPremium, user, state.isPremium]);
 
   // Check if today's entry already exists
   useEffect(() => {
@@ -79,8 +82,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Check premium from both local state AND Supabase
-  const isPremiumActive = state.isPremium || authIsPremium;
+  // Premium is active if either local state OR Supabase says so
+  // For logged-in users, Supabase is the source of truth (synced above)
+  const isPremiumActive = user ? authIsPremium : state.isPremium;
   const shouldShowPaywall = state.daysUsed >= 3 && !isPremiumActive && !state.isLoggedIn;
 
   const setStep = (step: OnboardingStep) => {

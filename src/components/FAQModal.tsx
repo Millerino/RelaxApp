@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: 'Can I cancel my subscription?',
-    answer: 'Yes, you can cancel anytime from your account settings. Your subscription will remain active until the end of the billing period, and we offer a 7-day money-back guarantee.',
+    answer: 'Yes, you can cancel anytime from your account settings. Your subscription will remain active until the end of the current billing period. No refunds are provided for partial periods.',
   },
   {
     question: 'What happens to my entries if I cancel?',

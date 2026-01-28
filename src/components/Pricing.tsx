@@ -185,7 +185,7 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
 
           {/* Footer note */}
           <p className="text-center text-xs text-silver-400 dark:text-silver-500 mt-6">
-            Cancel anytime. 7-day money-back guarantee.
+            Cancel anytime. Access continues until end of billing period.
           </p>
         </div>
       </div>

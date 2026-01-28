@@ -155,8 +155,9 @@ export function LegalModal({ onClose }: LegalModalProps) {
                   </h3>
                   <p className="leading-relaxed">
                     Premium subscriptions are billed monthly at $4.99 USD. You may cancel at any
-                    time, and your subscription will remain active until the end of your billing
-                    period. We offer a 7-day money-back guarantee.
+                    time, and your subscription will remain active until the end of your current billing
+                    period. No refunds are provided for partial billing periods or unused time.
+                    By subscribing, you agree to these billing terms.
                   </p>
                 </section>
 

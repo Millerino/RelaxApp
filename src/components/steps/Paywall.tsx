@@ -74,7 +74,7 @@ export function Paywall() {
         </button>
 
         <p className="mt-6 text-xs text-silver-400 dark:text-silver-500">
-          Cancel anytime. 7-day money-back guarantee.
+          Cancel anytime. Access continues until end of billing period.
         </p>
       </div>
     </div>
