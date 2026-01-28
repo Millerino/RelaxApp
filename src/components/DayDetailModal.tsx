@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
 
 interface DayDetailModalProps {
@@ -250,13 +251,17 @@ export function DayDetailModal({
     };
   };
 
-  return (
+  // Use portal to render at document body level to avoid stacking context issues
+  return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 isolate"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8"
       onClick={handleBackdropClick}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
+      {/* Backdrop - click to close */}
+      <div
+        className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm cursor-pointer"
+        onClick={onClose}
+      />
 
       {/* Navigation arrows - positioned with much more space from modal */}
       {onNavigate && (
@@ -797,7 +802,8 @@ export function DayDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

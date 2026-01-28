@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { UserProfile, WellnessGoal } from '../types';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -168,11 +169,12 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     }
   };
 
-  return (
+  // Use portal to render at document body level to avoid stacking context issues
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
 
@@ -303,13 +305,13 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                   selectedAvatar
                     ? ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.bg || 'from-lavender-400 to-lavender-600'
                     : 'from-lavender-400 to-lavender-600'
-                } flex items-center justify-center text-white text-2xl font-medium shrink-0
+                } flex items-center justify-center shrink-0
                 hover:scale-105 transition-transform cursor-pointer ring-2 ring-transparent hover:ring-lavender-300`}
                 title="Click to change avatar"
               >
                 {selectedAvatar
-                  ? ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.emoji
-                  : (name.charAt(0).toUpperCase() || '?')
+                  ? <span className="text-4xl leading-none">{ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.emoji}</span>
+                  : <span className="text-white text-2xl font-medium">{name.charAt(0).toUpperCase() || '?'}</span>
                 }
               </button>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white dark:bg-silver-800
@@ -347,8 +349,8 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                         key={animal.id}
                         type="button"
                         onClick={() => { setSelectedAvatar(animal.id); setShowAvatarPicker(false); }}
-                        className={`w-10 h-10 rounded-full bg-gradient-to-br ${animal.bg}
-                                  flex items-center justify-center text-lg
+                        className={`w-12 h-12 rounded-full bg-gradient-to-br ${animal.bg}
+                                  flex items-center justify-center text-2xl
                                   ${selectedAvatar === animal.id ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
                                   transition-all`}
                         title={animal.label}
@@ -509,6 +511,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

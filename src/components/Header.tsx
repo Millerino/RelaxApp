@@ -5,6 +5,25 @@ import { AuthModal } from './AuthModal';
 import { SubscriptionModal } from './SubscriptionModal';
 import { ProfileEditor } from './ProfileEditor';
 
+// Cute animal avatars - must match ProfileEditor
+const ANIMAL_AVATARS = [
+  { id: 'cat', emoji: '🐱', bg: 'from-amber-400 to-orange-500' },
+  { id: 'dog', emoji: '🐶', bg: 'from-amber-300 to-yellow-500' },
+  { id: 'rabbit', emoji: '🐰', bg: 'from-pink-300 to-rose-400' },
+  { id: 'bear', emoji: '🐻', bg: 'from-amber-500 to-amber-700' },
+  { id: 'panda', emoji: '🐼', bg: 'from-slate-300 to-slate-500' },
+  { id: 'koala', emoji: '🐨', bg: 'from-slate-400 to-slate-600' },
+  { id: 'fox', emoji: '🦊', bg: 'from-orange-400 to-red-500' },
+  { id: 'penguin', emoji: '🐧', bg: 'from-slate-600 to-slate-800' },
+  { id: 'owl', emoji: '🦉', bg: 'from-amber-600 to-amber-800' },
+  { id: 'unicorn', emoji: '🦄', bg: 'from-pink-400 to-purple-500' },
+  { id: 'butterfly', emoji: '🦋', bg: 'from-sky-400 to-blue-500' },
+  { id: 'turtle', emoji: '🐢', bg: 'from-emerald-400 to-green-600' },
+  { id: 'hedgehog', emoji: '🦔', bg: 'from-amber-400 to-amber-600' },
+  { id: 'sloth', emoji: '🦥', bg: 'from-amber-300 to-amber-500' },
+  { id: 'dolphin', emoji: '🐬', bg: 'from-cyan-400 to-blue-500' },
+];
+
 interface HeaderProps {
   onNavigateHome?: () => void;
 }
@@ -21,6 +40,10 @@ export function Header({ onNavigateHome }: HeaderProps) {
   // Get display name - prefer profile name over email
   const displayName = state.profile?.name || user?.email?.split('@')[0] || 'User';
   const initials = displayName.charAt(0).toUpperCase();
+
+  // Get avatar info
+  const avatarId = state.profile?.avatar;
+  const avatarData = avatarId ? ANIMAL_AVATARS.find(a => a.id === avatarId) : null;
 
   const handleLogoClick = () => {
     // Always navigate to complete step (home) when clicking logo
@@ -94,10 +117,18 @@ export function Header({ onNavigateHome }: HeaderProps) {
                            px-3 py-1.5 rounded-lg hover:bg-white/30 dark:hover:bg-silver-800/30
                            transition-colors"
                 >
-                  <div className="w-6 h-6 rounded-full bg-lavender-200 dark:bg-lavender-800
-                                flex items-center justify-center text-lavender-600 dark:text-lavender-300
-                                text-xs font-medium">
-                    {initials}
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center
+                                ${avatarData
+                                  ? `bg-gradient-to-br ${avatarData.bg}`
+                                  : 'bg-lavender-200 dark:bg-lavender-800'
+                                }`}>
+                    {avatarData ? (
+                      <span className="text-base leading-none">{avatarData.emoji}</span>
+                    ) : (
+                      <span className="text-lavender-600 dark:text-lavender-300 text-xs font-medium">
+                        {initials}
+                      </span>
+                    )}
                   </div>
                   <span className="hidden sm:inline max-w-[120px] truncate">
                     {displayName}
