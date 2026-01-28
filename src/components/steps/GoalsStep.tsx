@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { Celebration } from '../Celebration';
 import type { Goal } from '../../types';
 
 export function GoalsStep() {
@@ -7,6 +8,7 @@ export function GoalsStep() {
   const [goals, setLocalGoals] = useState<Goal[]>(
     currentEntry.goals || [{ id: crypto.randomUUID(), text: '', completed: false }]
   );
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const handleGoalChange = (id: string, text: string) => {
     setLocalGoals(prev =>
@@ -31,6 +33,11 @@ export function GoalsStep() {
     setGoals(validGoals);
     saveDayEntry();
 
+    // Show celebration before navigating
+    setShowCelebration(true);
+  };
+
+  const handleCelebrationComplete = () => {
     // Show login prompt for first-time users
     if (!state.isLoggedIn && !state.isOnboarded) {
       setStep('login-prompt');
@@ -44,7 +51,11 @@ export function GoalsStep() {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
+    <>
+      {showCelebration && (
+        <Celebration onComplete={handleCelebrationComplete} duration={1800} />
+      )}
+      <div className="relative flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
       {/* Cancel button */}
       <button
         onClick={handleCancel}
@@ -121,5 +132,6 @@ export function GoalsStep() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -426,6 +426,7 @@ export function CompleteStep() {
             updateEntry(entry);
             setShowTodayEditor(false);
           }}
+          quickNotes={state.quickNotes}
         />
       )}
     </>

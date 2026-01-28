@@ -277,9 +277,9 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
       )}
 
       {/* Main Modal */}
-      <div className="relative glass-card p-0 w-full max-w-lg animate-slide-up overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative glass-card p-0 w-full max-w-lg animate-slide-up overflow-hidden max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-b border-silver-200/50 dark:border-silver-700/30 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-b border-silver-200/50 dark:border-silver-700/30 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <h2 className="text-lg font-medium text-silver-800 dark:text-silver-100">
             Edit Profile
           </h2>
@@ -293,7 +293,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* Avatar and Name */}
           <div className="flex items-start gap-4">
             <div className="relative">
@@ -324,15 +324,15 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
               {/* Avatar Picker Dropdown */}
               {showAvatarPicker && (
                 <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-silver-800 rounded-xl
-                              shadow-xl border border-silver-200 dark:border-silver-700 p-3 w-64">
+                              shadow-xl border border-silver-200 dark:border-silver-700 p-2 sm:p-3 w-56 sm:w-64">
                   <p className="text-xs text-silver-500 dark:text-silver-400 mb-2">Choose your avatar</p>
 
                   {/* Default letter option */}
                   <button
                     type="button"
                     onClick={() => { setSelectedAvatar(null); setShowAvatarPicker(false); }}
-                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600
-                              flex items-center justify-center text-white text-sm font-medium mb-2
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600
+                              flex items-center justify-center text-white text-xs sm:text-sm font-medium mb-2
                               ${!selectedAvatar ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
                               transition-all`}
                     title="Use your initial"
@@ -343,15 +343,15 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                   <p className="text-xs text-silver-400 dark:text-silver-500 mb-2">Or pick a friend</p>
 
                   {/* Animal grid */}
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                     {ANIMAL_AVATARS.map(animal => (
                       <button
                         key={animal.id}
                         type="button"
                         onClick={() => { setSelectedAvatar(animal.id); setShowAvatarPicker(false); }}
-                        className={`w-12 h-12 rounded-full bg-gradient-to-br ${animal.bg}
-                                  flex items-center justify-center text-[1.75rem]
-                                  ${selectedAvatar === animal.id ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
+                        className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br ${animal.bg}
+                                  flex items-center justify-center text-xl sm:text-[1.5rem]
+                                  ${selectedAvatar === animal.id ? 'ring-2 ring-lavender-400 ring-offset-1 sm:ring-offset-2' : 'hover:scale-110'}
                                   transition-all`}
                         title={animal.label}
                       >
@@ -398,7 +398,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
             <label className="block text-sm font-medium text-silver-700 dark:text-silver-200 mb-2">
               Gender <span className="text-silver-400 font-normal">(optional)</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {[
                 { value: 'female', label: 'Female' },
                 { value: 'male', label: 'Male' },
@@ -408,7 +408,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                 <button
                   key={option.value}
                   onClick={() => setGender(option.value as UserProfile['gender'])}
-                  className={`px-4 py-2 rounded-xl text-sm transition-all
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-all
                            ${gender === option.value
                              ? 'bg-lavender-500 text-white'
                              : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700'
@@ -485,7 +485,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-t border-silver-200/50 dark:border-silver-700/30 px-6 py-4 flex gap-3">
+        <div className="sticky bottom-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-t border-silver-200/50 dark:border-silver-700/30 px-4 sm:px-6 py-3 sm:py-4 flex gap-2 sm:gap-3">
           <button
             onClick={onClose}
             className="flex-1 btn-secondary py-3"

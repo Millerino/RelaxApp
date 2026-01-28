@@ -61,14 +61,14 @@ export function EmotionsStep() {
           Select all that apply
         </p>
 
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mb-10">
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 mb-10">
           {emotionOptions.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => toggleEmotion(id)}
-              className={`mood-option py-3 px-4 ${selected.includes(id) ? 'selected' : ''}`}
+              className={`mood-option py-2.5 px-2 sm:py-3 sm:px-4 min-w-0 ${selected.includes(id) ? 'selected' : ''}`}
             >
-              <span className={`text-sm md:text-base font-medium
+              <span className={`text-xs sm:text-sm md:text-base font-medium truncate block
                               ${selected.includes(id)
                                 ? 'text-lavender-700 dark:text-lavender-300'
                                 : 'text-silver-600 dark:text-silver-300'}`}>

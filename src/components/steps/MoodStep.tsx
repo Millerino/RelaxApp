@@ -52,7 +52,7 @@ export function MoodStep() {
           There's no right or wrong answer
         </p>
 
-        <div className="flex justify-center gap-3 md:gap-4">
+        <div className="flex justify-center gap-1.5 xs:gap-2 sm:gap-3 md:gap-4">
           {moods.map(({ level, label }) => {
             const isSelected = currentEntry.mood === level;
             const isClicked = clickedLevel === level;
@@ -60,8 +60,8 @@ export function MoodStep() {
               <button
                 key={level}
                 onClick={() => handleSelect(level)}
-                className={`group flex flex-col items-center p-4 md:p-5 rounded-2xl
-                           transition-all duration-300 ease-out
+                className={`group flex flex-col items-center p-2.5 xs:p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl
+                           transition-all duration-300 ease-out min-w-0
                            ${isClicked ? 'animate-pulse-once' : ''}
                            ${isSelected
                              ? `${getSelectedBgColor(level)} border-2 ${getSelectedBorderColor(level)} scale-105 shadow-lg ${getSelectedShadowColor(level)}`
@@ -73,11 +73,11 @@ export function MoodStep() {
                   transition: 'transform 0.15s ease-out, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease'
                 }}
               >
-                <div className={`mb-2 transition-all duration-300 ease-out
+                <div className={`mb-1.5 sm:mb-2 transition-all duration-300 ease-out
                                 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`}>
                   <MoodCircle level={level} isSelected={isSelected} />
                 </div>
-                <span className={`text-xs md:text-sm font-medium transition-colors duration-300
+                <span className={`text-[10px] xs:text-xs sm:text-sm font-medium transition-colors duration-300 truncate max-w-full
                                  ${isSelected
                                    ? getSelectedTextColor(level)
                                    : `text-silver-500 dark:text-silver-400 ${getHoverTextColor(level)}`}`}>
@@ -94,7 +94,7 @@ export function MoodStep() {
 
 // Mood circle with hover color effect
 function MoodCircle({ level, isSelected }: { level: MoodLevel; isSelected: boolean }) {
-  const baseClass = `w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ease-out`;
+  const baseClass = `w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ease-out`;
 
   // Colors for selected state
   const selectedColors = {
@@ -118,7 +118,7 @@ function MoodCircle({ level, isSelected }: { level: MoodLevel; isSelected: boole
 
   return (
     <div className={`${baseClass} ${isSelected ? selectedColors[level] : `${defaultColor} ${hoverColors[level]}`}`}>
-      <span className="text-lg md:text-xl font-semibold">{level}</span>
+      <span className="text-base sm:text-lg md:text-xl font-semibold">{level}</span>
     </div>
   );
 }
