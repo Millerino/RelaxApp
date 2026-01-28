@@ -33,6 +33,7 @@ export interface UserProfile {
   timezone?: string;
   wellnessGoals?: WellnessGoal[];
   notificationPreferences?: NotificationPreferences;
+  avatar?: string; // Animal avatar ID or null for initial letter
   createdAt: number;
   trackedFeelings?: string[];
 }

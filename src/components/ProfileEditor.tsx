@@ -9,6 +9,25 @@ interface ProfileEditorProps {
   onClose: () => void;
 }
 
+// Cute animal avatars
+const ANIMAL_AVATARS = [
+  { id: 'cat', emoji: '🐱', label: 'Cat', bg: 'from-amber-400 to-orange-500' },
+  { id: 'dog', emoji: '🐶', label: 'Dog', bg: 'from-amber-300 to-yellow-500' },
+  { id: 'rabbit', emoji: '🐰', label: 'Rabbit', bg: 'from-pink-300 to-rose-400' },
+  { id: 'bear', emoji: '🐻', label: 'Bear', bg: 'from-amber-500 to-amber-700' },
+  { id: 'panda', emoji: '🐼', label: 'Panda', bg: 'from-slate-300 to-slate-500' },
+  { id: 'koala', emoji: '🐨', label: 'Koala', bg: 'from-slate-400 to-slate-600' },
+  { id: 'fox', emoji: '🦊', label: 'Fox', bg: 'from-orange-400 to-red-500' },
+  { id: 'penguin', emoji: '🐧', label: 'Penguin', bg: 'from-slate-600 to-slate-800' },
+  { id: 'owl', emoji: '🦉', label: 'Owl', bg: 'from-amber-600 to-amber-800' },
+  { id: 'unicorn', emoji: '🦄', label: 'Unicorn', bg: 'from-pink-400 to-purple-500' },
+  { id: 'butterfly', emoji: '🦋', label: 'Butterfly', bg: 'from-sky-400 to-blue-500' },
+  { id: 'turtle', emoji: '🐢', label: 'Turtle', bg: 'from-emerald-400 to-green-600' },
+  { id: 'hedgehog', emoji: '🦔', label: 'Hedgehog', bg: 'from-amber-400 to-amber-600' },
+  { id: 'sloth', emoji: '🦥', label: 'Sloth', bg: 'from-amber-300 to-amber-500' },
+  { id: 'dolphin', emoji: '🐬', label: 'Dolphin', bg: 'from-cyan-400 to-blue-500' },
+];
+
 const WELLNESS_GOALS: { id: WellnessGoal; label: string; icon: string }[] = [
   { id: 'reduce-stress', label: 'Reduce stress', icon: '🧘' },
   { id: 'improve-sleep', label: 'Improve sleep', icon: '😴' },
@@ -37,6 +56,8 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     profile?.wellnessGoals || []
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(profile?.avatar || null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Delete account states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -61,6 +82,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
       gender,
       country: country || undefined,
       wellnessGoals: wellnessGoals.length > 0 ? wellnessGoals : undefined,
+      avatar: selectedAvatar || undefined,
       createdAt: profile?.createdAt || Date.now(),
     };
 
@@ -147,7 +169,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
@@ -272,8 +294,71 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
         <div className="p-6 space-y-6">
           {/* Avatar and Name */}
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-2xl font-medium shrink-0">
-              {name.charAt(0).toUpperCase() || '?'}
+            <div className="relative">
+              {/* Avatar button */}
+              <button
+                type="button"
+                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                className={`w-16 h-16 rounded-full bg-gradient-to-br ${
+                  selectedAvatar
+                    ? ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.bg || 'from-lavender-400 to-lavender-600'
+                    : 'from-lavender-400 to-lavender-600'
+                } flex items-center justify-center text-white text-2xl font-medium shrink-0
+                hover:scale-105 transition-transform cursor-pointer ring-2 ring-transparent hover:ring-lavender-300`}
+                title="Click to change avatar"
+              >
+                {selectedAvatar
+                  ? ANIMAL_AVATARS.find(a => a.id === selectedAvatar)?.emoji
+                  : (name.charAt(0).toUpperCase() || '?')
+                }
+              </button>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white dark:bg-silver-800
+                            border-2 border-lavender-400 flex items-center justify-center">
+                <svg className="w-3 h-3 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+
+              {/* Avatar Picker Dropdown */}
+              {showAvatarPicker && (
+                <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-silver-800 rounded-xl
+                              shadow-xl border border-silver-200 dark:border-silver-700 p-3 w-64">
+                  <p className="text-xs text-silver-500 dark:text-silver-400 mb-2">Choose your avatar</p>
+
+                  {/* Default letter option */}
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedAvatar(null); setShowAvatarPicker(false); }}
+                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600
+                              flex items-center justify-center text-white text-sm font-medium mb-2
+                              ${!selectedAvatar ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
+                              transition-all`}
+                    title="Use your initial"
+                  >
+                    {name.charAt(0).toUpperCase() || '?'}
+                  </button>
+
+                  <p className="text-xs text-silver-400 dark:text-silver-500 mb-2">Or pick a friend</p>
+
+                  {/* Animal grid */}
+                  <div className="grid grid-cols-5 gap-2">
+                    {ANIMAL_AVATARS.map(animal => (
+                      <button
+                        key={animal.id}
+                        type="button"
+                        onClick={() => { setSelectedAvatar(animal.id); setShowAvatarPicker(false); }}
+                        className={`w-10 h-10 rounded-full bg-gradient-to-br ${animal.bg}
+                                  flex items-center justify-center text-lg
+                                  ${selectedAvatar === animal.id ? 'ring-2 ring-lavender-400 ring-offset-2' : 'hover:scale-110'}
+                                  transition-all`}
+                        title={animal.label}
+                      >
+                        {animal.emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-silver-700 dark:text-silver-200 mb-1.5">

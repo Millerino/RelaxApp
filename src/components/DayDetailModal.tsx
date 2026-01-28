@@ -252,7 +252,7 @@ export function DayDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 isolate"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 isolate"
       onClick={handleBackdropClick}
     >
       {/* Backdrop */}
