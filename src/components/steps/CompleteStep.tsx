@@ -367,6 +367,9 @@ export function CompleteStep() {
 
                   {/* Right column */}
                   <div className="space-y-6">
+                    {/* Quick Notes - always visible */}
+                    <QuickNotes />
+
                     {/* Statistics */}
                     {state.entries.length >= 3 && (
                       <StatsCard entries={state.entries} />
@@ -377,8 +380,10 @@ export function CompleteStep() {
                   </div>
                 </div>
               ) : (
-                /* New user - just show daily insight */
-                <div className="max-w-md mx-auto">
+                /* New user - show Quick Notes and daily insight */
+                <div className="max-w-md mx-auto space-y-6">
+                  {/* Quick Notes - visible for new users too */}
+                  <QuickNotes />
                   <DailyInsight entries={state.entries} />
                 </div>
               )}

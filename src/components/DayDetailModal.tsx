@@ -34,6 +34,25 @@ const DEFAULT_FEELINGS = [
   { name: 'Energy', color: 'amber' },
 ];
 
+// Available feelings users can track
+const AVAILABLE_FEELINGS = [
+  'Happiness',
+  'Energy',
+  'Calmness',
+  'Focus',
+  'Motivation',
+  'Confidence',
+  'Creativity',
+  'Connection',
+  'Gratitude',
+  'Hope',
+  'Patience',
+  'Self-compassion',
+  'Resilience',
+  'Clarity',
+  'Balance',
+];
+
 export function DayDetailModal({
   entry,
   date,
@@ -56,6 +75,7 @@ export function DayDetailModal({
   );
   const [hoveredFeeling, setHoveredFeeling] = useState<string | null>(null);
   const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
+  const [feelingDropdownOpen, setFeelingDropdownOpen] = useState<number | null>(null);
 
   // Handle drag for feeling sliders
   const handleFeelingDrag = (e: React.MouseEvent | React.TouchEvent, feelingName: string) => {
@@ -165,6 +185,21 @@ export function DayDetailModal({
     );
   };
 
+  const changeFeelingType = (index: number, newName: string) => {
+    setEditFeelings(prev =>
+      prev.map((f, i) => i === index ? { ...f, name: newName } : f)
+    );
+    setFeelingDropdownOpen(null);
+  };
+
+  // Get available feelings that aren't already selected
+  const getAvailableFeelings = (currentIndex: number) => {
+    const currentNames = editFeelings.map(f => f.name);
+    return AVAILABLE_FEELINGS.filter(f =>
+      f === editFeelings[currentIndex].name || !currentNames.includes(f)
+    );
+  };
+
   const handleSave = () => {
     if (!onSaveEntry || editMood === null) return;
 
@@ -260,13 +295,20 @@ export function DayDetailModal({
         </>
       )}
 
-      {/* Modal - extra wide for comfortable editing (min 600px on desktop) */}
+      {/* Modal - extra wide for comfortable editing */}
       <div
         className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl
-                   w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[800px] xl:w-[900px]
+                   w-[95vw] sm:w-[90vw] md:w-[800px] lg:w-[850px] xl:w-[900px]
+                   min-w-[320px] md:min-w-[700px] lg:min-w-[800px]
                    max-w-[900px]
                    animate-slide-up overflow-hidden max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          // Close feeling dropdown when clicking elsewhere in modal
+          if (feelingDropdownOpen !== null) {
+            setFeelingDropdownOpen(null);
+          }
+        }}
       >
         {/* Header */}
         <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
@@ -369,14 +411,50 @@ export function DayDetailModal({
                   How's your...
                 </label>
                 <div className="space-y-4">
-                  {editFeelings.map((feeling) => {
+                  {editFeelings.map((feeling, index) => {
                     const colors = getFeelingColor(feeling.value);
                     const isHovered = hoveredFeeling === feeling.name;
                     const isDragging = draggingFeeling === feeling.name;
+                    const isDropdownOpen = feelingDropdownOpen === index;
                     return (
-                      <div key={feeling.name} className="relative">
+                      <div key={index} className="relative">
                         <div className="flex justify-between text-xs mb-1.5">
-                          <span className="text-silver-600 dark:text-silver-300 font-medium">{feeling.name}</span>
+                          {/* Feeling name with dropdown */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setFeelingDropdownOpen(isDropdownOpen ? null : index)}
+                              className="flex items-center gap-1 text-silver-600 dark:text-silver-300 font-medium
+                                       hover:text-lavender-600 dark:hover:text-lavender-400 transition-colors"
+                            >
+                              {feeling.name}
+                              <svg className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            {/* Dropdown menu */}
+                            {isDropdownOpen && (
+                              <div className="absolute top-full left-0 mt-1 z-20 bg-white dark:bg-silver-800
+                                            rounded-lg shadow-lg border border-silver-200 dark:border-silver-700
+                                            py-1 min-w-[160px] max-h-48 overflow-y-auto">
+                                {getAvailableFeelings(index).map(f => (
+                                  <button
+                                    key={f}
+                                    type="button"
+                                    onClick={() => changeFeelingType(index, f)}
+                                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors
+                                              ${f === feeling.name
+                                                ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300'
+                                                : 'hover:bg-silver-100 dark:hover:bg-silver-700 text-silver-700 dark:text-silver-300'
+                                              }`}
+                                  >
+                                    {f}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <span className={`font-medium transition-colors ${colors.text}`}>
                             {feeling.value >= 70 ? 'High' : feeling.value >= 40 ? 'Neutral' : 'Low'}
                           </span>
