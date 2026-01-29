@@ -13,7 +13,6 @@ import { DayDetailModal } from '../DayDetailModal';
 import { QuickNotes } from '../QuickNotes';
 import { PatternInsight } from '../PatternInsight';
 import { DailyRituals } from '../habits';
-import { SyncStatus } from '../SyncStatus';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -67,14 +66,7 @@ export function CompleteStep() {
           {todayEntry ? (
             <>
               {/* Header section - centered */}
-              <div className="text-center mb-8 relative">
-                {/* Sync status - top right */}
-                {user && (
-                  <div className="absolute right-0 top-0">
-                    <SyncStatus />
-                  </div>
-                )}
-
+              <div className="text-center mb-8">
                 {/* Streak badge at top */}
                 {streak > 0 && (
                   <div className="mb-6">
@@ -312,14 +304,7 @@ export function CompleteStep() {
             /* No entry today - welcome back state */
             <>
               {/* Header section - centered */}
-              <div className="text-center mb-8 relative">
-                {/* Sync status - top right */}
-                {user && (
-                  <div className="absolute right-0 top-0">
-                    <SyncStatus />
-                  </div>
-                )}
-
+              <div className="text-center mb-8">
                 {/* Show streak if returning user */}
                 {streak > 0 && (
                   <div className="mb-6">

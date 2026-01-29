@@ -206,6 +206,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // REALTIME SUBSCRIPTION
   // ============================================================================
 
+  // ============================================================================
+  // AUTOMATIC BACKGROUND SYNC
+  // ============================================================================
+
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured) {
+      syncService.stopAutoSync();
+      return;
+    }
+
+    // Start automatic background sync
+    const stopAutoSync = syncService.startAutoSync(user.id);
+
+    return () => {
+      stopAutoSync();
+    };
+  }, [user]);
+
   useEffect(() => {
     if (!user || !isSupabaseConfigured) {
       return;

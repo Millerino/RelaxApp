@@ -295,6 +295,9 @@ export const addToQueue = (
   }
 
   saveQueue(queue);
+
+  // Trigger immediate sync attempt
+  triggerImmediateSync();
 };
 
 /**
@@ -1042,6 +1045,108 @@ export const subscribeToChanges = (
 };
 
 // ============================================================================
+// AUTOMATIC BACKGROUND SYNC
+// ============================================================================
+
+let autoSyncUserId: string | null = null;
+let autoSyncCleanup: (() => void) | null = null;
+let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Debounced queue processing - prevents rapid-fire syncs
+ */
+const debouncedProcessQueue = (userId: string, delay: number = 500): void => {
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+  }
+  syncDebounceTimer = setTimeout(async () => {
+    if (checkOnline() && loadQueue().length > 0) {
+      console.log('[AutoSync] Processing queue...');
+      await processQueue(userId);
+    }
+  }, delay);
+};
+
+/**
+ * Start automatic background sync for a user
+ * - Processes queue when coming online
+ * - Processes queue when tab becomes visible
+ * - Runs periodic sync every 30 seconds as fallback
+ */
+export const startAutoSync = (userId: string): (() => void) => {
+  // Clean up any existing auto-sync
+  if (autoSyncCleanup) {
+    autoSyncCleanup();
+  }
+
+  autoSyncUserId = userId;
+  console.log('[AutoSync] Starting automatic sync for user:', userId);
+
+  // Process queue immediately if online and has items
+  if (checkOnline() && loadQueue().length > 0) {
+    processQueue(userId);
+  }
+
+  // Handle coming online
+  const handleOnline = () => {
+    console.log('[AutoSync] Back online, processing queue...');
+    debouncedProcessQueue(userId, 1000);
+  };
+
+  // Handle tab visibility (sync when user returns to tab)
+  const handleVisibility = () => {
+    if (document.visibilityState === 'visible' && checkOnline()) {
+      debouncedProcessQueue(userId, 2000);
+    }
+  };
+
+  // Periodic sync as fallback (every 30 seconds)
+  const periodicInterval = setInterval(() => {
+    if (checkOnline() && loadQueue().length > 0) {
+      console.log('[AutoSync] Periodic sync check...');
+      processQueue(userId);
+    }
+  }, 30000);
+
+  // Set up listeners
+  window.addEventListener('online', handleOnline);
+  document.addEventListener('visibilitychange', handleVisibility);
+
+  // Return cleanup function
+  autoSyncCleanup = () => {
+    console.log('[AutoSync] Stopping automatic sync');
+    window.removeEventListener('online', handleOnline);
+    document.removeEventListener('visibilitychange', handleVisibility);
+    clearInterval(periodicInterval);
+    if (syncDebounceTimer) {
+      clearTimeout(syncDebounceTimer);
+    }
+    autoSyncUserId = null;
+    autoSyncCleanup = null;
+  };
+
+  return autoSyncCleanup;
+};
+
+/**
+ * Stop automatic background sync
+ */
+export const stopAutoSync = (): void => {
+  if (autoSyncCleanup) {
+    autoSyncCleanup();
+  }
+};
+
+/**
+ * Trigger immediate sync (called after adding to queue)
+ */
+const triggerImmediateSync = (): void => {
+  if (autoSyncUserId && checkOnline()) {
+    debouncedProcessQueue(autoSyncUserId, 100);
+  }
+};
+
+// ============================================================================
 // EXPORT ALL
 // ============================================================================
 
@@ -1063,6 +1168,10 @@ export const syncService = {
   processQueue,
   getQueueSize,
   clearQueue,
+
+  // Auto sync
+  startAutoSync,
+  stopAutoSync,
 
   // Realtime
   subscribeToChanges,
