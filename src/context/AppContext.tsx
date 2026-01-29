@@ -21,8 +21,9 @@ interface AppContextType {
   clearAllData: () => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
-  addQuickNote: (text: string, date?: string) => void;
+  addQuickNote: (text: string, emoji?: string, date?: string) => void;
   deleteQuickNote: (id: string) => void;
+  updateQuickNote: (id: string, text: string, emoji?: string) => void;
   updateQuickNoteEmoji: (id: string, emoji: string) => void;
   getNotesForDate: (date: string) => QuickNote[];
 }
@@ -198,10 +199,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, profile }));
   };
 
-  const addQuickNote = (text: string, date?: string) => {
+  const addQuickNote = (text: string, emoji?: string, date?: string) => {
     const note: QuickNote = {
       id: crypto.randomUUID(),
       text,
+      emoji: emoji || undefined,
       date: date || new Date().toDateString(),
       createdAt: Date.now(),
     };
@@ -215,6 +217,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({
       ...prev,
       quickNotes: (prev.quickNotes || []).filter(n => n.id !== id),
+    }));
+  };
+
+  const updateQuickNote = (id: string, text: string, emoji?: string) => {
+    setState(prev => ({
+      ...prev,
+      quickNotes: (prev.quickNotes || []).map(n =>
+        n.id === id ? { ...n, text, emoji: emoji || n.emoji } : n
+      ),
     }));
   };
 
@@ -268,6 +279,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       shouldShowPaywall,
       addQuickNote,
       deleteQuickNote,
+      updateQuickNote,
       updateQuickNoteEmoji,
       getNotesForDate,
     }}>

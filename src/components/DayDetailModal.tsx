@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
+import { useApp } from '../context/AppContext';
+
+// Emojis for quick notes
+const NOTE_EMOJIS = ['😊', '🙂', '😌', '🥰', '😄', '🤗', '🤔', '😐', '💪', '🌟', '✨', '🔥', '❤️', '💜', '😢', '😔', '😤', '🧘', '📖', '☕'];
 
 interface DayDetailModalProps {
   entry: DayEntry | null;
@@ -78,6 +82,14 @@ export function DayDetailModal({
   const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
   const [feelingDropdownOpen, setFeelingDropdownOpen] = useState<number | null>(null);
 
+  // Quick notes editing state
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteText, setEditNoteText] = useState('');
+  const [editNoteEmoji, setEditNoteEmoji] = useState<string | undefined>(undefined);
+  const [showNoteEmojiPicker, setShowNoteEmojiPicker] = useState(false);
+
+  const { deleteQuickNote, updateQuickNote } = useApp();
+
   // Handle drag for feeling sliders
   const handleFeelingDrag = (e: React.MouseEvent | React.TouchEvent, feelingName: string) => {
     const target = e.currentTarget as HTMLElement;
@@ -127,6 +139,28 @@ export function DayDetailModal({
 
   // Filter notes for this day
   const dayNotes = quickNotes.filter(n => n.date === date.toDateString());
+
+  // Quick note edit helpers
+  const startEditingNote = (note: QuickNote) => {
+    setEditingNoteId(note.id);
+    setEditNoteText(note.text);
+    setEditNoteEmoji(note.emoji);
+    setShowNoteEmojiPicker(false);
+  };
+
+  const cancelEditingNote = () => {
+    setEditingNoteId(null);
+    setEditNoteText('');
+    setEditNoteEmoji(undefined);
+    setShowNoteEmojiPicker(false);
+  };
+
+  const saveNoteEdit = () => {
+    if (editingNoteId && editNoteText.trim()) {
+      updateQuickNote(editingNoteId, editNoteText.trim(), editNoteEmoji);
+      cancelEditingNote();
+    }
+  };
 
   // Reset form when entry changes
   useEffect(() => {
@@ -609,21 +643,65 @@ export function DayDetailModal({
                 />
               </div>
 
-              {/* Quick Notes for this day - show in edit mode too */}
+              {/* Quick Notes for this day - with edit/delete */}
               {dayNotes.length > 0 && (
                 <div className="pt-2 border-t border-silver-200/50 dark:border-silver-700/30">
                   <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2 flex items-center gap-2">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    Quick Notes from this day ({dayNotes.length})
+                    Quick Notes ({dayNotes.length})
                   </p>
-                  <div className="space-y-2 max-h-24 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                     {dayNotes.map(note => (
-                      <div key={note.id} className="flex items-start gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg
-                                                   border border-slate-200/60 dark:border-slate-700/50 text-xs">
-                        {note.emoji && <span>{note.emoji}</span>}
-                        <p className="text-slate-600 dark:text-slate-300">{note.text}</p>
+                      <div key={note.id} className="group flex items-start gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg
+                                                   border border-slate-200/60 dark:border-slate-700/50">
+                        {editingNoteId === note.id ? (
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start gap-2">
+                              <div className="relative">
+                                <button
+                                  onClick={() => setShowNoteEmojiPicker(!showNoteEmojiPicker)}
+                                  className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm hover:bg-slate-300 dark:hover:bg-slate-600"
+                                >
+                                  {editNoteEmoji || '➕'}
+                                </button>
+                                {showNoteEmojiPicker && (
+                                  <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-silver-800 rounded-lg shadow-lg border border-silver-200 dark:border-silver-700 z-20 grid grid-cols-5 gap-1 w-36">
+                                    <button onClick={() => { setEditNoteEmoji(undefined); setShowNoteEmojiPicker(false); }} className="w-6 h-6 rounded text-xs hover:bg-slate-200 dark:hover:bg-slate-700">✕</button>
+                                    {NOTE_EMOJIS.slice(0, 14).map(emoji => (
+                                      <button key={emoji} onClick={() => { setEditNoteEmoji(emoji); setShowNoteEmojiPicker(false); }} className="w-6 h-6 rounded text-sm hover:bg-slate-200 dark:hover:bg-slate-700">{emoji}</button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <textarea
+                                value={editNoteText}
+                                onChange={(e) => setEditNoteText(e.target.value)}
+                                className="flex-1 text-xs bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-lavender-400"
+                                rows={2}
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={cancelEditingNote} className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Cancel</button>
+                              <button onClick={saveNoteEdit} className="px-3 py-1 text-xs bg-lavender-500 text-white rounded-lg hover:bg-lavender-600">Save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {note.emoji && <span className="text-sm">{note.emoji}</span>}
+                            <p className="flex-1 text-xs text-slate-600 dark:text-slate-300">{note.text}</p>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => startEditingNote(note)} className="p-1 rounded text-slate-400 hover:text-lavender-500 hover:bg-lavender-50 dark:hover:bg-lavender-900/20" title="Edit">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                              </button>
+                              <button onClick={() => deleteQuickNote(note.id)} className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20" title="Delete">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -738,7 +816,7 @@ export function DayDetailModal({
                 </div>
               )}
 
-              {/* Quick Notes for this day - fixed height with scroll */}
+              {/* Quick Notes for this day - with edit/delete */}
               {dayNotes.length > 0 && (
                 <div>
                   <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
@@ -746,10 +824,54 @@ export function DayDetailModal({
                   </p>
                   <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                     {dayNotes.map(note => (
-                      <div key={note.id} className="flex items-start gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg
+                      <div key={note.id} className="group flex items-start gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg
                                                    border border-slate-200/60 dark:border-slate-700/50">
-                        {note.emoji && <span className="text-base">{note.emoji}</span>}
-                        <p className="text-sm text-slate-700 dark:text-slate-200">{note.text}</p>
+                        {editingNoteId === note.id ? (
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start gap-2">
+                              <div className="relative">
+                                <button
+                                  onClick={() => setShowNoteEmojiPicker(!showNoteEmojiPicker)}
+                                  className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-base hover:bg-slate-300 dark:hover:bg-slate-600"
+                                >
+                                  {editNoteEmoji || '➕'}
+                                </button>
+                                {showNoteEmojiPicker && (
+                                  <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-silver-800 rounded-lg shadow-lg border border-silver-200 dark:border-silver-700 z-20 grid grid-cols-5 gap-1 w-40">
+                                    <button onClick={() => { setEditNoteEmoji(undefined); setShowNoteEmojiPicker(false); }} className="w-6 h-6 rounded text-xs hover:bg-slate-200 dark:hover:bg-slate-700">✕</button>
+                                    {NOTE_EMOJIS.slice(0, 14).map(emoji => (
+                                      <button key={emoji} onClick={() => { setEditNoteEmoji(emoji); setShowNoteEmojiPicker(false); }} className="w-6 h-6 rounded text-base hover:bg-slate-200 dark:hover:bg-slate-700">{emoji}</button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <textarea
+                                value={editNoteText}
+                                onChange={(e) => setEditNoteText(e.target.value)}
+                                className="flex-1 text-sm bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-lavender-400"
+                                rows={2}
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={cancelEditingNote} className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Cancel</button>
+                              <button onClick={saveNoteEdit} className="px-3 py-1 text-xs bg-lavender-500 text-white rounded-lg hover:bg-lavender-600">Save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {note.emoji && <span className="text-base">{note.emoji}</span>}
+                            <p className="flex-1 text-sm text-slate-700 dark:text-slate-200">{note.text}</p>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => startEditingNote(note)} className="p-1.5 rounded text-slate-400 hover:text-lavender-500 hover:bg-lavender-50 dark:hover:bg-lavender-900/20" title="Edit">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                              </button>
+                              <button onClick={() => deleteQuickNote(note.id)} className="p-1.5 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20" title="Delete">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
