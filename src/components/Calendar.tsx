@@ -6,13 +6,26 @@ interface Props {
   entries: DayEntry[];
   onSaveEntry?: (entry: DayEntry) => void;
   quickNotes?: QuickNote[];
+  weekOffset?: number; // Controlled week offset
+  onWeekChange?: (offset: number) => void; // Callback when week changes
 }
 
-export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
+export function Calendar({ entries, onSaveEntry, quickNotes = [], weekOffset: controlledOffset, onWeekChange }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DayEntry | null>(null);
   const [showEmptyDay, setShowEmptyDay] = useState(false);
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = last week, etc.
+  const [internalOffset, setInternalOffset] = useState(0);
+
+  // Use controlled offset if provided, otherwise use internal state
+  const weekOffset = controlledOffset !== undefined ? controlledOffset : internalOffset;
+  const setWeekOffset = (offset: number | ((prev: number) => number)) => {
+    const newOffset = typeof offset === 'function' ? offset(weekOffset) : offset;
+    if (onWeekChange) {
+      onWeekChange(newOffset);
+    } else {
+      setInternalOffset(newOffset);
+    }
+  };
 
   const today = useMemo(() => {
     const d = new Date();

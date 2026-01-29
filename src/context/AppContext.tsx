@@ -49,6 +49,7 @@ const getInitialState = (): UserState => {
     entries: [],
     currentStep: 'welcome',
     xp: 0,
+    firstEntryDate: undefined, // Track when user first started to prevent XP cheating
   };
 };
 
@@ -154,6 +155,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       daysUsed: prev.daysUsed + 1,
       isOnboarded: true,
       xp: (prev.xp || 0) + earnedXP,
+      // Set firstEntryDate if this is the user's first entry
+      firstEntryDate: prev.firstEntryDate || today,
     }));
 
     setCurrentEntry({});
@@ -180,8 +183,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
       const isNewEntry = existingIndex === -1;
 
-      // Only give XP for new entries (not edits)
-      const xpGain = isNewEntry ? 10 : 0;
+      // Determine if XP should be awarded:
+      // 1. Must be a new entry (not an edit)
+      // 2. Entry date must be on or after firstEntryDate (prevents backdating cheats)
+      // 3. If no firstEntryDate yet, only give XP if entry is for today
+      const today = new Date().toDateString();
+      const entryDate = new Date(entry.date);
+      const firstDate = prev.firstEntryDate ? new Date(prev.firstEntryDate) : null;
+
+      let xpGain = 0;
+      let newFirstEntryDate = prev.firstEntryDate;
+
+      if (isNewEntry) {
+        if (!firstDate) {
+          // First ever entry - set firstEntryDate and only give XP if it's today
+          if (entry.date === today) {
+            xpGain = 10;
+            newFirstEntryDate = today;
+          }
+          // If backdating their first entry, no XP but track when they actually started
+          else {
+            newFirstEntryDate = today; // Their journey starts today, not the backdated date
+          }
+        } else {
+          // Has existing entries - only give XP if entry is on or after firstEntryDate
+          entryDate.setHours(0, 0, 0, 0);
+          firstDate.setHours(0, 0, 0, 0);
+          if (entryDate >= firstDate) {
+            xpGain = 10;
+          }
+          // Backdated entries before firstEntryDate get no XP
+        }
+      }
 
       return {
         ...prev,
@@ -191,6 +224,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
         isOnboarded: true,
         xp: (prev.xp || 0) + xpGain,
+        firstEntryDate: newFirstEntryDate,
       };
     });
   };

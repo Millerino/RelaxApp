@@ -12,6 +12,7 @@ import { AuthModal } from '../AuthModal';
 import { DayDetailModal } from '../DayDetailModal';
 import { QuickNotes } from '../QuickNotes';
 import { PatternInsight } from '../PatternInsight';
+import { DailyRituals } from '../habits';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -22,6 +23,7 @@ export function CompleteStep() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [showTodayEditor, setShowTodayEditor] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0); // Shared between Calendar and MoodGraph
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   if (shouldShowPaywall && !user) {
@@ -191,16 +193,16 @@ export function CompleteStep() {
                     )}
                   </button>
 
-                  {/* 7-day Mood Graph */}
+                  {/* 7-day Mood Graph - synced with Calendar week */}
                   {state.entries.length >= 2 && (
                     <div className="glass-card p-5">
-                      <MoodGraph entries={state.entries} />
+                      <MoodGraph entries={state.entries} weekOffset={weekOffset} />
                     </div>
                   )}
 
                   {/* Calendar */}
                   <div className="glass-card p-5">
-                    <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
+                    <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} weekOffset={weekOffset} onWeekChange={setWeekOffset} />
                   </div>
                 </div>
 
@@ -278,6 +280,9 @@ export function CompleteStep() {
                   {/* Quick Notes */}
                   <QuickNotes />
 
+                  {/* Daily Rituals - habits tracking */}
+                  <DailyRituals />
+
                   {/* Pattern Insight - occasional, language only */}
                   {state.entries.length >= 5 && (
                     <PatternInsight entries={state.entries} />
@@ -352,16 +357,16 @@ export function CompleteStep() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left column */}
                   <div className="space-y-6">
-                    {/* 7-day Mood Graph */}
+                    {/* 7-day Mood Graph - synced with Calendar week */}
                     {state.entries.length >= 2 && (
                       <div className="glass-card p-5">
-                        <MoodGraph entries={state.entries} />
+                        <MoodGraph entries={state.entries} weekOffset={weekOffset} />
                       </div>
                     )}
 
                     {/* Calendar */}
                     <div className="glass-card p-5">
-                      <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
+                      <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} weekOffset={weekOffset} onWeekChange={setWeekOffset} />
                     </div>
                   </div>
 
@@ -369,6 +374,9 @@ export function CompleteStep() {
                   <div className="space-y-6">
                     {/* Quick Notes - always visible */}
                     <QuickNotes />
+
+                    {/* Daily Rituals - habits tracking */}
+                    <DailyRituals />
 
                     {/* Statistics */}
                     {state.entries.length >= 3 && (
@@ -384,6 +392,8 @@ export function CompleteStep() {
                 <div className="max-w-md mx-auto space-y-6">
                   {/* Quick Notes - visible for new users too */}
                   <QuickNotes />
+                  {/* Daily Rituals - habits tracking */}
+                  <DailyRituals />
                   <DailyInsight entries={state.entries} />
                 </div>
               )}

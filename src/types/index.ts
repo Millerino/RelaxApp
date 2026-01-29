@@ -73,6 +73,7 @@ export interface UserState {
   profile?: UserProfile;
   xp: number;
   quickNotes?: QuickNote[];
+  firstEntryDate?: string; // Track when user first started (prevents XP cheating from backdated entries)
 }
 
 export type OnboardingStep =

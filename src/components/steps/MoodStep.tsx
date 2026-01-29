@@ -54,7 +54,7 @@ export function MoodStep() {
 
         {/* Mood buttons - horizontal on all screens */}
         <div className="flex justify-center items-end gap-2 sm:gap-3 md:gap-4">
-          {moods.map(({ level, label, emoji }) => {
+          {moods.map(({ level, label }) => {
             const isSelected = currentEntry.mood === level;
             const isClicked = clickedLevel === level;
             return (

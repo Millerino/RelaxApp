@@ -3,6 +3,7 @@ import type { DayEntry } from '../types';
 
 interface MoodGraphProps {
   entries: DayEntry[];
+  weekOffset?: number; // 0 = current week, -1 = last week, etc.
 }
 
 interface TooltipData {
@@ -16,18 +17,23 @@ interface TooltipData {
   };
 }
 
-export function MoodGraph({ entries }: MoodGraphProps) {
+export function MoodGraph({ entries, weekOffset = 0 }: MoodGraphProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const last7Days = useMemo(() => {
+  // Get week days based on offset (matches Calendar logic)
+  const weekDays = useMemo(() => {
     const days: { date: Date; label: string; fullLabel: string; entry: DayEntry | null }[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
+    // Go to Sunday of current week, then apply offset
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7));
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
       const dateStr = date.toDateString();
       const entry = entries.find(e => e.date === dateStr) || null;
 
@@ -39,7 +45,10 @@ export function MoodGraph({ entries }: MoodGraphProps) {
     }
 
     return days;
-  }, [entries]);
+  }, [entries, weekOffset]);
+
+  // Alias for compatibility with existing code
+  const last7Days = weekDays;
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -181,7 +190,7 @@ export function MoodGraph({ entries }: MoodGraphProps) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
-            Your Week
+            {weekOffset === 0 ? 'Your Week' : weekOffset === -1 ? 'Last Week' : `${Math.abs(weekOffset)} Weeks Ago`}
           </h4>
           <p className="text-xs text-silver-400 dark:text-silver-500 mt-0.5">
             {stats.daysLogged} of 7 days logged
@@ -279,7 +288,9 @@ export function MoodGraph({ entries }: MoodGraphProps) {
             const x = padding.left + i * stepX;
             const labelY = height - 8;
             const isHovered = hoveredIndex === i;
-            const isToday = i === 6;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const isToday = day.date.toDateString() === today.toDateString();
 
             return (
               <g key={i}>
