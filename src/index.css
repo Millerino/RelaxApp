@@ -7,10 +7,19 @@
 @layer base {
   html {
     @apply antialiased;
+    /* Prevent pull-to-refresh and overscroll on mobile */
+    overscroll-behavior: none;
   }
 
   body {
     @apply font-sans transition-colors duration-300;
+    /* Prevent double-tap zoom on iOS */
+    touch-action: manipulation;
+  }
+
+  /* Ensure inputs don't trigger iOS zoom (must be 16px+) */
+  input, textarea, select {
+    font-size: 16px;
   }
 }
 

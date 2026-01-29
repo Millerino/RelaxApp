@@ -55,7 +55,7 @@ export function GoalsStep() {
       {showCelebration && (
         <Celebration onComplete={handleCelebrationComplete} duration={1800} />
       )}
-      <div className="relative flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
+      <div className="relative flex flex-col items-center justify-start pt-8 md:justify-center md:pt-0 min-h-0 md:min-h-[60vh] animate-slide-up">
       {/* Cancel button */}
       <button
         onClick={handleCancel}
@@ -89,7 +89,7 @@ export function GoalsStep() {
                 value={goal.text}
                 onChange={e => handleGoalChange(goal.id, e.target.value)}
                 placeholder="Enter a goal..."
-                className="input-field flex-1"
+                className="input-field flex-1 text-base"
               />
               {goals.length > 1 && (
                 <button

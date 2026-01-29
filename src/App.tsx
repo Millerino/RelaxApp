@@ -156,7 +156,7 @@ function AppShell() {
       <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
         <Background />
         <LampToggle />
-        <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
+        <main className="relative min-h-screen flex items-center justify-center px-4 py-12 md:py-20">
           <AuthCallback onComplete={handleAuthComplete} />
         </main>
       </div>
@@ -167,7 +167,7 @@ function AppShell() {
     <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
       <Background />
       <LampToggle />
-      <main className="relative min-h-screen flex items-center justify-center px-4 py-20">
+      <main className="relative min-h-screen flex items-center justify-center px-4 py-12 md:py-20">
         <AppContent
           onShowPricing={() => setShowPricing(true)}
           onShowFAQ={() => setShowFAQ(true)}

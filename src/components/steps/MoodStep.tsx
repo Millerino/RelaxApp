@@ -29,7 +29,7 @@ export function MoodStep() {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
+    <div className="relative flex flex-col items-center justify-start pt-8 md:justify-center md:pt-0 min-h-0 md:min-h-[60vh] animate-slide-up">
       <div className="text-center w-full max-w-2xl px-4 sm:px-6">
         {/* Cancel/Exit button */}
         <button

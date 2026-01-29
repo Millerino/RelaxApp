@@ -15,7 +15,7 @@ export function ReflectionStep() {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
+    <div className="relative flex flex-col items-center justify-start pt-8 md:justify-center md:pt-0 min-h-0 md:min-h-[60vh] animate-slide-up">
       {/* Cancel button */}
       <button
         onClick={handleCancel}
