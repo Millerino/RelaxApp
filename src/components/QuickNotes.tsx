@@ -38,19 +38,21 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
     ? (state.quickNotes || [])
     : (state.quickNotes || []).filter(n => n.date === todayStr);
 
-  const handleSubmit = () => {
-    if (newNote.trim()) {
-      addQuickNote(newNote.trim(), selectedEmoji || undefined);
+  const handleSubmit = (textOverride?: string) => {
+    const text = textOverride ?? newNote;
+    if (text.trim()) {
+      addQuickNote(text.trim(), selectedEmoji || undefined);
       setNewNote('');
       setSelectedEmoji(null);
       setShowInputEmojiPicker(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      // Use current target value to avoid stale closure
+      handleSubmit(e.currentTarget.value);
     }
   };
 
@@ -153,14 +155,14 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                   {showInputEmojiPicker && (
                     <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-silver-800
                                   rounded-xl shadow-xl border border-silver-200 dark:border-silver-700 z-20
-                                  grid grid-cols-6 gap-1 w-52">
+                                  grid grid-cols-6 gap-1.5 w-56">
                       {/* No emoji option */}
                       <button
                         onClick={() => {
                           setSelectedEmoji(null);
                           setShowInputEmojiPicker(false);
                         }}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs
                                   transition-colors hover:bg-silver-100 dark:hover:bg-silver-700
                                   ${!selectedEmoji ? 'bg-lavender-100 dark:bg-lavender-900/50' : ''}`}
                       >
@@ -173,7 +175,7 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                             setSelectedEmoji(emoji);
                             setShowInputEmojiPicker(false);
                           }}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg leading-none
                                     transition-colors hover:bg-silver-100 dark:hover:bg-silver-700
                                     ${selectedEmoji === emoji ? 'bg-lavender-100 dark:bg-lavender-900/50' : ''}`}
                         >
@@ -186,7 +188,7 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
 
                 {/* Save button */}
                 <button
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit()}
                   className="px-4 py-1.5 text-xs font-medium rounded-lg
                            bg-lavender-500 text-white hover:bg-lavender-600
                            transition-colors"
@@ -231,10 +233,10 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                         />
                       </div>
                       {showEmojiPicker === `edit-${note.id}` && (
-                        <div className="flex flex-wrap gap-1 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                           <button
                             onClick={() => { setEditEmoji(undefined); setShowEmojiPicker(null); }}
-                            className="w-6 h-6 rounded text-xs hover:bg-slate-200 dark:hover:bg-slate-700"
+                            className="w-7 h-7 rounded text-xs hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center"
                           >
                             ✕
                           </button>
@@ -242,7 +244,7 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                             <button
                               key={emoji}
                               onClick={() => { setEditEmoji(emoji); setShowEmojiPicker(null); }}
-                              className="w-6 h-6 rounded text-sm hover:bg-slate-200 dark:hover:bg-slate-700"
+                              className="w-7 h-7 rounded text-base leading-none hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center"
                             >
                               {emoji}
                             </button>
@@ -286,7 +288,7 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                         {showEmojiPicker === note.id && (
                           <div className="absolute top-full left-0 mt-1 p-1.5 bg-white dark:bg-silver-800
                                         rounded-lg shadow-lg border border-silver-200 dark:border-silver-700 z-10
-                                        grid grid-cols-6 gap-1 w-40">
+                                        grid grid-cols-6 gap-1.5 w-48">
                             {MOOD_EMOJIS.slice(0, 18).map(emoji => (
                               <button
                                 key={emoji}
@@ -294,8 +296,8 @@ export function QuickNotes({ dateFilter, showAllDates }: QuickNotesProps) {
                                   updateQuickNoteEmoji(note.id, emoji);
                                   setShowEmojiPicker(null);
                                 }}
-                                className="w-5 h-5 rounded hover:bg-silver-100 dark:hover:bg-silver-700
-                                         flex items-center justify-center text-sm transition-colors"
+                                className="w-6 h-6 rounded hover:bg-silver-100 dark:hover:bg-silver-700
+                                         flex items-center justify-center text-base leading-none transition-colors"
                               >
                                 {emoji}
                               </button>
