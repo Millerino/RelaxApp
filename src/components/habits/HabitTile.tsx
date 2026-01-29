@@ -9,6 +9,7 @@ interface HabitTileProps {
   completed: boolean;
   onClick: () => void;
   isActive?: boolean; // For detox timer
+  iconBgColor?: string; // Background color for premium icon
 }
 
 export function HabitTile({
@@ -20,6 +21,7 @@ export function HabitTile({
   completed,
   onClick,
   isActive,
+  iconBgColor,
 }: HabitTileProps) {
   return (
     <button
@@ -57,7 +59,12 @@ export function HabitTile({
           color={color}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl">{icon}</span>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: iconBgColor || color + '30' }}
+          >
+            {icon}
+          </div>
         </div>
       </div>
 

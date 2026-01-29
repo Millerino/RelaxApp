@@ -90,26 +90,27 @@ export function DayDetailModal({
 
   const { deleteQuickNote, updateQuickNote } = useApp();
 
-  // Handle drag for feeling sliders
-  const handleFeelingDrag = (e: React.MouseEvent | React.TouchEvent, feelingName: string) => {
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const x = clientX - rect.left;
-    const percent = Math.round((x / rect.width) * 100);
-    updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
-  };
+  // Store slider refs for accurate drag tracking
+  const sliderRefs = useState<Record<string, HTMLDivElement | null>>(() => ({}))[0];
 
-  const handleFeelingMouseDown = (e: React.MouseEvent, feelingName: string) => {
+  // Handle drag for feeling sliders - improved for smooth dragging
+  const handleFeelingMouseDown = (e: React.MouseEvent, feelingName: string, sliderElement: HTMLDivElement) => {
+    e.preventDefault(); // Prevent text selection during drag
     setDraggingFeeling(feelingName);
-    handleFeelingDrag(e, feelingName);
 
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      const x = moveEvent.clientX - rect.left;
+    const updatePosition = (clientX: number) => {
+      const rect = sliderElement.getBoundingClientRect();
+      const x = clientX - rect.left;
       const percent = Math.round((x / rect.width) * 100);
       updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
+    };
+
+    // Update immediately on click
+    updatePosition(e.clientX);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      updatePosition(moveEvent.clientX);
     };
 
     const handleMouseUp = () => {
@@ -122,14 +123,22 @@ export function DayDetailModal({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleFeelingTouchStart = (e: React.TouchEvent, feelingName: string) => {
+  const handleFeelingTouchStart = (e: React.TouchEvent, feelingName: string, sliderElement: HTMLDivElement) => {
     setDraggingFeeling(feelingName);
-    handleFeelingDrag(e, feelingName);
+    const touch = e.touches[0];
+    const rect = sliderElement.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const percent = Math.round((x / rect.width) * 100);
+    updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
   };
 
-  const handleFeelingTouchMove = (e: React.TouchEvent, feelingName: string) => {
-    if (draggingFeeling === feelingName) {
-      handleFeelingDrag(e, feelingName);
+  const handleFeelingTouchMove = (e: React.TouchEvent, feelingName: string, sliderElement: HTMLDivElement) => {
+    if (draggingFeeling === feelingName && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const rect = sliderElement.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const percent = Math.round((x / rect.width) * 100);
+      updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
     }
   };
 
@@ -499,13 +508,24 @@ export function DayDetailModal({
                           </span>
                         </div>
                         <div
+                          ref={(el) => { if (el) sliderRefs[feeling.name] = el; }}
                           className={`relative h-8 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer
-                                    select-none touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                                    select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                          style={{ touchAction: 'none' }}
                           onMouseEnter={() => setHoveredFeeling(feeling.name)}
                           onMouseLeave={() => !isDragging && setHoveredFeeling(null)}
-                          onMouseDown={(e) => handleFeelingMouseDown(e, feeling.name)}
-                          onTouchStart={(e) => handleFeelingTouchStart(e, feeling.name)}
-                          onTouchMove={(e) => handleFeelingTouchMove(e, feeling.name)}
+                          onMouseDown={(e) => {
+                            const el = sliderRefs[feeling.name];
+                            if (el) handleFeelingMouseDown(e, feeling.name, el);
+                          }}
+                          onTouchStart={(e) => {
+                            const el = sliderRefs[feeling.name];
+                            if (el) handleFeelingTouchStart(e, feeling.name, el);
+                          }}
+                          onTouchMove={(e) => {
+                            const el = sliderRefs[feeling.name];
+                            if (el) handleFeelingTouchMove(e, feeling.name, el);
+                          }}
                           onTouchEnd={handleFeelingTouchEnd}
                         >
                           {/* Fill bar */}
@@ -566,11 +586,6 @@ export function DayDetailModal({
                                    : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 border border-silver-200 dark:border-silver-700'
                                  }`}
                       >
-                        {isSelected && (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
                         <span>{activity.emoji}</span>
                         <span>{activity.label}</span>
                       </button>
@@ -591,17 +606,12 @@ export function DayDetailModal({
                       <button
                         key={emotion}
                         onClick={() => toggleEmotion(emotion.toLowerCase())}
-                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                                  ${isSelected
                                    ? 'bg-lavender-500 dark:bg-lavender-600 text-white shadow-md shadow-lavender-500/30 dark:shadow-lavender-600/30 ring-2 ring-lavender-400 dark:ring-lavender-500'
                                    : 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300 hover:bg-silver-200 dark:hover:bg-silver-700 border border-silver-200 dark:border-silver-700'
                                  }`}
                       >
-                        {isSelected && (
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
                         {emotion}
                       </button>
                     );
@@ -750,11 +760,11 @@ export function DayDetailModal({
                 </div>
               </div>
 
-              {/* Feeling Levels */}
+              {/* How's your... (Feeling Levels) */}
               {entry.feelingLevels && entry.feelingLevels.length > 0 && (
                 <div>
                   <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
-                    Feeling Levels
+                    How's your...
                   </p>
                   <div className="space-y-2">
                     {entry.feelingLevels.map(feeling => {

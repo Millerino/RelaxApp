@@ -224,11 +224,6 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [], weekOffset: co
                 <span className={`text-lg font-semibold ${hasData ? '' : ''}`}>
                   {date.getDate()}
                 </span>
-                {hasData && (
-                  <span className="text-[10px] opacity-80 mt-0.5">
-                    {getMoodEmoji(entry.mood)}
-                  </span>
-                )}
                 {!hasData && !future && (
                   <span className="text-[10px] opacity-50 mt-0.5">+</span>
                 )}
@@ -265,13 +260,3 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [], weekOffset: co
   );
 }
 
-function getMoodEmoji(mood: number): string {
-  const emojis: Record<number, string> = {
-    1: '😔',
-    2: '😕',
-    3: '😐',
-    4: '🙂',
-    5: '😊',
-  };
-  return emojis[mood] || '😐';
-}

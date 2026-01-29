@@ -215,30 +215,39 @@ export function StatsCard({ entries }: StatsCardProps) {
           <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">
             Most felt emotions
           </h4>
-          <div className="space-y-2">
-            {stats.topEmotions.map(([emotion, count], i) => (
-              <div key={emotion} className="flex items-center gap-3">
-                <span className="text-lg">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
-                </span>
-                <div className="flex-1">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm text-silver-600 dark:text-silver-300 capitalize">
-                      {emotion}
-                    </span>
-                    <span className="text-xs text-silver-400 dark:text-silver-500">
-                      {count}x
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-lavender-400 rounded-full"
-                      style={{ width: `${(count / stats.topEmotions[0][1]) * 100}%` }}
-                    />
+          <div className="space-y-3">
+            {stats.topEmotions.map(([emotion, count], i) => {
+              // Different colored accents for each emotion without rankings
+              const accentColors = [
+                { bar: 'bg-lavender-400', dot: 'bg-lavender-400' },
+                { bar: 'bg-violet-400', dot: 'bg-violet-400' },
+                { bar: 'bg-purple-400', dot: 'bg-purple-400' },
+              ];
+              const colors = accentColors[i] || accentColors[0];
+
+              return (
+                <div key={emotion} className="flex items-center gap-3">
+                  {/* Small colored indicator dot instead of medal */}
+                  <div className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
+                  <div className="flex-1">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm text-silver-600 dark:text-silver-300 capitalize font-medium">
+                        {emotion}
+                      </span>
+                      <span className="text-xs text-silver-400 dark:text-silver-500">
+                        {count} {count === 1 ? 'time' : 'times'}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${colors.bar} rounded-full transition-all duration-500`}
+                        style={{ width: `${(count / stats.topEmotions[0][1]) * 100}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
