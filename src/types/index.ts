@@ -88,3 +88,11 @@ export type OnboardingStep =
   | 'paywall';
 
 export type Theme = 'light' | 'dark';
+
+// Habit tracking types (from useHabitTracker)
+export interface HabitState {
+  water: { current: number; goal: number; completed: boolean };
+  meditate: { minutes: number; completed: boolean };
+  sleep: { hours: number; quality: 'poor' | 'okay' | 'great' | null; completed: boolean };
+  detox: { active: boolean; startTime: number | null; completed: boolean; successful: boolean | null };
+}

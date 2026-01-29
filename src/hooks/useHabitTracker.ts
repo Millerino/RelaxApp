@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { syncService } from '../services/syncService';
+import { isSupabaseConfigured } from '../lib/supabase';
+import type { HabitState } from '../types';
 
-export interface HabitState {
-  water: { current: number; goal: number; completed: boolean };
-  meditate: { minutes: number; completed: boolean };
-  sleep: { hours: number; quality: 'poor' | 'okay' | 'great' | null; completed: boolean };
-  detox: { active: boolean; startTime: number | null; completed: boolean; successful: boolean | null };
-}
+export type { HabitState };
 
 interface HabitTrackerReturn {
   habits: HabitState;
@@ -55,6 +54,24 @@ const saveState = (state: HabitState) => {
 
 export function useHabitTracker(): HabitTrackerReturn {
   const [habits, setHabits] = useState<HabitState>(loadState);
+  const { user } = useAuth();
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced sync to Supabase
+  const syncToSupabase = useCallback((habitsToSync: HabitState) => {
+    if (!user || !isSupabaseConfigured) return;
+
+    // Clear existing timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    // Debounce sync by 1 second to batch rapid changes
+    syncTimeoutRef.current = setTimeout(() => {
+      const today = new Date().toDateString();
+      syncService.syncHabits(user.id, habitsToSync, today);
+    }, 1000);
+  }, [user]);
 
   // Check for date change (midnight reset)
   useEffect(() => {
@@ -76,7 +93,17 @@ export function useHabitTracker(): HabitTrackerReturn {
   // Persist state changes
   useEffect(() => {
     saveState(habits);
-  }, [habits]);
+    syncToSupabase(habits);
+  }, [habits, syncToSupabase]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const updateWater = useCallback((amount: number) => {
     setHabits(prev => {
