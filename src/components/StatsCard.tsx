@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { DayEntry } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 
 interface StatsCardProps {
   entries: DayEntry[];
@@ -168,9 +169,15 @@ export function StatsCard({ entries }: StatsCardProps) {
       {/* Mood by Day of Week */}
       {entries.length >= 7 && (
         <div className="glass-card p-4">
-          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">
-            Mood by day
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
+              Mood by day
+            </h4>
+            <InfoTooltip
+              title="Mood by Day"
+              description="See which days of the week tend to be your best and most challenging. The bars show your average mood for each weekday based on all your entries. Green highlights your best day, while lighter colors show harder days."
+            />
+          </div>
           <div className="flex justify-between items-end h-20 gap-1">
             {stats.moodByDayArray.map((day) => (
               <div key={day.name} className="flex-1 flex flex-col items-center gap-1">
@@ -212,9 +219,15 @@ export function StatsCard({ entries }: StatsCardProps) {
       {/* Top Emotions */}
       {stats.topEmotions.length > 0 && (
         <div className="glass-card p-4">
-          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">
-            Most felt emotions
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
+              Most felt emotions
+            </h4>
+            <InfoTooltip
+              title="Most Felt Emotions"
+              description="Your top 3 most frequently selected emotions across all entries. This helps you understand your emotional patterns over time. The bars show how often you've felt each emotion relative to the most common one."
+            />
+          </div>
           <div className="space-y-3">
             {stats.topEmotions.map(([emotion, count], i) => {
               // Different colored accents for each emotion without rankings

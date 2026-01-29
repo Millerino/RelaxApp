@@ -164,10 +164,10 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-lavender-50 dark:bg-silver-950 text-silver-900 dark:text-silver-100">
       <Background />
       <LampToggle />
-      <main className="relative min-h-screen flex items-center justify-center px-4 py-12 md:py-20">
+      <main className="relative min-h-screen flex flex-col items-center justify-start md:justify-center px-4 py-12 md:py-20 overflow-x-hidden">
         <AppContent
           onShowPricing={() => setShowPricing(true)}
           onShowFAQ={() => setShowFAQ(true)}

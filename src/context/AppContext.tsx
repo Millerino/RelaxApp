@@ -183,8 +183,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await syncService.syncQuickNote(user.id, note);
           }
 
-          // Push profile if exists locally
-          if (state.profile) {
+          // Only push local profile if server doesn't have one
+          // This prevents overwriting server data with potentially empty local data
+          if (!data.profile && state.profile) {
             await syncService.syncProfile(user.id, state.profile, state.xp || 0, state.firstEntryDate);
           }
 

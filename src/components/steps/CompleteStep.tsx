@@ -13,6 +13,7 @@ import { DayDetailModal } from '../DayDetailModal';
 import { QuickNotes } from '../QuickNotes';
 import { PatternInsight } from '../PatternInsight';
 import { DailyRituals } from '../habits';
+import { InfoTooltip } from '../InfoTooltip';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -60,7 +61,7 @@ export function CompleteStep() {
 
   return (
     <>
-      <div className="flex flex-col items-center min-h-[60vh] animate-fade-in pt-4">
+      <div className="flex flex-col items-center w-full max-w-full overflow-x-hidden animate-fade-in pt-4">
         <div className="w-full max-w-5xl px-6">
           {/* Success state - today's entry exists */}
           {todayEntry ? (
@@ -126,72 +127,80 @@ export function CompleteStep() {
                 {/* Left column */}
                 <div className="space-y-6">
                   {/* Today's summary card - clickable to edit */}
-                  <button
-                    onClick={() => setShowTodayEditor(true)}
-                    className="glass-card p-5 text-left w-full hover:ring-2 hover:ring-lavender-400/50 transition-all group"
-                  >
+                  <div className="glass-card p-5 w-full">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200">Today's Summary</h3>
-                      <span className="text-xs text-lavender-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-silver-700 dark:text-silver-200">Today's Summary</h3>
+                        <InfoTooltip
+                          title="Today's Summary"
+                          description="A snapshot of your daily reflection including your mood score, emotions you selected, and goals for tomorrow. Tap the card to edit or add more details to today's entry."
+                        />
+                      </div>
+                      <span className="text-xs text-lavender-500">
                         Tap to edit
                       </span>
                     </div>
 
-                    {/* Mood display - clean and visual */}
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className={`w-12 h-12 rounded-xl ${getMoodGradient(todayEntry.mood)}
-                                    flex items-center justify-center shadow-md`}>
-                        <span className="text-lg font-bold text-white">{todayEntry.mood}</span>
-                      </div>
-                      <div>
-                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide">Mood</p>
-                        <p className={`text-lg font-semibold ${getMoodTextColor(todayEntry.mood)}`}>
-                          {getMoodLabel(todayEntry.mood)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Emotions - cleaner display */}
-                    {todayEntry.emotions.length > 0 && (
-                      <div className="mb-5">
-                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
-                          Emotions
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {todayEntry.emotions.map(e => (
-                            <span key={e} className="px-3 py-1.5 rounded-lg text-sm font-medium
-                                                   bg-lavender-50 dark:bg-lavender-900/30
-                                                   text-lavender-600 dark:text-lavender-300
-                                                   border border-lavender-200 dark:border-lavender-800">
-                              {e.charAt(0).toUpperCase() + e.slice(1)}
-                            </span>
-                          ))}
+                    <button
+                      onClick={() => setShowTodayEditor(true)}
+                      className="text-left w-full hover:bg-silver-50/50 dark:hover:bg-silver-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors"
+                    >
+                      {/* Mood display - clean and visual */}
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className={`w-12 h-12 rounded-xl ${getMoodGradient(todayEntry.mood)}
+                                      flex items-center justify-center shadow-md`}>
+                          <span className="text-lg font-bold text-white">{todayEntry.mood}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide">Mood</p>
+                          <p className={`text-lg font-semibold ${getMoodTextColor(todayEntry.mood)}`}>
+                            {getMoodLabel(todayEntry.mood)}
+                          </p>
                         </div>
                       </div>
-                    )}
 
-                    {/* Goals */}
-                    {todayEntry.goals.length > 0 && (
-                      <div>
-                        <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
-                          Tomorrow's Focus
-                        </p>
-                        <ul className="space-y-2">
-                          {todayEntry.goals.map(g => (
-                            <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-start gap-2.5">
-                              <span className="w-5 h-5 rounded-md bg-lavender-100 dark:bg-lavender-900/40
-                                             flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <svg className="w-3 h-3 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                      {/* Emotions - cleaner display */}
+                      {todayEntry.emotions.length > 0 && (
+                        <div className="mb-5">
+                          <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                            Emotions
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {todayEntry.emotions.map(e => (
+                              <span key={e} className="px-3 py-1.5 rounded-lg text-sm font-medium
+                                                     bg-lavender-50 dark:bg-lavender-900/30
+                                                     text-lavender-600 dark:text-lavender-300
+                                                     border border-lavender-200 dark:border-lavender-800">
+                                {e.charAt(0).toUpperCase() + e.slice(1)}
                               </span>
-                              {g.text}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Goals */}
+                      {todayEntry.goals.length > 0 && (
+                        <div>
+                          <p className="text-xs text-silver-500 dark:text-silver-400 uppercase tracking-wide mb-2">
+                            Tomorrow's Focus
+                          </p>
+                          <ul className="space-y-2">
+                            {todayEntry.goals.map(g => (
+                              <li key={g.id} className="text-sm text-silver-700 dark:text-silver-300 flex items-start gap-2.5">
+                                <span className="w-5 h-5 rounded-md bg-lavender-100 dark:bg-lavender-900/40
+                                               flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <svg className="w-3 h-3 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </span>
+                                {g.text}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </button>
+                  </div>
 
                   {/* 7-day Mood Graph - synced with Calendar week */}
                   {state.entries.length >= 2 && (

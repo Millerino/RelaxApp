@@ -121,19 +121,27 @@ export const entryToDb = (
 
 /**
  * Convert database entry to local DayEntry
+ * Note: db.date is in YYYY-MM-DD format. We need to parse it carefully
+ * to avoid timezone issues (UTC midnight can shift to previous day in local time)
  */
-export const dbToEntry = (db: DbEntry, goals: DbGoal[]): DayEntry => ({
-  id: db.id,
-  date: new Date(db.date).toDateString(),
-  mood: db.mood as 1 | 2 | 3 | 4 | 5,
-  emotions: db.emotions,
-  reflection: db.reflection,
-  gratitude: db.gratitude,
-  goals: goals.filter(g => g.entry_id === db.id).map(dbToGoal),
-  activities: db.activities,
-  feelingLevels: db.feeling_levels,
-  createdAt: new Date(db.created_at).getTime(),
-});
+export const dbToEntry = (db: DbEntry, goals: DbGoal[]): DayEntry => {
+  // Parse YYYY-MM-DD as local date by splitting and using Date constructor
+  const [year, month, day] = db.date.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day);
+
+  return {
+    id: db.id,
+    date: localDate.toDateString(),
+    mood: db.mood as 1 | 2 | 3 | 4 | 5,
+    emotions: db.emotions,
+    reflection: db.reflection,
+    gratitude: db.gratitude,
+    goals: goals.filter(g => g.entry_id === db.id).map(dbToGoal),
+    activities: db.activities,
+    feelingLevels: db.feeling_levels,
+    createdAt: new Date(db.created_at).getTime(),
+  };
+};
 
 /**
  * Convert local Goal to database format
@@ -177,14 +185,23 @@ export const quickNoteToDb = (
 
 /**
  * Convert database quick note to local QuickNote
+ * Note: db.date is in YYYY-MM-DD format. We need to parse it carefully
+ * to avoid timezone issues (UTC midnight can shift to previous day in local time)
  */
-export const dbToQuickNote = (db: DbQuickNote): QuickNote => ({
-  id: db.id,
-  text: db.text,
-  emoji: db.emoji || undefined,
-  date: new Date(db.date).toDateString(),
-  createdAt: new Date(db.created_at).getTime(),
-});
+export const dbToQuickNote = (db: DbQuickNote): QuickNote => {
+  // Parse YYYY-MM-DD as local date by splitting and using Date constructor
+  // This avoids the UTC interpretation issue
+  const [year, month, day] = db.date.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day);
+
+  return {
+    id: db.id,
+    text: db.text,
+    emoji: db.emoji || undefined,
+    date: localDate.toDateString(),
+    createdAt: new Date(db.created_at).getTime(),
+  };
+};
 
 /**
  * Convert local HabitState to database format

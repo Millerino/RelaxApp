@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { DayEntry } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 
 interface MoodGraphProps {
   entries: DayEntry[];
@@ -188,13 +189,19 @@ export function MoodGraph({ entries, weekOffset = 0 }: MoodGraphProps) {
     <div className="relative">
       {/* Header with title and stats */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
-            {weekOffset === 0 ? 'Your Week' : weekOffset === -1 ? 'Last Week' : `${Math.abs(weekOffset)} Weeks Ago`}
-          </h4>
-          <p className="text-xs text-silver-400 dark:text-silver-500 mt-0.5">
-            {stats.daysLogged} of 7 days logged
-          </p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
+              {weekOffset === 0 ? 'Your Week' : weekOffset === -1 ? 'Last Week' : `${Math.abs(weekOffset)} Weeks Ago`}
+            </h4>
+            <p className="text-xs text-silver-400 dark:text-silver-500 mt-0.5">
+              {stats.daysLogged} of 7 days logged
+            </p>
+          </div>
+          <InfoTooltip
+            title="Your Week Graph"
+            description="This chart shows your mood scores for each day of the week. The line connects your entries, helping you spot patterns. Hover or tap on any day to see details. The trend indicator shows if your mood is improving, declining, or stable."
+          />
         </div>
         {stats.daysLogged > 0 && (
           <div className="flex items-center gap-3">
