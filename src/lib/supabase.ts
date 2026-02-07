@@ -58,3 +58,32 @@ export async function upsertProfile(userId: string, fields: Partial<SupabaseProf
   }
   return true;
 }
+
+// --- Subscription management ---
+
+interface ManageSubscriptionResult {
+  success?: boolean;
+  error?: string;
+  premium_until?: string;
+  status?: string;
+}
+
+/** Cancel the user's Stripe subscription at end of billing period */
+export async function cancelStripeSubscription(): Promise<ManageSubscriptionResult> {
+  if (!supabase) return { error: 'Not configured' };
+  const { data, error } = await supabase.functions.invoke('manage-subscription', {
+    body: { action: 'cancel' },
+  });
+  if (error) return { error: error.message };
+  return data;
+}
+
+/** Resume a canceled Stripe subscription (undo cancel) */
+export async function resumeStripeSubscription(): Promise<ManageSubscriptionResult> {
+  if (!supabase) return { error: 'Not configured' };
+  const { data, error } = await supabase.functions.invoke('manage-subscription', {
+    body: { action: 'resume' },
+  });
+  if (error) return { error: error.message };
+  return data;
+}

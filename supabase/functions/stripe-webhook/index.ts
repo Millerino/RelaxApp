@@ -98,28 +98,46 @@ serve(async (req) => {
         const subscription = event.data.object
         const customerId = subscription.customer
         const status = subscription.status // 'active', 'past_due', 'canceled', etc.
+        const periodEnd = subscription.current_period_end // Unix timestamp
+
+        const updateData: Record<string, unknown> = {
+          subscription_status: status,
+          is_premium: status === 'active' || status === 'trialing',
+        }
+        // Store the actual billing period end date
+        if (periodEnd) {
+          updateData.premium_until = new Date(periodEnd * 1000).toISOString()
+        }
 
         const { error } = await supabase
           .from('profiles')
-          .update({
-            subscription_status: status,
-            is_premium: status === 'active' || status === 'trialing',
-          })
+          .update(updateData)
           .eq('stripe_customer_id', customerId)
 
         if (error) console.error('Error updating subscription:', error)
+        else console.log('Subscription updated:', status, 'customer:', customerId)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
         const customerId = subscription.customer
+        const periodEnd = subscription.current_period_end // Unix timestamp
+
+        // Keep premium until the paid billing period ends
+        const premiumUntil = periodEnd ? new Date(periodEnd * 1000) : new Date()
+        const stillHasTime = premiumUntil > new Date()
+
+        console.log('Subscription canceled for customer:', customerId,
+          'premium_until:', premiumUntil.toISOString(),
+          'still_has_time:', stillHasTime)
 
         const { error } = await supabase
           .from('profiles')
           .update({
             subscription_status: 'canceled',
-            is_premium: false,
+            is_premium: stillHasTime, // Keep premium if paid period hasn't ended
+            premium_until: premiumUntil.toISOString(),
           })
           .eq('stripe_customer_id', customerId)
 
