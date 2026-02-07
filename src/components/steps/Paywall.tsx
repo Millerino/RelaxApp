@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { STRIPE_PAYMENT_LINK, isStripeConfigured } from '../../lib/stripe';
 
 export function Paywall() {
-  const { subscribeToPremium, setStep } = useApp();
+  const { setStep } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    subscribeToPremium();
+    if (isStripeConfigured) {
+      // Redirect to Stripe payment page
+      window.location.href = STRIPE_PAYMENT_LINK;
+      return;
+    }
+    // Stripe not configured - show demo message
     setIsLoading(false);
     setStep('complete');
   };

@@ -23,11 +23,6 @@ export function CompleteStep() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [showTodayEditor, setShowTodayEditor] = useState(false);
 
-  // Check if should show paywall (but not if user is authenticated via Supabase)
-  if (shouldShowPaywall && !user) {
-    return null; // Will be handled by parent
-  }
-
   const today = new Date().toDateString();
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
@@ -51,6 +46,12 @@ export function CompleteStep() {
     if (hour < 21) return 'Good evening';
     return 'Good night';
   }, []);
+
+  // Check if should show paywall (but not if user is authenticated via Supabase)
+  // Placed after all hooks to satisfy React's Rules of Hooks
+  if (shouldShowPaywall && !user) {
+    return null; // Will be handled by parent
+  }
 
   const handleNewEntry = () => {
     setStep('mood');
@@ -609,7 +610,7 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
         {/* Main orb - grows, bounces, and pulses on hover */}
         <div
           className="relative rounded-full transition-all duration-300 ease-out
-                     group-hover:scale-115 group-hover:-translate-y-1 group-hover:animate-pulse"
+                     group-hover:scale-110 group-hover:-translate-y-1 group-hover:animate-pulse"
           style={{
             width: size,
             height: size,

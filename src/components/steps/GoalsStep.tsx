@@ -29,7 +29,8 @@ export function GoalsStep() {
   const handleComplete = () => {
     const validGoals = goals.filter(g => g.text.trim());
     setGoals(validGoals);
-    saveDayEntry();
+    // Pass goals directly to avoid stale closure (setGoals is async)
+    saveDayEntry({ goals: validGoals });
 
     // Show login prompt for first-time users
     if (!state.isLoggedIn && !state.isOnboarded) {

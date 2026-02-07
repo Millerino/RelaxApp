@@ -89,7 +89,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
       />
 
       {/* Modal */}
-      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-lavender-500 to-lavender-600 relative">
           <button

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { STRIPE_PAYMENT_LINK, isStripeConfigured } from '../lib/stripe';
 
 interface SubscriptionModalProps {
   onClose: () => void;
@@ -272,8 +273,12 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
 
                 <button
                   onClick={() => {
-                    subscribeToPremium();
-                    onClose();
+                    if (isStripeConfigured) {
+                      window.location.href = STRIPE_PAYMENT_LINK;
+                    } else {
+                      subscribeToPremium();
+                      onClose();
+                    }
                   }}
                   className="btn-primary w-full py-3"
                 >

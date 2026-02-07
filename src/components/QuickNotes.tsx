@@ -15,7 +15,7 @@ export function QuickNotes() {
 
   const handleSubmit = () => {
     if (newNote.trim()) {
-      addQuickNote(newNote.trim());
+      addQuickNote(newNote.trim(), undefined, selectedEmoji || undefined);
       setNewNote('');
       setSelectedEmoji(null);
     }

@@ -9,6 +9,11 @@ export function AuthCallback({ onComplete }: AuthCallbackProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    let fallbackTimeout: ReturnType<typeof setTimeout>;
+    let errorTimeout: ReturnType<typeof setTimeout>;
+    let authSubscription: { unsubscribe: () => void } | null = null;
+
     const handleCallback = async () => {
       try {
         if (!supabase) {
@@ -17,6 +22,8 @@ export function AuthCallback({ onComplete }: AuthCallbackProps) {
 
         // Get the session from URL hash (Supabase puts tokens there)
         const { data, error } = await supabase.auth.getSession();
+
+        if (!mounted) return;
 
         if (error) {
           throw error;
@@ -30,30 +37,46 @@ export function AuthCallback({ onComplete }: AuthCallbackProps) {
           // No session yet, wait for auth state change
           const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) {
+              clearTimeout(fallbackTimeout);
               subscription.unsubscribe();
+              if (mounted) {
+                window.history.replaceState({}, '', '/');
+                onComplete();
+              }
+            }
+          });
+          authSubscription = subscription;
+
+          // Timeout fallback
+          fallbackTimeout = setTimeout(() => {
+            subscription.unsubscribe();
+            if (mounted) {
               window.history.replaceState({}, '', '/');
               onComplete();
             }
-          });
-
-          // Timeout fallback
-          setTimeout(() => {
-            subscription.unsubscribe();
-            window.history.replaceState({}, '', '/');
-            onComplete();
           }, 5000);
         }
       } catch (err) {
+        if (!mounted) return;
         setError(err instanceof Error ? err.message : 'Authentication failed');
         // Redirect home after showing error
-        setTimeout(() => {
-          window.history.replaceState({}, '', '/');
-          onComplete();
+        errorTimeout = setTimeout(() => {
+          if (mounted) {
+            window.history.replaceState({}, '', '/');
+            onComplete();
+          }
         }, 3000);
       }
     };
 
     handleCallback();
+
+    return () => {
+      mounted = false;
+      clearTimeout(fallbackTimeout);
+      clearTimeout(errorTimeout);
+      authSubscription?.unsubscribe();
+    };
   }, [onComplete]);
 
   return (

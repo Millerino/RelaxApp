@@ -217,8 +217,8 @@ export function Header({ onNavigateHome }: HeaderProps) {
         <AuthModal
           onClose={() => {
             setShowAuthModal(false);
-            // After login, redirect to dashboard
-            setStep('complete');
+            // Only navigate to dashboard if user is now authenticated
+            // (user state will have been updated by AuthContext's onAuthStateChange)
           }}
           initialMode={authMode}
         />
