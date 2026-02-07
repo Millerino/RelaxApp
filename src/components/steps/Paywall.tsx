@@ -104,7 +104,7 @@ export function Paywall() {
               'Unlimited daily reflections',
               'Full mood & emotion history',
               'Goal tracking insights',
-              'Export your journal anytime',
+              'Priority support',
             ].map((feature, i) => (
               <li key={i} className="flex items-center gap-2.5 text-silver-600 dark:text-silver-300">
                 <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

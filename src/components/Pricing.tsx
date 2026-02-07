@@ -98,7 +98,7 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
                 'Unlimited daily reflections',
                 'Complete mood history & insights',
                 'Goal tracking over time',
-                'Export your journal anytime',
+                'Priority support',
                 'Help support this project',
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-3 text-silver-600 dark:text-silver-300">

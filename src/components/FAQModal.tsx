@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     question: 'Is my data private?',
-    answer: 'Absolutely. Your journal entries and personal reflections are encrypted and stored securely. We never share your data with third parties, and you can export or delete your data at any time.',
+    answer: 'Absolutely. Your journal entries and personal reflections are stored securely. We never share your data with third parties, and you can delete your data at any time.',
   },
   {
     question: 'How does the free trial work?',
