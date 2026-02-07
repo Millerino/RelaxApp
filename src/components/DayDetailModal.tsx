@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
 
 interface DayDetailModalProps {
@@ -235,7 +236,7 @@ export function DayDetailModal({
     };
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 isolate"
       onClick={handleBackdropClick}
@@ -770,7 +771,8 @@ export function DayDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
