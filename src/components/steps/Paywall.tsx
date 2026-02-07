@@ -5,13 +5,20 @@ import { buildPaymentLink, isStripeConfigured } from '../../lib/stripe';
 
 export function Paywall() {
   const { setStep, state, subscribeToPremium } = useApp();
-  const { user } = useAuth();
+  const { user, isConfigured: isAuthConfigured } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const daysUsed = state.daysUsed || 0;
   const entriesCount = state.entries?.length || 0;
 
   const handleSubscribe = async () => {
+    // Require login so we can verify payment against Supabase
+    if (!user && isAuthConfigured) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setIsLoading(true);
     if (isStripeConfigured) {
       window.location.href = buildPaymentLink({
@@ -20,7 +27,7 @@ export function Paywall() {
       });
       return;
     }
-    // Stripe not configured - demo mode
+    // Stripe not configured - demo mode only
     subscribeToPremium();
     setIsLoading(false);
     setStep('complete');
@@ -53,6 +60,35 @@ export function Paywall() {
           Your free trial has ended. Continue your journey with Premium, or take a look around first.
         </p>
 
+        {/* Login prompt if not logged in */}
+        {showLoginPrompt && !user && (
+          <div className="glass-card p-5 mb-6 border-2 border-lavender-300/50 dark:border-lavender-700/50">
+            <p className="text-sm text-silver-700 dark:text-silver-200 mb-3">
+              Create a free account first so we can link your subscription
+            </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => {
+                  // Dispatch event to open auth modal from AppShell
+                  window.dispatchEvent(new CustomEvent('openAuthModal', { detail: { mode: 'signup' } }));
+                }}
+                className="btn-primary px-5 py-2 text-sm"
+              >
+                Sign up free
+              </button>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('openAuthModal', { detail: { mode: 'login' } }));
+                }}
+                className="px-5 py-2 text-sm font-medium rounded-lg text-lavender-600 dark:text-lavender-400
+                         hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+              >
+                Log in
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Pricing card - soft glass style */}
         <div className="glass-card p-6 mb-6">
           <div className="flex items-baseline justify-center gap-1 mb-1">
@@ -84,7 +120,7 @@ export function Paywall() {
             disabled={isLoading}
             className="btn-primary w-full py-3.5 text-base"
           >
-            {isLoading ? 'Processing...' : 'Continue with Premium'}
+            {isLoading ? 'Processing...' : user ? 'Continue with Premium' : 'Sign up & subscribe'}
           </button>
         </div>
 
