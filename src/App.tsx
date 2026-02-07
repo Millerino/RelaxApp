@@ -110,7 +110,7 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile, setStep, subscribeToPremium } = useApp();
+  const { state, setProfile, setStep, subscribeToPremium, cancelSubscription } = useApp();
   const { user, profile: supabaseProfile, refreshProfile } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -133,40 +133,51 @@ function AppShell() {
   };
 
   // Sync premium status from Supabase profile → local state
+  // This is the ONLY way premium gets activated: from the database
   useEffect(() => {
     if (supabaseProfile?.is_premium && !state.isPremium) {
       subscribeToPremium();
     }
-  }, [supabaseProfile?.is_premium, state.isPremium, subscribeToPremium]);
+    // If Supabase says NOT premium but local says premium, revoke it (anti-tampering)
+    if (user && supabaseProfile && !supabaseProfile.is_premium && state.isPremium) {
+      cancelSubscription();
+    }
+  }, [supabaseProfile?.is_premium, state.isPremium, user, subscribeToPremium, cancelSubscription]);
 
   // Handle payment success redirect from Stripe
+  // Does NOT grant premium — only polls Supabase for the webhook to confirm
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('payment_success')) {
       window.history.replaceState({}, '', window.location.pathname);
+      setStep('complete');
 
       if (user) {
-        // Poll Supabase a few times for the webhook to update premium status
+        // Poll Supabase for webhook confirmation (5 attempts, 3s apart = 15s)
         const checkPremium = async (attempts: number) => {
           const p = await refreshProfile();
           if (p?.is_premium) {
             subscribeToPremium();
-            setStep('complete');
           } else if (attempts > 0) {
-            setTimeout(() => checkPremium(attempts - 1), 2000);
-          } else {
-            // Webhook hasn't fired yet - set premium optimistically
-            subscribeToPremium();
-            setStep('complete');
+            setTimeout(() => checkPremium(attempts - 1), 3000);
           }
+          // If all attempts fail, premium stays off
+          // The sync effect will catch it on next page load when webhook completes
         };
-        checkPremium(3);
-      } else {
-        subscribeToPremium();
-        setStep('complete');
+        checkPremium(5);
       }
+      // If not logged in, do nothing — can't verify payment without an account
     }
   }, []); // Run once on mount
+
+  // Listen for auth modal events from Paywall/other components
+  useEffect(() => {
+    const handleOpenAuth = () => {
+      setShowAuthModal(true);
+    };
+    window.addEventListener('openAuthModal', handleOpenAuth);
+    return () => window.removeEventListener('openAuthModal', handleOpenAuth);
+  }, []);
 
   // Auto-create minimal profile for logged-in users without one
   useEffect(() => {
