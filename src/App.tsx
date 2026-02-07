@@ -135,14 +135,23 @@ function AppShell() {
   // Sync premium status from Supabase profile → local state
   // This is the ONLY way premium gets activated: from the database
   useEffect(() => {
-    if (supabaseProfile?.is_premium && !state.isPremium) {
+    if (!user || !supabaseProfile) return;
+
+    const dbSaysPremium = supabaseProfile.is_premium;
+    // Also grant premium if subscription was canceled but paid period hasn't ended
+    const stillHasTime = supabaseProfile.premium_until
+      ? new Date(supabaseProfile.premium_until) > new Date()
+      : false;
+    const shouldBePremium = dbSaysPremium || stillHasTime;
+
+    if (shouldBePremium && !state.isPremium) {
       subscribeToPremium();
     }
-    // If Supabase says NOT premium but local says premium, revoke it (anti-tampering)
-    if (user && supabaseProfile && !supabaseProfile.is_premium && state.isPremium) {
+    // Anti-tampering: revoke if DB says not premium AND paid period has ended
+    if (!shouldBePremium && state.isPremium) {
       cancelSubscription();
     }
-  }, [supabaseProfile?.is_premium, state.isPremium, user, subscribeToPremium, cancelSubscription]);
+  }, [supabaseProfile?.is_premium, supabaseProfile?.premium_until, state.isPremium, user, supabaseProfile, subscribeToPremium, cancelSubscription]);
 
   // Handle payment success redirect from Stripe
   // Does NOT grant premium — only polls Supabase for the webhook to confirm
