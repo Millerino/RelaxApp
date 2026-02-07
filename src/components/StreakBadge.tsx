@@ -12,9 +12,9 @@ export function StreakBadge({ streak, showMessage = false }: Props) {
     if (streak === 3) return "Three days in a row!";
     if (streak === 7) return "One week streak!";
     if (streak === 14) return "Two weeks of reflection!";
-    if (streak === 30) return "One month champion!";
     if (streak >= 100) return "Legendary dedication!";
     if (streak >= 50) return "Incredible commitment!";
+    if (streak >= 30) return "One month champion!";
     if (streak >= 21) return "Habit formed!";
     return `${streak} day streak!`;
   };

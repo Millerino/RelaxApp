@@ -20,6 +20,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
 
   // Get display name - prefer profile name over email
   const displayName = state.profile?.name || user?.email?.split('@')[0] || 'User';
+  const avatar = state.profile?.avatar;
   const initials = displayName.charAt(0).toUpperCase();
 
   const handleLogoClick = () => {
@@ -97,7 +98,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
                   <div className="w-6 h-6 rounded-full bg-lavender-200 dark:bg-lavender-800
                                 flex items-center justify-center text-lavender-600 dark:text-lavender-300
                                 text-xs font-medium">
-                    {initials}
+                    {avatar || initials}
                   </div>
                   <span className="hidden sm:inline max-w-[120px] truncate">
                     {displayName}
@@ -217,8 +218,8 @@ export function Header({ onNavigateHome }: HeaderProps) {
         <AuthModal
           onClose={() => {
             setShowAuthModal(false);
-            // After login, redirect to dashboard
-            setStep('complete');
+            // Only navigate to dashboard if user is now authenticated
+            // (user state will have been updated by AuthContext's onAuthStateChange)
           }}
           initialMode={authMode}
         />

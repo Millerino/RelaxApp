@@ -20,6 +20,11 @@ const WELLNESS_GOALS: { id: WellnessGoal; label: string; icon: string }[] = [
   { id: 'self-discovery', label: 'Self-discovery', icon: '🔮' },
 ];
 
+const ANIMAL_AVATARS = [
+  '🐶', '🐱', '🐻', '🐼', '🦊', '🐨', '🦁', '🐯',
+  '🐸', '🐵', '🐰', '🐦', '🦋', '🐢', '🐙', '🦄',
+];
+
 const COUNTRIES = [
   'Norway', 'United States', 'United Kingdom', 'Canada', 'Australia',
   'Germany', 'France', 'Sweden', 'Denmark', 'Netherlands', 'Spain',
@@ -30,6 +35,8 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
   const { state, clearAllData } = useApp();
   const { signOut } = useAuth();
   const [name, setName] = useState(profile?.name || '');
+  const [avatar, setAvatar] = useState(profile?.avatar || '');
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [birthday, setBirthday] = useState(profile?.birthday || '');
   const [gender, setGender] = useState<UserProfile['gender']>(profile?.gender);
   const [country, setCountry] = useState(profile?.country || '');
@@ -57,6 +64,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     setIsSaving(true);
     const updatedProfile: UserProfile = {
       name: name.trim(),
+      avatar: avatar || undefined,
       birthday: birthday || undefined,
       gender,
       country: country || undefined,
@@ -253,7 +261,8 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
       )}
 
       {/* Main Modal */}
-      <div className="relative glass-card p-0 w-full max-w-lg animate-slide-up overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative glass-card p-0 w-full max-w-lg animate-slide-up overflow-hidden max-h-[90vh] overflow-y-auto"
+           onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="sticky top-0 bg-white/80 dark:bg-silver-900/80 backdrop-blur-sm border-b border-silver-200/50 dark:border-silver-700/30 px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-medium text-silver-800 dark:text-silver-100">
@@ -272,8 +281,45 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
         <div className="p-6 space-y-6">
           {/* Avatar and Name */}
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-2xl font-medium shrink-0">
-              {name.charAt(0).toUpperCase() || '?'}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-2xl font-medium
+                         hover:ring-2 hover:ring-lavender-400/50 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-silver-900 transition-all"
+              >
+                {avatar || name.charAt(0).toUpperCase() || '?'}
+              </button>
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-lavender-500 flex items-center justify-center
+                            border-2 border-white dark:border-silver-900">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              {showAvatarPicker && (
+                <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-silver-800
+                              rounded-xl shadow-xl border border-silver-200 dark:border-silver-700 z-20
+                              grid grid-cols-4 gap-1.5 w-48">
+                  {ANIMAL_AVATARS.map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => { setAvatar(emoji); setShowAvatarPicker(false); }}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl
+                                hover:bg-lavender-50 dark:hover:bg-lavender-900/30 transition-colors
+                                ${avatar === emoji ? 'bg-lavender-100 dark:bg-lavender-900/50 ring-2 ring-lavender-400' : ''}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  {avatar && (
+                    <button
+                      onClick={() => { setAvatar(''); setShowAvatarPicker(false); }}
+                      className="col-span-4 mt-1 text-xs text-silver-500 hover:text-silver-700 dark:hover:text-silver-300 py-1"
+                    >
+                      Remove avatar
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-silver-700 dark:text-silver-200 mb-1.5">

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
 import { AuthModal } from '../AuthModal';
 import type { MoodLevel } from '../../types';
 
@@ -29,16 +28,19 @@ const moodColors: Record<MoodLevel, string> = {
 };
 
 export function LoginPrompt() {
-  const { currentEntry, skipLogin, saveDayEntry } = useApp();
-  const { user } = useAuth();
+  const { currentEntry, skipLogin, state } = useApp();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
 
-  const mood = (currentEntry.mood || 3) as MoodLevel;
-  const emotions = currentEntry.emotions || [];
-  const reflection = currentEntry.reflection || '';
-  const gratitude = currentEntry.gratitude || '';
-  const goals = currentEntry.goals || [];
+  // Read today's saved entry for the preview (GoalsStep already saved it)
+  const today = new Date().toDateString();
+  const savedEntry = state.entries.find(e => e.date === today);
+
+  const mood = (savedEntry?.mood || currentEntry.mood || 3) as MoodLevel;
+  const emotions = savedEntry?.emotions || currentEntry.emotions || [];
+  const reflection = savedEntry?.reflection || currentEntry.reflection || '';
+  const gratitude = savedEntry?.gratitude || currentEntry.gratitude || '';
+  const goals = savedEntry?.goals || currentEntry.goals || [];
 
   const handleSignUp = () => {
     setAuthMode('signup');
@@ -51,17 +53,14 @@ export function LoginPrompt() {
   };
 
   const handleContinueWithoutSaving = () => {
-    saveDayEntry();
+    // Entry was already saved in GoalsStep, just navigate
     skipLogin();
   };
 
   const handleAuthClose = () => {
     setShowAuthModal(false);
-    // If user is now logged in, save and continue
-    if (user) {
-      saveDayEntry();
-      skipLogin();
-    }
+    // Entry was already saved in GoalsStep, just navigate
+    skipLogin();
   };
 
   return (

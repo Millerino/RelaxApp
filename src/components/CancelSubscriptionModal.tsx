@@ -12,6 +12,7 @@ export function CancelSubscriptionModal({ onClose }: CancelSubscriptionModalProp
   const [step, setStep] = useState<CancelStep>('confirm');
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [didCancel, setDidCancel] = useState(false);
 
   const reasons = [
     'Too expensive',
@@ -34,6 +35,7 @@ export function CancelSubscriptionModal({ onClose }: CancelSubscriptionModalProp
     // In production, this would call Stripe API to cancel subscription
     await new Promise(resolve => setTimeout(resolve, 1000));
     cancelSubscription?.();
+    setDidCancel(true);
     setStep('success');
     setIsLoading(false);
   };
@@ -53,7 +55,7 @@ export function CancelSubscriptionModal({ onClose }: CancelSubscriptionModalProp
       />
 
       {/* Modal */}
-      <div className="relative glass-card p-6 md:p-8 w-full max-w-md animate-slide-up">
+      <div className="relative glass-card p-6 md:p-8 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -207,10 +209,10 @@ export function CancelSubscriptionModal({ onClose }: CancelSubscriptionModalProp
               </svg>
             </div>
             <h2 className="text-xl font-light text-silver-800 dark:text-silver-100 mb-2">
-              {selectedReason ? 'Subscription canceled' : 'Free month applied!'}
+              {didCancel ? 'Subscription canceled' : 'Free month applied!'}
             </h2>
             <p className="text-sm text-silver-500 dark:text-silver-400 mb-6">
-              {selectedReason
+              {didCancel
                 ? 'Your access continues until the end of your billing period. We hope to see you again!'
                 : 'Your next billing will be skipped. Enjoy your free month of Pulsero!'
               }
