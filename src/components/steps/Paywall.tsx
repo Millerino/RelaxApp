@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { STRIPE_PAYMENT_LINK, isStripeConfigured } from '../../lib/stripe';
+import { useAuth } from '../../context/AuthContext';
+import { buildPaymentLink, isStripeConfigured } from '../../lib/stripe';
 
 export function Paywall() {
-  const { setStep, state } = useApp();
+  const { setStep, state, subscribeToPremium } = useApp();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const daysUsed = state.daysUsed || 0;
@@ -12,10 +14,14 @@ export function Paywall() {
   const handleSubscribe = async () => {
     setIsLoading(true);
     if (isStripeConfigured) {
-      window.location.href = STRIPE_PAYMENT_LINK;
+      window.location.href = buildPaymentLink({
+        email: user?.email ?? undefined,
+        userId: user?.id,
+      });
       return;
     }
-    // Stripe not configured - show demo message
+    // Stripe not configured - demo mode
+    subscribeToPremium();
     setIsLoading(false);
     setStep('complete');
   };

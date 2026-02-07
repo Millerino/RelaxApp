@@ -84,8 +84,8 @@ export function FAQModal({ onClose }: FAQModalProps) {
           <div className="mt-6 pt-4 border-t border-silver-200/50 dark:border-silver-700/30">
             <p className="text-xs text-silver-500 dark:text-silver-400 text-center">
               Still have questions? Contact us at{' '}
-              <a href="mailto:support@pulsero.fit" className="text-lavender-500 hover:text-lavender-600">
-                support@pulsero.fit
+              <a href="mailto:pulsero.help@gmail.com" className="text-lavender-500 hover:text-lavender-600">
+                pulsero.help@gmail.com
               </a>
             </p>
           </div>
