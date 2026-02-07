@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { DayEntry } from '../types';
 
 interface StatsCardProps {
@@ -135,6 +135,8 @@ export function StatsCard({ entries }: StatsCardProps) {
     return 'bg-red-400';
   };
 
+  const [showMoodInfo, setShowMoodInfo] = useState(false);
+
   return (
     <div className="space-y-4">
       {/* Quick Stats Row */}
@@ -168,9 +170,37 @@ export function StatsCard({ entries }: StatsCardProps) {
       {/* Mood by Day of Week */}
       {entries.length >= 7 && (
         <div className="glass-card p-4">
-          <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200 mb-3">
-            Mood by day
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-silver-700 dark:text-silver-200">
+              Mood by day
+            </h4>
+            <div className="relative">
+              <button
+                onClick={() => setShowMoodInfo(!showMoodInfo)}
+                className="p-1 rounded-full text-silver-400 hover:text-silver-600 dark:hover:text-silver-300
+                         hover:bg-silver-100 dark:hover:bg-silver-800 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              {showMoodInfo && (
+                <div className="absolute right-0 top-full mt-1 w-56 p-3 bg-white dark:bg-silver-800
+                              rounded-xl shadow-xl border border-silver-200 dark:border-silver-700 z-20">
+                  <p className="text-xs text-silver-600 dark:text-silver-300 leading-relaxed">
+                    Shows your average mood for each day of the week. Higher bars mean better days on average.
+                    The green label marks your best day, while the label on the right shows your hardest.
+                  </p>
+                  <button
+                    onClick={() => setShowMoodInfo(false)}
+                    className="mt-2 text-[10px] text-lavender-500 hover:text-lavender-600"
+                  >
+                    Got it
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex justify-between items-end h-20 gap-1">
             {stats.moodByDayArray.map((day) => (
               <div key={day.name} className="flex-1 flex flex-col items-center gap-1">
@@ -218,8 +248,11 @@ export function StatsCard({ entries }: StatsCardProps) {
           <div className="space-y-2">
             {stats.topEmotions.map(([emotion, count], i) => (
               <div key={emotion} className="flex items-center gap-3">
-                <span className="text-lg">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold
+                              ${i === 0 ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-600 dark:text-lavender-400'
+                                : i === 1 ? 'bg-silver-100 dark:bg-silver-800 text-silver-600 dark:text-silver-300'
+                                : 'bg-silver-50 dark:bg-silver-800/50 text-silver-500 dark:text-silver-400'}`}>
+                  {i + 1}
                 </span>
                 <div className="flex-1">
                   <div className="flex justify-between mb-1">

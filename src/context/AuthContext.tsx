@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+    }).catch(() => {
+      // Ensure loading state is cleared even on network errors
+      setIsLoading(false);
     });
 
     // Listen for auth changes

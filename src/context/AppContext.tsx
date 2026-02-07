@@ -10,7 +10,7 @@ interface AppContextType {
   setReflection: (text: string) => void;
   setGratitude: (text: string) => void;
   setGoals: (goals: Goal[]) => void;
-  saveDayEntry: () => void;
+  saveDayEntry: (overrides?: Partial<DayEntry>) => void;
   updateEntry: (entry: DayEntry) => void;
   setProfile: (profile: UserProfile) => void;
   login: (email: string) => void;
@@ -20,7 +20,7 @@ interface AppContextType {
   clearAllData: () => Promise<void>;
   currentEntry: Partial<DayEntry>;
   shouldShowPaywall: boolean;
-  addQuickNote: (text: string, date?: string) => void;
+  addQuickNote: (text: string, date?: string, emoji?: string) => void;
   deleteQuickNote: (id: string) => void;
   updateQuickNoteEmoji: (id: string, emoji: string) => void;
   getNotesForDate: (date: string) => QuickNote[];
@@ -110,16 +110,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return xp;
   };
 
-  const saveDayEntry = () => {
+  const saveDayEntry = (overrides?: Partial<DayEntry>) => {
     const today = new Date().toDateString();
+    const merged = { ...currentEntry, ...overrides };
     const entry: DayEntry = {
       id: crypto.randomUUID(),
       date: today,
-      mood: currentEntry.mood || 3,
-      emotions: currentEntry.emotions || [],
-      reflection: currentEntry.reflection || '',
-      gratitude: currentEntry.gratitude || '',
-      goals: currentEntry.goals || [],
+      mood: merged.mood || 3,
+      emotions: merged.emotions || [],
+      reflection: merged.reflection || '',
+      gratitude: merged.gratitude || '',
+      goals: merged.goals || [],
       createdAt: Date.now(),
     };
 
@@ -130,13 +131,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const earnedXP = calculateXP(entry, hadYesterday);
 
-    setState(prev => ({
-      ...prev,
-      entries: [...prev.entries.filter(e => e.date !== today), entry],
-      daysUsed: prev.daysUsed + 1,
-      isOnboarded: true,
-      xp: (prev.xp || 0) + earnedXP,
-    }));
+    setState(prev => {
+      const alreadyHasToday = prev.entries.some(e => e.date === today);
+      return {
+        ...prev,
+        entries: [...prev.entries.filter(e => e.date !== today), entry],
+        daysUsed: alreadyHasToday ? prev.daysUsed : prev.daysUsed + 1,
+        isOnboarded: true,
+        xp: (prev.xp || 0) + earnedXP,
+      };
+    });
 
     setCurrentEntry({});
   };
@@ -181,12 +185,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, profile }));
   };
 
-  const addQuickNote = (text: string, date?: string) => {
+  const addQuickNote = (text: string, date?: string, emoji?: string) => {
     const note: QuickNote = {
       id: crypto.randomUUID(),
       text,
       date: date || new Date().toDateString(),
       createdAt: Date.now(),
+      ...(emoji ? { emoji } : {}),
     };
     setState(prev => ({
       ...prev,

@@ -6,13 +6,16 @@ interface Props {
   entries: DayEntry[];
   onSaveEntry?: (entry: DayEntry) => void;
   quickNotes?: QuickNote[];
+  weekOffset?: number;
+  onWeekOffsetChange?: (offset: number) => void;
 }
 
-export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
+export function Calendar({ entries, onSaveEntry, quickNotes = [], weekOffset: controlledOffset, onWeekOffsetChange }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DayEntry | null>(null);
   const [showEmptyDay, setShowEmptyDay] = useState(false);
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = last week, etc.
+  const [internalOffset, setInternalOffset] = useState(0);
+  const weekOffset = controlledOffset ?? internalOffset;
 
   const today = useMemo(() => {
     const d = new Date();
@@ -129,13 +132,18 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
     return nextDate <= todayDate;
   })() : false;
 
+  const setOffset = (val: number) => {
+    if (onWeekOffsetChange) onWeekOffsetChange(val);
+    else setInternalOffset(val);
+  };
+
   const goToPrevWeek = () => {
-    setWeekOffset(prev => prev - 1);
+    setOffset(weekOffset - 1);
   };
 
   const goToNextWeek = () => {
     if (weekOffset < 0) {
-      setWeekOffset(prev => prev + 1);
+      setOffset(weekOffset + 1);
     }
   };
 
@@ -211,11 +219,6 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
                 <span className={`text-lg font-semibold ${hasData ? '' : ''}`}>
                   {date.getDate()}
                 </span>
-                {hasData && (
-                  <span className="text-[10px] opacity-80 mt-0.5">
-                    {getMoodEmoji(entry.mood)}
-                  </span>
-                )}
                 {!hasData && !future && (
                   <span className="text-[10px] opacity-50 mt-0.5">+</span>
                 )}
@@ -252,13 +255,3 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [] }: Props) {
   );
 }
 
-function getMoodEmoji(mood: number): string {
-  const emojis: Record<number, string> = {
-    1: '😔',
-    2: '😕',
-    3: '😐',
-    4: '🙂',
-    5: '😊',
-  };
-  return emojis[mood] || '😐';
-}

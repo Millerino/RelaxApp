@@ -53,18 +53,15 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 
   // Handle logo click
   const handleNavigateHome = () => {
-    if (user && entries.length > 0) {
-      setStep('complete');
-    } else if (!user && entries.length > 0) {
-      // Non-logged-in user with local entries - show limited dashboard
-      setStep('complete');
-    } else {
-      setStep('welcome');
+    // Don't allow bypassing paywall via logo click
+    if (shouldShowPaywall && !user) {
+      return;
     }
+    setStep(entries.length > 0 ? 'complete' : 'welcome');
   };
 
   // Show paywall if user has used for 3+ days and isn't premium
-  if (shouldShowPaywall && currentStep !== 'complete') {
+  if (shouldShowPaywall && !user && currentStep !== 'complete') {
     return (
       <>
         <Header onNavigateHome={handleNavigateHome} />
@@ -190,8 +187,7 @@ function AppShell() {
         <AuthModal
           onClose={() => {
             setShowAuthModal(false);
-            // Go to dashboard after login
-            setStep('complete');
+            // Navigation handled by smart routing useEffect when user state changes
           }}
         />
       )}

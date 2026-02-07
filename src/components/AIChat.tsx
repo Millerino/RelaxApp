@@ -14,6 +14,16 @@ interface Message {
   timestamp: number;
 }
 
+// Simple markdown to HTML converter for chat messages
+function formatMarkdown(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
 // Suggestions for what users can ask
 const SUGGESTIONS = [
   "Summarize my mood patterns this week",
@@ -242,7 +252,7 @@ export function AIChat({ entries, userName, onClose }: AIChatProps) {
                             : 'bg-silver-100 dark:bg-silver-800 text-silver-700 dark:text-silver-200 rounded-bl-md'
                           }`}
               >
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }} />
               </div>
             </div>
           ))}

@@ -18,6 +18,11 @@ const WELLNESS_GOALS: { id: WellnessGoal; label: string; icon: string }[] = [
   { id: 'self-discovery', label: 'Self-discovery', icon: '🔮' },
 ];
 
+const ANIMAL_AVATARS = [
+  '🐶', '🐱', '🐻', '🐼', '🦊', '🐨', '🦁', '🐯',
+  '🐸', '🐵', '🐰', '🐦', '🦋', '🐢', '🐙', '🦄',
+];
+
 const COUNTRIES = [
   'Norway', 'United States', 'United Kingdom', 'Canada', 'Australia',
   'Germany', 'France', 'Sweden', 'Denmark', 'Netherlands', 'Spain',
@@ -27,6 +32,7 @@ const COUNTRIES = [
 export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetupProps) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState(initialProfile?.name || '');
+  const [avatar, setAvatar] = useState(initialProfile?.avatar || '');
   const [birthday, setBirthday] = useState(initialProfile?.birthday || '');
   const [gender, setGender] = useState<UserProfile['gender']>(initialProfile?.gender);
   const [country, setCountry] = useState(initialProfile?.country || '');
@@ -47,6 +53,7 @@ export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetu
   const handleComplete = () => {
     const profile: UserProfile = {
       name: name.trim(),
+      avatar: avatar || undefined,
       birthday: birthday || undefined,
       gender,
       country: country || undefined,
@@ -72,10 +79,12 @@ export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetu
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+           onClick={onSkip} />
 
       {/* Modal */}
-      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden">
+      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden"
+           onClick={e => e.stopPropagation()}>
         {/* Progress bar */}
         <div className="h-1 bg-silver-100 dark:bg-silver-800">
           <div
@@ -97,9 +106,34 @@ export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetu
             </h2>
           </div>
 
-          {/* Step 1: Name */}
+          {/* Step 1: Name + Avatar */}
           {step === 1 && (
             <div className="space-y-6">
+              {/* Avatar picker */}
+              <div>
+                <label className="block text-sm font-medium text-silver-700 dark:text-silver-200 mb-3 text-center">
+                  Pick your avatar
+                </label>
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600
+                                flex items-center justify-center text-2xl">
+                    {avatar || (name ? name.charAt(0).toUpperCase() : '?')}
+                  </div>
+                </div>
+                <div className="grid grid-cols-8 gap-1.5 max-w-xs mx-auto">
+                  {ANIMAL_AVATARS.map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => setAvatar(avatar === emoji ? '' : emoji)}
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg
+                                hover:bg-lavender-50 dark:hover:bg-lavender-900/30 transition-all hover:scale-110
+                                ${avatar === emoji ? 'bg-lavender-100 dark:bg-lavender-900/50 ring-2 ring-lavender-400 scale-110' : ''}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-silver-700 dark:text-silver-200 mb-2">
                   What should we call you?
