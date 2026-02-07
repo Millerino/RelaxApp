@@ -27,6 +27,7 @@ export interface Goal {
 
 export interface UserProfile {
   name: string;
+  avatar?: string;
   birthday?: string;
   gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
   country?: string;

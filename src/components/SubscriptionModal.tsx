@@ -62,7 +62,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative glass-card p-8 w-full max-w-md animate-slide-up">
+        <div className="relative glass-card p-8 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-500
                           flex items-center justify-center">
@@ -114,7 +114,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative glass-card p-8 w-full max-w-md animate-slide-up">
+        <div className="relative glass-card p-8 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-silver-100 dark:bg-silver-800
                           flex items-center justify-center">
@@ -154,7 +154,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden">
+      <div className="relative glass-card p-0 w-full max-w-md animate-slide-up overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="bg-gradient-to-r from-lavender-400 to-lavender-500 px-6 py-5">
           <button

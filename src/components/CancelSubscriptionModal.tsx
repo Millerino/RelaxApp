@@ -55,7 +55,7 @@ export function CancelSubscriptionModal({ onClose }: CancelSubscriptionModalProp
       />
 
       {/* Modal */}
-      <div className="relative glass-card p-6 md:p-8 w-full max-w-md animate-slide-up">
+      <div className="relative glass-card p-6 md:p-8 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
         {/* Close button */}
         <button
           onClick={onClose}

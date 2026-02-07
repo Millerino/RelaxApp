@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { Calendar } from '../Calendar';
@@ -22,10 +22,23 @@ export function CompleteStep() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [showTodayEditor, setShowTodayEditor] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const hasTriggeredConfetti = useRef(false);
 
   const today = new Date().toDateString();
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
+
+  // Trigger confetti when entry is first completed
+  useEffect(() => {
+    if (todayEntry && !hasTriggeredConfetti.current) {
+      hasTriggeredConfetti.current = true;
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [todayEntry]);
 
   // Get user's first name from profile or email
   const userName = useMemo(() => {
@@ -195,13 +208,13 @@ export function CompleteStep() {
                   {/* 7-day Mood Graph */}
                   {state.entries.length >= 2 && (
                     <div className="glass-card p-5">
-                      <MoodGraph entries={state.entries} />
+                      <MoodGraph entries={state.entries} weekOffset={weekOffset} />
                     </div>
                   )}
 
                   {/* Calendar */}
                   <div className="glass-card p-5">
-                    <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
+                    <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} weekOffset={weekOffset} onWeekOffsetChange={setWeekOffset} />
                   </div>
                 </div>
 
@@ -356,13 +369,13 @@ export function CompleteStep() {
                     {/* 7-day Mood Graph */}
                     {state.entries.length >= 2 && (
                       <div className="glass-card p-5">
-                        <MoodGraph entries={state.entries} />
+                        <MoodGraph entries={state.entries} weekOffset={weekOffset} />
                       </div>
                     )}
 
                     {/* Calendar */}
                     <div className="glass-card p-5">
-                      <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} />
+                      <Calendar entries={state.entries} onSaveEntry={updateEntry} quickNotes={state.quickNotes} weekOffset={weekOffset} onWeekOffsetChange={setWeekOffset} />
                     </div>
                   </div>
 
@@ -424,7 +437,55 @@ export function CompleteStep() {
           }}
         />
       )}
+
+      {/* Confetti celebration effect */}
+      {showConfetti && <ConfettiEffect />}
     </>
+  );
+}
+
+function ConfettiEffect() {
+  const particles = useMemo(() => {
+    const colors = ['#c4b5fd', '#a78bfa', '#8b5cf6', '#34d399', '#fbbf24', '#f472b6', '#60a5fa'];
+    return Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      color: colors[i % colors.length],
+      left: Math.random() * 100,
+      delay: Math.random() * 0.8,
+      duration: 1.5 + Math.random() * 1.5,
+      size: 4 + Math.random() * 6,
+      drift: -30 + Math.random() * 60,
+    }));
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="absolute rounded-sm animate-confetti-fall"
+          style={{
+            left: `${p.left}%`,
+            top: '-10px',
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            '--drift': `${p.drift}px`,
+          } as React.CSSProperties}
+        />
+      ))}
+      <style>{`
+        @keyframes confetti-fall {
+          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) translateX(var(--drift)) rotate(720deg); opacity: 0; }
+        }
+        .animate-confetti-fall {
+          animation: confetti-fall linear forwards;
+        }
+      `}</style>
+    </div>
   );
 }
 

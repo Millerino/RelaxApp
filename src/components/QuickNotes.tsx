@@ -139,9 +139,9 @@ export function QuickNotes() {
 
                     {/* Emoji picker dropdown */}
                     {showEmojiPicker === note.id && (
-                      <div className="absolute top-full left-0 mt-1 p-1.5 bg-white dark:bg-silver-800
+                      <div className="absolute bottom-full left-0 mb-1 p-1.5 bg-white dark:bg-silver-800
                                     rounded-lg shadow-lg border border-silver-200 dark:border-silver-700 z-10
-                                    flex gap-1 flex-wrap w-32">
+                                    flex gap-1 flex-wrap w-48">
                         {MOOD_EMOJIS.map(emoji => (
                           <button
                             key={emoji}

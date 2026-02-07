@@ -160,7 +160,8 @@ export function BreathingExercise({ onClose }: BreathingExerciseProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       {/* Close button */}
       <button
         onClick={onClose}

@@ -57,26 +57,22 @@ export function DayDetailModal({
   const [hoveredFeeling, setHoveredFeeling] = useState<string | null>(null);
   const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
 
-  // Handle drag for feeling sliders
-  const handleFeelingDrag = (e: React.MouseEvent | React.TouchEvent, feelingName: string) => {
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+  // Handle drag for feeling sliders - uses stored track ref for accurate positioning
+  const calcPercent = (clientX: number, track: HTMLElement) => {
+    const rect = track.getBoundingClientRect();
     const x = clientX - rect.left;
-    const percent = Math.round((x / rect.width) * 100);
-    updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
+    return Math.max(0, Math.min(100, Math.round((x / rect.width) * 100)));
   };
 
   const handleFeelingMouseDown = (e: React.MouseEvent, feelingName: string) => {
+    e.preventDefault();
+    const track = e.currentTarget as HTMLElement;
     setDraggingFeeling(feelingName);
-    handleFeelingDrag(e, feelingName);
+    updateFeeling(feelingName, calcPercent(e.clientX, track));
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      const x = moveEvent.clientX - rect.left;
-      const percent = Math.round((x / rect.width) * 100);
-      updateFeeling(feelingName, Math.max(0, Math.min(100, percent)));
+      moveEvent.preventDefault();
+      updateFeeling(feelingName, calcPercent(moveEvent.clientX, track));
     };
 
     const handleMouseUp = () => {
@@ -90,18 +86,23 @@ export function DayDetailModal({
   };
 
   const handleFeelingTouchStart = (e: React.TouchEvent, feelingName: string) => {
+    const track = e.currentTarget as HTMLElement;
     setDraggingFeeling(feelingName);
-    handleFeelingDrag(e, feelingName);
-  };
+    updateFeeling(feelingName, calcPercent(e.touches[0].clientX, track));
 
-  const handleFeelingTouchMove = (e: React.TouchEvent, feelingName: string) => {
-    if (draggingFeeling === feelingName) {
-      handleFeelingDrag(e, feelingName);
-    }
-  };
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      moveEvent.preventDefault();
+      updateFeeling(feelingName, calcPercent(moveEvent.touches[0].clientX, track));
+    };
 
-  const handleFeelingTouchEnd = () => {
-    setDraggingFeeling(null);
+    const handleTouchEnd = () => {
+      setDraggingFeeling(null);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
   };
 
   // Filter notes for this day
@@ -380,14 +381,12 @@ export function DayDetailModal({
                           </span>
                         </div>
                         <div
-                          className={`relative h-8 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer
-                                    select-none touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                          className={`relative h-10 bg-silver-100 dark:bg-silver-800 rounded-full overflow-hidden cursor-pointer
+                                    select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                           onMouseEnter={() => setHoveredFeeling(feeling.name)}
                           onMouseLeave={() => !isDragging && setHoveredFeeling(null)}
                           onMouseDown={(e) => handleFeelingMouseDown(e, feeling.name)}
                           onTouchStart={(e) => handleFeelingTouchStart(e, feeling.name)}
-                          onTouchMove={(e) => handleFeelingTouchMove(e, feeling.name)}
-                          onTouchEnd={handleFeelingTouchEnd}
                         >
                           {/* Fill bar */}
                           <div
