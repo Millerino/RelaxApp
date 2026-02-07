@@ -107,8 +107,14 @@ serve(async (req) => {
         })
       }
 
+      // Log full response for debugging
+      console.log('Stripe cancel response:', JSON.stringify(cancelData))
+
       // Update profile with cancellation info
-      const periodEnd = new Date(cancelData.current_period_end * 1000).toISOString()
+      const periodEndTimestamp = cancelData.current_period_end
+      const periodEnd = periodEndTimestamp
+        ? new Date(periodEndTimestamp * 1000).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback: 30 days
       await supabaseAdmin
         .from('profiles')
         .update({
