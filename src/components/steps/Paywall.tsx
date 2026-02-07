@@ -3,13 +3,15 @@ import { useApp } from '../../context/AppContext';
 import { STRIPE_PAYMENT_LINK, isStripeConfigured } from '../../lib/stripe';
 
 export function Paywall() {
-  const { setStep } = useApp();
+  const { setStep, state } = useApp();
   const [isLoading, setIsLoading] = useState(false);
+
+  const daysUsed = state.daysUsed || 0;
+  const entriesCount = state.entries?.length || 0;
 
   const handleSubscribe = async () => {
     setIsLoading(true);
     if (isStripeConfigured) {
-      // Redirect to Stripe payment page
       window.location.href = STRIPE_PAYMENT_LINK;
       return;
     }
@@ -21,38 +23,49 @@ export function Paywall() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] animate-slide-up">
       <div className="text-center w-full max-w-md px-6">
-        {/* Premium badge */}
-        <div className="mb-8 flex justify-center">
-          <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-lavender-400 to-lavender-500
-                        text-white text-sm font-medium shadow-lg shadow-lavender-500/25">
-            Premium
+        {/* Warm welcome back */}
+        <div className="mb-6 flex justify-center">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-lavender-100 to-lavender-200
+                        dark:from-lavender-900/40 dark:to-lavender-800/30
+                        flex items-center justify-center">
+            <svg className="w-10 h-10 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           </div>
         </div>
 
-        <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
-          You're on a roll
+        <h2 className="text-2xl md:text-3xl font-light text-silver-800 dark:text-silver-100 mb-3">
+          You're doing great
         </h2>
-        <p className="text-silver-500 dark:text-silver-400 mb-8 leading-relaxed">
-          3 days of mindful reflection. Continue your journey with unlimited access.
+        <p className="text-silver-500 dark:text-silver-400 mb-2 leading-relaxed text-sm">
+          {daysUsed > 0
+            ? `${daysUsed} day${daysUsed !== 1 ? 's' : ''} of reflection${entriesCount > 1 ? `, ${entriesCount} entries` : ''} — that's real progress.`
+            : "Your wellness journey has just begun."}
+        </p>
+        <p className="text-silver-400 dark:text-silver-500 mb-8 leading-relaxed text-sm">
+          Your free trial has ended. Continue your journey with Premium, or take a look around first.
         </p>
 
-        {/* Pricing card */}
-        <div className="glass-card p-8 mb-8">
-          <div className="flex items-baseline justify-center gap-1 mb-4">
-            <span className="text-5xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
-            <span className="text-silver-500 dark:text-silver-400">/month</span>
+        {/* Pricing card - soft glass style */}
+        <div className="glass-card p-6 mb-6">
+          <div className="flex items-baseline justify-center gap-1 mb-1">
+            <span className="text-4xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
+            <span className="text-silver-400 dark:text-silver-500 text-sm">/month</span>
           </div>
+          <p className="text-xs text-silver-400 dark:text-silver-500 mb-5">
+            Cancel anytime &middot; 7-day money-back guarantee
+          </p>
 
-          <ul className="space-y-3 text-left mb-8">
+          <ul className="space-y-2.5 text-left mb-6">
             {[
               'Unlimited daily reflections',
               'Full mood & emotion history',
               'Goal tracking insights',
               'Export your journal anytime',
-              'Priority support',
             ].map((feature, i) => (
-              <li key={i} className="flex items-center gap-3 text-silver-600 dark:text-silver-300">
-                <svg className="w-5 h-5 text-lavender-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <li key={i} className="flex items-center gap-2.5 text-silver-600 dark:text-silver-300">
+                <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="text-sm">{feature}</span>
@@ -63,22 +76,23 @@ export function Paywall() {
           <button
             onClick={handleSubscribe}
             disabled={isLoading}
-            className="btn-primary w-full py-4 text-lg"
+            className="btn-primary w-full py-3.5 text-base"
           >
-            {isLoading ? 'Processing...' : 'Start Premium'}
+            {isLoading ? 'Processing...' : 'Continue with Premium'}
           </button>
         </div>
 
+        {/* Soft continue option - very visible */}
         <button
           onClick={() => setStep('complete')}
-          className="text-silver-400 hover:text-silver-600 dark:hover:text-silver-300
-                   transition-colors text-sm"
+          className="text-lavender-500 hover:text-lavender-600 dark:text-lavender-400 dark:hover:text-lavender-300
+                   transition-colors text-sm font-medium mb-4"
         >
-          Maybe later
+          Continue exploring for free &rarr;
         </button>
 
-        <p className="mt-6 text-xs text-silver-400 dark:text-silver-500">
-          Cancel anytime. 7-day money-back guarantee.
+        <p className="text-[11px] text-silver-400 dark:text-silver-500 leading-relaxed mt-4">
+          Free users can still view past reflections. Premium unlocks unlimited entries and insights.
         </p>
       </div>
     </div>

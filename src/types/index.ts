@@ -73,6 +73,7 @@ export interface UserState {
   profile?: UserProfile;
   xp: number;
   quickNotes?: QuickNote[];
+  firstUsedAt?: number;
 }
 
 export type OnboardingStep =

@@ -68,7 +68,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium && !state.isLoggedIn;
+  // 3-day free trial: show paywall after 3 calendar days from first use
+  const shouldShowPaywall = (() => {
+    if (state.isPremium) return false;
+    if (!state.firstUsedAt) return false;
+    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+    return Date.now() - state.firstUsedAt >= threeDaysMs;
+  })();
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));
@@ -138,7 +144,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         entries: [...prev.entries.filter(e => e.date !== today), entry],
         daysUsed: alreadyHasToday ? prev.daysUsed : prev.daysUsed + 1,
         isOnboarded: true,
-        xp: (prev.xp || 0) + earnedXP,
+        // Only award XP for genuinely new entries, not re-saves
+        xp: alreadyHasToday ? (prev.xp || 0) : (prev.xp || 0) + earnedXP,
+        // Track first use timestamp for free trial
+        firstUsedAt: prev.firstUsedAt || Date.now(),
       };
     });
 
@@ -166,9 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
       const isNewEntry = existingIndex === -1;
 
-      // Only give XP for new entries (not edits)
-      const xpGain = isNewEntry ? 10 : 0;
-
+      // Never award XP for edits or backfilled past entries - only the daily flow gives XP
       return {
         ...prev,
         entries: isNewEntry
@@ -176,7 +183,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : prev.entries.map((e, i) => i === existingIndex ? entry : e),
         daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
         isOnboarded: true,
-        xp: (prev.xp || 0) + xpGain,
       };
     });
   };
@@ -231,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       entries: [],
       currentStep: 'welcome',
       xp: 0,
+      firstUsedAt: undefined,
     });
     setCurrentEntry({});
   };

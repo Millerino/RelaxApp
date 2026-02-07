@@ -53,15 +53,11 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 
   // Handle logo click
   const handleNavigateHome = () => {
-    // Don't allow bypassing paywall via logo click
-    if (shouldShowPaywall && !user) {
-      return;
-    }
     setStep(entries.length > 0 ? 'complete' : 'welcome');
   };
 
-  // Show paywall if user has used for 3+ days and isn't premium
-  if (shouldShowPaywall && !user && currentStep !== 'complete') {
+  // Show paywall after 3-day free trial for non-premium users
+  if (shouldShowPaywall && currentStep !== 'complete') {
     return (
       <>
         <Header onNavigateHome={handleNavigateHome} />
