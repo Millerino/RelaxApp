@@ -19,8 +19,16 @@ const WELLNESS_GOALS: { id: WellnessGoal; label: string; icon: string }[] = [
 ];
 
 const ANIMAL_AVATARS = [
-  '🐶', '🐱', '🐻', '🐼', '🦊', '🐨', '🦁', '🐯',
-  '🐸', '🐵', '🐰', '🐦', '🦋', '🐢', '🐙', '🦄',
+  { id: 'red-panda', label: 'Red Panda' },
+  { id: 'axolotl', label: 'Axolotl' },
+  { id: 'snow-leopard', label: 'Snow Leopard' },
+  { id: 'otter', label: 'Otter' },
+  { id: 'fennec-fox', label: 'Fennec Fox' },
+  { id: 'capybara', label: 'Capybara' },
+  { id: 'narwhal', label: 'Narwhal' },
+  { id: 'quokka', label: 'Quokka' },
+  { id: 'pangolin', label: 'Pangolin' },
+  { id: 'koi-fish', label: 'Koi Fish' },
 ];
 
 const COUNTRIES = [
@@ -116,20 +124,23 @@ export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetu
                 </label>
                 <div className="flex justify-center mb-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600
-                                flex items-center justify-center text-2xl">
-                    {avatar || (name ? name.charAt(0).toUpperCase() : '?')}
+                                flex items-center justify-center text-2xl overflow-hidden">
+                    {avatar ? (
+                      <img src={`/images/avatars/${avatar}.png`} alt={avatar} className="w-full h-full object-cover" />
+                    ) : (name ? name.charAt(0).toUpperCase() : '?')}
                   </div>
                 </div>
-                <div className="grid grid-cols-8 gap-1.5 max-w-xs mx-auto">
-                  {ANIMAL_AVATARS.map(emoji => (
+                <div className="grid grid-cols-5 gap-2 max-w-xs mx-auto">
+                  {ANIMAL_AVATARS.map(animal => (
                     <button
-                      key={emoji}
-                      onClick={() => setAvatar(avatar === emoji ? '' : emoji)}
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg
-                                hover:bg-lavender-50 dark:hover:bg-lavender-900/30 transition-all hover:scale-110
-                                ${avatar === emoji ? 'bg-lavender-100 dark:bg-lavender-900/50 ring-2 ring-lavender-400 scale-110' : ''}`}
+                      key={animal.id}
+                      onClick={() => setAvatar(avatar === animal.id ? '' : animal.id)}
+                      className={`w-12 h-12 rounded-xl overflow-hidden
+                                hover:ring-2 hover:ring-lavender-400 transition-all hover:scale-110
+                                ${avatar === animal.id ? 'ring-2 ring-lavender-400 scale-110' : ''}`}
+                      title={animal.label}
                     >
-                      {emoji}
+                      <img src={`/images/avatars/${animal.id}.png`} alt={animal.label} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
