@@ -391,7 +391,7 @@ export function DayDetailModal({
                           {/* Fill bar */}
                           <div
                             className={`absolute inset-y-0 left-0 ${colors.bg} rounded-full
-                                      transition-[width] duration-75 ease-out
+                                      ${isDragging ? '' : 'transition-[width] duration-200 ease-out'}
                                       ${(isHovered || isDragging) ? `shadow-lg ${colors.glow}` : ''}`}
                             style={{ width: `${feeling.value}%` }}
                           />
@@ -409,7 +409,8 @@ export function DayDetailModal({
                           {/* Thumb */}
                           <div
                             className={`absolute top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white
-                                      shadow-md transition-transform duration-100 flex items-center justify-center
+                                      shadow-md flex items-center justify-center
+                                      ${isDragging ? '' : 'transition-all duration-200'}
                                       ${(isHovered || isDragging) ? 'scale-110 shadow-lg' : ''}`}
                             style={{ left: `calc(${feeling.value}% - 14px)` }}
                           >
