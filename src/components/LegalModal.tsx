@@ -101,7 +101,7 @@ export function LegalModal({ onClose }: LegalModalProps) {
                   </h3>
                   <p className="leading-relaxed">
                     You have the right to access, export, or delete your data at any time. Contact
-                    us at support@pulsero.fit for any data-related requests.
+                    us at pulsero.help@gmail.com for any data-related requests.
                   </p>
                 </section>
 

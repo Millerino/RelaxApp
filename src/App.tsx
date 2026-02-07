@@ -110,8 +110,8 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile, setStep } = useApp();
-  const { user } = useAuth();
+  const { state, setProfile, setStep, subscribeToPremium } = useApp();
+  const { user, profile: supabaseProfile, refreshProfile } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
@@ -124,7 +124,6 @@ function AppShell() {
 
   const handleAuthComplete = useCallback(() => {
     setIsAuthCallback(false);
-    // Always navigate to complete step for authenticated users
     setStep('complete');
   }, [setStep]);
 
@@ -133,7 +132,43 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
-  // Auto-create minimal profile for logged-in users without one (no modal needed)
+  // Sync premium status from Supabase profile → local state
+  useEffect(() => {
+    if (supabaseProfile?.is_premium && !state.isPremium) {
+      subscribeToPremium();
+    }
+  }, [supabaseProfile?.is_premium, state.isPremium, subscribeToPremium]);
+
+  // Handle payment success redirect from Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('payment_success')) {
+      window.history.replaceState({}, '', window.location.pathname);
+
+      if (user) {
+        // Poll Supabase a few times for the webhook to update premium status
+        const checkPremium = async (attempts: number) => {
+          const p = await refreshProfile();
+          if (p?.is_premium) {
+            subscribeToPremium();
+            setStep('complete');
+          } else if (attempts > 0) {
+            setTimeout(() => checkPremium(attempts - 1), 2000);
+          } else {
+            // Webhook hasn't fired yet - set premium optimistically
+            subscribeToPremium();
+            setStep('complete');
+          }
+        };
+        checkPremium(3);
+      } else {
+        subscribeToPremium();
+        setStep('complete');
+      }
+    }
+  }, []); // Run once on mount
+
+  // Auto-create minimal profile for logged-in users without one
   useEffect(() => {
     if (user && !state.profile) {
       setProfile({
