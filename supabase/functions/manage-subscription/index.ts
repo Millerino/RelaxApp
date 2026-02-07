@@ -41,10 +41,10 @@ serve(async (req) => {
       })
     }
 
-    const supabaseClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
-    })
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
+    // Verify the user's JWT using the service role key
+    const token = authHeader.replace('Bearer ', '')
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
@@ -54,7 +54,6 @@ serve(async (req) => {
     }
 
     // Get the user's Stripe customer ID from profiles
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('stripe_customer_id')
@@ -108,8 +107,14 @@ serve(async (req) => {
         })
       }
 
+      // Log full response for debugging
+      console.log('Stripe cancel response:', JSON.stringify(cancelData))
+
       // Update profile with cancellation info
-      const periodEnd = new Date(cancelData.current_period_end * 1000).toISOString()
+      const periodEndTimestamp = cancelData.current_period_end
+      const periodEnd = periodEndTimestamp
+        ? new Date(periodEndTimestamp * 1000).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback: 30 days
       await supabaseAdmin
         .from('profiles')
         .update({
