@@ -103,6 +103,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
       onClose();
     } catch (error) {
       console.error('Error deleting account:', error);
+      alert('Something went wrong while deleting your account. Please try again.');
       setIsDeleting(false);
     }
   };
@@ -278,6 +279,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 text-silver-400 hover:text-silver-600 dark:hover:text-silver-200 transition-colors rounded-lg hover:bg-silver-100/50 dark:hover:bg-silver-800/50"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -344,7 +346,6 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="input-field"
-                autoFocus
               />
               {name.trim().length > 0 && name.trim().length < 2 && (
                 <p className="text-xs text-red-500 mt-1">Name must be at least 2 characters</p>

@@ -91,8 +91,8 @@
   @apply bg-silver-400 dark:bg-silver-600;
 }
 
-/* Smooth transitions for theme changes */
-* {
+/* Smooth transitions for theme changes - scoped to avoid mobile perf issues */
+body, .glass-card, .glass-card-light, .btn-primary, .btn-secondary, .input-field {
   @apply transition-colors duration-200;
 }
 

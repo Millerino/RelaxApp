@@ -99,9 +99,13 @@ serve(async (req) => {
         const customerId = subscription.customer
         const status = subscription.status // 'active', 'past_due', 'canceled', etc.
         const periodEnd = subscription.current_period_end // Unix timestamp
+        const cancelAtPeriodEnd = subscription.cancel_at_period_end // true when user initiated cancel
+
+        // Determine effective status: if cancel_at_period_end is true, mark as 'canceling'
+        const effectiveStatus = cancelAtPeriodEnd ? 'canceling' : status
 
         const updateData: Record<string, unknown> = {
-          subscription_status: status,
+          subscription_status: effectiveStatus,
           is_premium: status === 'active' || status === 'trialing',
         }
         // Store the actual billing period end date
@@ -115,7 +119,7 @@ serve(async (req) => {
           .eq('stripe_customer_id', customerId)
 
         if (error) console.error('Error updating subscription:', error)
-        else console.log('Subscription updated:', status, 'customer:', customerId)
+        else console.log('Subscription updated:', effectiveStatus, 'cancel_at_period_end:', cancelAtPeriodEnd, 'customer:', customerId)
         break
       }
 

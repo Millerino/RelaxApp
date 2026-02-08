@@ -291,6 +291,7 @@ export function DayDetailModal({
         <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30
                      text-white transition-all hover:scale-110"
           >
@@ -556,7 +557,7 @@ export function DayDetailModal({
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm transition-all"
+                           resize-none text-base transition-all"
                   rows={3}
                 />
               </div>
@@ -573,7 +574,7 @@ export function DayDetailModal({
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm transition-all"
+                           resize-none text-base transition-all"
                   rows={2}
                 />
               </div>

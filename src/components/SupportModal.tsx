@@ -17,6 +17,7 @@ export function SupportModal({ onClose }: SupportModalProps) {
           {/* Close button */}
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1 text-silver-500 hover:text-silver-700
                      dark:text-silver-400 dark:hover:text-silver-200 transition-colors"
           >

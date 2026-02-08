@@ -157,27 +157,48 @@ function AppShell() {
   // Does NOT grant premium — only polls Supabase for the webhook to confirm
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has('payment_success')) {
-      window.history.replaceState({}, '', window.location.pathname);
-      setStep('complete');
+    if (!params.has('payment_success')) return;
 
-      if (user) {
-        // Poll Supabase for webhook confirmation (5 attempts, 3s apart = 15s)
-        const checkPremium = async (attempts: number) => {
-          const p = await refreshProfile();
-          if (p?.is_premium) {
-            subscribeToPremium();
-          } else if (attempts > 0) {
-            setTimeout(() => checkPremium(attempts - 1), 3000);
-          }
-          // If all attempts fail, premium stays off
-          // The sync effect will catch it on next page load when webhook completes
-        };
-        checkPremium(5);
+    window.history.replaceState({}, '', window.location.pathname);
+    setStep('complete');
+
+    if (!user) return;
+
+    let cancelled = false;
+    // Poll Supabase for webhook confirmation (5 attempts, 3s apart = 15s)
+    const checkPremium = async (attempts: number) => {
+      if (cancelled) return;
+      try {
+        const p = await refreshProfile();
+        if (cancelled) return;
+        if (p?.is_premium) {
+          subscribeToPremium();
+        } else if (attempts > 0) {
+          setTimeout(() => checkPremium(attempts - 1), 3000);
+        }
+      } catch {
+        // Network error — retry if attempts remain
+        if (!cancelled && attempts > 0) {
+          setTimeout(() => checkPremium(attempts - 1), 3000);
+        }
       }
-      // If not logged in, do nothing — can't verify payment without an account
-    }
+    };
+    checkPremium(5);
+
+    return () => { cancelled = true; };
   }, []); // Run once on mount
+
+  // Refresh profile on window focus and periodically to catch webhook-driven changes
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => refreshProfile(), 60_000);
+    const handleFocus = () => refreshProfile();
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, refreshProfile]);
 
   // Listen for auth modal events from Paywall/other components
   useEffect(() => {

@@ -30,6 +30,29 @@ export function CompleteStep() {
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
 
+  // Preload all images on dashboard mount so modals feel instant
+  useEffect(() => {
+    const imagesToPreload = [
+      // Aura evolution stages
+      '/images/aura/spark.png', '/images/aura/ember.png', '/images/aura/flame.png',
+      '/images/aura/blaze.png', '/images/aura/radiance.png', '/images/aura/aurora.png',
+      '/images/aura/celestial.png',
+      // Avatar/profile pictures
+      '/images/avatars/axolotl.png', '/images/avatars/capybara.png',
+      '/images/avatars/fennec-fox.png', '/images/avatars/koi-fish.png',
+      '/images/avatars/narwhal.png', '/images/avatars/pangolin.png',
+      '/images/avatars/quokka.png', '/images/avatars/otter.png',
+      '/images/avatars/red-panda.png', '/images/avatars/snow-leopard.png',
+      // Action icons
+      '/images/actions/breathe.png', '/images/actions/new-entry.png',
+      '/images/actions/profile.png', '/images/actions/your-aura.png',
+    ];
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   // Trigger confetti when entry is first completed
   useEffect(() => {
     if (todayEntry && !hasTriggeredConfetti.current) {
@@ -455,7 +478,7 @@ function ConfettiEffect() {
       <style>{`
         @keyframes confetti-fall {
           0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) translateX(var(--drift)) rotate(720deg); opacity: 0; }
+          100% { transform: translateY(800px) translateX(var(--drift)) rotate(720deg); opacity: 0; }
         }
         .animate-confetti-fall {
           animation: confetti-fall linear forwards;

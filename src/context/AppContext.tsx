@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
+import { FREE_TRIAL_MS } from '../lib/constants';
 
 interface AppContextType {
   state: UserState;
@@ -72,8 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const shouldShowPaywall = (() => {
     if (state.isPremium) return false;
     if (!state.firstUsedAt) return false;
-    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-    return Date.now() - state.firstUsedAt >= threeDaysMs;
+    return Date.now() - state.firstUsedAt >= FREE_TRIAL_MS;
   })();
 
   const setStep = (step: OnboardingStep) => {
