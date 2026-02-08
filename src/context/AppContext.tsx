@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
 import { FREE_TRIAL_MS } from '../lib/constants';
@@ -65,16 +65,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const today = new Date().toDateString();
     const todayEntry = state.entries.find(e => e.date === today);
     if (todayEntry && state.isOnboarded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore step on mount
       setState(prev => ({ ...prev, currentStep: 'complete' }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, []);
 
   // 3-day free trial: show paywall after 3 calendar days from first use
-  const shouldShowPaywall = (() => {
+  const shouldShowPaywall = useMemo(() => {
     if (state.isPremium) return false;
     if (!state.firstUsedAt) return false;
     return Date.now() - state.firstUsedAt >= FREE_TRIAL_MS;
-  })();
+  }, [state.isPremium, state.firstUsedAt]);
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));
@@ -271,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

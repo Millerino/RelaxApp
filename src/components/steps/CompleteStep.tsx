@@ -57,6 +57,7 @@ export function CompleteStep() {
   useEffect(() => {
     if (todayEntry && !hasTriggeredConfetti.current) {
       hasTriggeredConfetti.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time confetti trigger
       setShowConfetti(true);
       const timer = setTimeout(() => setShowConfetti(false), 3000);
       return () => clearTimeout(timer);
@@ -74,14 +75,14 @@ export function CompleteStep() {
     return null;
   }, [state.profile?.name, user?.email]);
 
-  // Get time-based greeting
-  const greeting = useMemo(() => {
+  // Get time-based greeting (computed once on mount)
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     if (hour < 21) return 'Good evening';
     return 'Good night';
-  }, []);
+  });
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   // Placed after all hooks to satisfy React's Rules of Hooks
@@ -444,7 +445,7 @@ export function CompleteStep() {
 }
 
 function ConfettiEffect() {
-  const particles = useMemo(() => {
+  const [particles] = useState(() => {
     const colors = ['#c4b5fd', '#a78bfa', '#8b5cf6', '#34d399', '#fbbf24', '#f472b6', '#60a5fa'];
     return Array.from({ length: 40 }, (_, i) => ({
       id: i,
@@ -455,7 +456,7 @@ function ConfettiEffect() {
       size: 4 + Math.random() * 6,
       drift: -30 + Math.random() * 60,
     }));
-  }, []);
+  });
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
@@ -716,7 +717,7 @@ function calculateStreak(entries: DayEntry[]): number {
   }
 
   let streak = 1;
-  let checkDate = new Date(latestDate);
+  const checkDate = new Date(latestDate);
   checkDate.setDate(checkDate.getDate() - 1);
 
   for (let i = 1; i < sortedEntries.length; i++) {

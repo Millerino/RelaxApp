@@ -50,14 +50,15 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
   }, [daysSinceLastEntry]);
 
   // Get current evolution stage
-  const currentStage = useMemo(() => {
+  const currentStageIndex = useMemo(() => {
     for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
       if (xp >= EVOLUTION_STAGES[i].minXP) {
-        return { ...EVOLUTION_STAGES[i], index: i };
+        return i;
       }
     }
-    return { ...EVOLUTION_STAGES[0], index: 0 };
+    return 0;
   }, [xp]);
+  const currentStage = { ...EVOLUTION_STAGES[currentStageIndex], index: currentStageIndex };
 
   // Get next stage
   const nextStage = EVOLUTION_STAGES[currentStage.index + 1] || null;

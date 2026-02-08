@@ -54,7 +54,7 @@ export function AuthModal({ onClose, initialMode = 'login' }: AuthModalProps) {
           setSuccess('Check your email to confirm your account');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);

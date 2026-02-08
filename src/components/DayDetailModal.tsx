@@ -117,8 +117,9 @@ export function DayDetailModal({
   // Filter notes for this day
   const dayNotes = quickNotes.filter(n => n.date === date.toDateString());
 
-  // Reset form when entry changes
+  // Reset form when entry changes - intentional synchronous state reset
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- form reset when navigating between days
     setEditMood(entry?.mood || null);
     setEditEmotions(entry?.emotions || []);
     setEditReflection(entry?.reflection || '');
