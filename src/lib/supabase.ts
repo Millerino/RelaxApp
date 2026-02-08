@@ -20,6 +20,10 @@ export interface SupabaseProfile {
   email: string | null;
   name: string | null;
   avatar: string | null;
+  birthday: string | null;
+  gender: string | null;
+  country: string | null;
+  timezone: string | null;
   is_premium: boolean;
   stripe_customer_id: string | null;
   subscription_status: string | null;

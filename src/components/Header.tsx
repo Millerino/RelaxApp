@@ -250,6 +250,10 @@ export function Header({ onNavigateHome }: HeaderProps) {
               upsertProfile(user.id, {
                 name: profile.name,
                 avatar: profile.avatar || null,
+                birthday: profile.birthday || null,
+                gender: profile.gender || null,
+                country: profile.country || null,
+                timezone: profile.timezone || null,
               });
             }
           }}
