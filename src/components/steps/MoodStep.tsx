@@ -13,7 +13,7 @@ const moods: { level: MoodLevel; label: string }[] = [
 export function MoodStep() {
   const { setMood, setStep, currentEntry } = useApp();
   const [clickedLevel, setClickedLevel] = useState<MoodLevel | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSelect = (level: MoodLevel) => {
     setClickedLevel(level);
