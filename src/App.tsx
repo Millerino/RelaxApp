@@ -132,6 +132,23 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
+  // Sync profile name/avatar from Supabase → local state so changes persist across devices
+  useEffect(() => {
+    if (!user || !supabaseProfile) return;
+    const supaName = supabaseProfile.name;
+    const supaAvatar = supabaseProfile.avatar;
+    // Only update if Supabase has a name and it differs from local
+    if (supaName && supaName !== state.profile?.name) {
+      setProfile({
+        ...state.profile,
+        name: supaName,
+        avatar: supaAvatar || state.profile?.avatar,
+        createdAt: state.profile?.createdAt || Date.now(),
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when supabase profile changes
+  }, [supabaseProfile?.name, supabaseProfile?.avatar, user]);
+
   // Sync premium status from Supabase profile → local state
   // This is the ONLY way premium gets activated: from the database
   useEffect(() => {

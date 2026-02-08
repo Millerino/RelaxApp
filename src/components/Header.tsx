@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { upsertProfile } from '../lib/supabase';
 import { AuthModal } from './AuthModal';
 import { SubscriptionModal } from './SubscriptionModal';
 import { ProfileEditor } from './ProfileEditor';
@@ -244,6 +245,13 @@ export function Header({ onNavigateHome }: HeaderProps) {
           onSave={(profile) => {
             setProfile(profile);
             setShowEditProfile(false);
+            // Sync profile changes to Supabase so they persist across devices
+            if (user) {
+              upsertProfile(user.id, {
+                name: profile.name,
+                avatar: profile.avatar || null,
+              });
+            }
           }}
           onClose={() => setShowEditProfile(false)}
         />
