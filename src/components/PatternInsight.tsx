@@ -122,10 +122,10 @@ export function PatternInsight({ entries }: PatternInsightProps) {
       insights.push("You've been taking time to really reflect. That matters.");
     }
 
-    // Pick a random insight to show
+    // Pick an insight based on entry count (deterministic, changes as entries grow)
     if (insights.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * insights.length);
-    return insights[randomIndex];
+    const index = entries.length % insights.length;
+    return insights[index];
   }, [entries]);
 
   // Don't show if dismissed or no insight

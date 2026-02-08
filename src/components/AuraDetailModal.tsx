@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { DayEntry } from '../types';
 
 interface AuraDetailModalProps {
@@ -19,6 +19,14 @@ const EVOLUTION_STAGES = [
 
 export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) {
   const [hoveredStage, setHoveredStage] = useState<number | null>(null);
+
+  // Preload all aura images on mount so hover tooltips are instant
+  useEffect(() => {
+    EVOLUTION_STAGES.forEach(stage => {
+      const img = new Image();
+      img.src = stage.image;
+    });
+  }, []);
 
   // Calculate days since last entry
   const daysSinceLastEntry = useMemo(() => {
@@ -42,14 +50,15 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
   }, [daysSinceLastEntry]);
 
   // Get current evolution stage
-  const currentStage = useMemo(() => {
+  const currentStageIndex = useMemo(() => {
     for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
       if (xp >= EVOLUTION_STAGES[i].minXP) {
-        return { ...EVOLUTION_STAGES[i], index: i };
+        return i;
       }
     }
-    return { ...EVOLUTION_STAGES[0], index: 0 };
+    return 0;
   }, [xp]);
+  const currentStage = { ...EVOLUTION_STAGES[currentStageIndex], index: currentStageIndex };
 
   // Get next stage
   const nextStage = EVOLUTION_STAGES[currentStage.index + 1] || null;
@@ -94,6 +103,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
         <div className="px-6 py-5 bg-gradient-to-r from-lavender-500 to-lavender-600 relative">
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30
                      text-white transition-colors"
           >

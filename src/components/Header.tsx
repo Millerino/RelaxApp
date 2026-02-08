@@ -42,9 +42,12 @@ export function Header({ onNavigateHome }: HeaderProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch {
+      // Sign out failed — proceed with local cleanup anyway
+    }
     setShowUserMenu(false);
-    // Reset to welcome page on logout
     setStep('welcome');
   };
 
@@ -74,7 +77,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4">
+      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           {/* Logo/Brand - left side */}
           <button

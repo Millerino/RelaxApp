@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { buildPaymentLink, isStripeConfigured } from '../lib/stripe';
 import { cancelStripeSubscription, resumeStripeSubscription } from '../lib/supabase';
+import { MONTHLY_PRICE } from '../lib/constants';
 
 interface SubscriptionModalProps {
   onClose: () => void;
@@ -11,6 +12,11 @@ interface SubscriptionModalProps {
 export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
   const { state, subscribeToPremium } = useApp();
   const { user, profile: supabaseProfile, refreshProfile } = useAuth();
+
+  // Refresh profile on mount to get latest subscription status
+  useEffect(() => {
+    refreshProfile();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
@@ -33,12 +39,16 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
   const handleCancel = async () => {
     setIsLoading(true);
     setError(null);
-    const result = await cancelStripeSubscription();
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setCancelSuccess(true);
-      await refreshProfile();
+    try {
+      const result = await cancelStripeSubscription();
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setCancelSuccess(true);
+        await refreshProfile();
+      }
+    } catch {
+      setError('Unable to reach the server. Please check your connection and try again.');
     }
     setIsLoading(false);
   };
@@ -46,12 +56,16 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
   const handleResume = async () => {
     setIsLoading(true);
     setError(null);
-    const result = await resumeStripeSubscription();
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setResumeSuccess(true);
-      await refreshProfile();
+    try {
+      const result = await resumeStripeSubscription();
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setResumeSuccess(true);
+        await refreshProfile();
+      }
+    } catch {
+      setError('Unable to reach the server. Please check your connection and try again.');
     }
     setIsLoading(false);
   };
@@ -184,6 +198,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
         <div className="bg-gradient-to-r from-lavender-400 to-lavender-500 px-6 py-5">
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30
                      text-white transition-colors"
           >
@@ -242,7 +257,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
                 <div className="flex justify-between items-center py-3 border-b border-silver-200/50 dark:border-silver-700/30">
                   <span className="text-sm text-silver-500 dark:text-silver-400">Monthly price</span>
                   <span className="text-sm font-medium text-silver-700 dark:text-silver-200">
-                    $4.99/month
+                    ${MONTHLY_PRICE}/month
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-silver-200/50 dark:border-silver-700/30">
@@ -351,7 +366,7 @@ export function SubscriptionModal({ onClose }: SubscriptionModalProps) {
                   }}
                   className="btn-primary w-full py-3"
                 >
-                  Upgrade to Premium - $4.99/mo
+                  Upgrade to Premium - ${MONTHLY_PRICE}/mo
                 </button>
               </div>
             </>

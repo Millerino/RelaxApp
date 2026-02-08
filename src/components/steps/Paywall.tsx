@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { buildPaymentLink, isStripeConfigured } from '../../lib/stripe';
+import { MONTHLY_PRICE } from '../../lib/constants';
 
 export function Paywall() {
   const { setStep, state, subscribeToPremium } = useApp();
@@ -92,7 +93,7 @@ export function Paywall() {
         {/* Pricing card - soft glass style */}
         <div className="glass-card p-6 mb-6">
           <div className="flex items-baseline justify-center gap-1 mb-1">
-            <span className="text-4xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
+            <span className="text-4xl font-light text-silver-800 dark:text-silver-100">${MONTHLY_PRICE}</span>
             <span className="text-silver-400 dark:text-silver-500 text-sm">/month</span>
           </div>
           <p className="text-xs text-silver-400 dark:text-silver-500 mb-5">

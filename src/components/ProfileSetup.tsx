@@ -155,7 +155,6 @@ export function ProfileSetup({ onComplete, onSkip, initialProfile }: ProfileSetu
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your first name"
                   className="input-field text-center text-lg"
-                  autoFocus
                 />
                 <p className="text-xs text-silver-400 dark:text-silver-500 text-center mt-2">
                   This helps us personalize your daily greetings

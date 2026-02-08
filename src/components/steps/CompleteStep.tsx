@@ -30,10 +30,34 @@ export function CompleteStep() {
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
 
+  // Preload all images on dashboard mount so modals feel instant
+  useEffect(() => {
+    const imagesToPreload = [
+      // Aura evolution stages
+      '/images/aura/spark.png', '/images/aura/ember.png', '/images/aura/flame.png',
+      '/images/aura/blaze.png', '/images/aura/radiance.png', '/images/aura/aurora.png',
+      '/images/aura/celestial.png',
+      // Avatar/profile pictures
+      '/images/avatars/axolotl.png', '/images/avatars/capybara.png',
+      '/images/avatars/fennec-fox.png', '/images/avatars/koi-fish.png',
+      '/images/avatars/narwhal.png', '/images/avatars/pangolin.png',
+      '/images/avatars/quokka.png', '/images/avatars/otter.png',
+      '/images/avatars/red-panda.png', '/images/avatars/snow-leopard.png',
+      // Action icons
+      '/images/actions/breathe.png', '/images/actions/new-entry.png',
+      '/images/actions/profile.png', '/images/actions/your-aura.png',
+    ];
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   // Trigger confetti when entry is first completed
   useEffect(() => {
     if (todayEntry && !hasTriggeredConfetti.current) {
       hasTriggeredConfetti.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time confetti trigger
       setShowConfetti(true);
       const timer = setTimeout(() => setShowConfetti(false), 3000);
       return () => clearTimeout(timer);
@@ -51,14 +75,14 @@ export function CompleteStep() {
     return null;
   }, [state.profile?.name, user?.email]);
 
-  // Get time-based greeting
-  const greeting = useMemo(() => {
+  // Get time-based greeting (computed once on mount)
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     if (hour < 21) return 'Good evening';
     return 'Good night';
-  }, []);
+  });
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   // Placed after all hooks to satisfy React's Rules of Hooks
@@ -421,7 +445,7 @@ export function CompleteStep() {
 }
 
 function ConfettiEffect() {
-  const particles = useMemo(() => {
+  const [particles] = useState(() => {
     const colors = ['#c4b5fd', '#a78bfa', '#8b5cf6', '#34d399', '#fbbf24', '#f472b6', '#60a5fa'];
     return Array.from({ length: 40 }, (_, i) => ({
       id: i,
@@ -432,7 +456,7 @@ function ConfettiEffect() {
       size: 4 + Math.random() * 6,
       drift: -30 + Math.random() * 60,
     }));
-  }, []);
+  });
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
@@ -455,7 +479,7 @@ function ConfettiEffect() {
       <style>{`
         @keyframes confetti-fall {
           0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) translateX(var(--drift)) rotate(720deg); opacity: 0; }
+          100% { transform: translateY(800px) translateX(var(--drift)) rotate(720deg); opacity: 0; }
         }
         .animate-confetti-fall {
           animation: confetti-fall linear forwards;
@@ -693,7 +717,7 @@ function calculateStreak(entries: DayEntry[]): number {
   }
 
   let streak = 1;
-  let checkDate = new Date(latestDate);
+  const checkDate = new Date(latestDate);
   checkDate.setDate(checkDate.getDate() - 1);
 
   for (let i = 1; i < sortedEntries.length; i++) {

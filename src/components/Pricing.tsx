@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { isStripeConfigured, buildPaymentLink } from '../lib/stripe';
+import { MONTHLY_PRICE } from '../lib/constants';
 
 interface PricingProps {
   onClose: () => void;
@@ -59,6 +60,7 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
           {/* Close button */}
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 text-silver-400 hover:text-silver-600
                      dark:hover:text-silver-300 transition-colors"
           >
@@ -89,7 +91,7 @@ export function Pricing({ onClose, onLoginClick }: PricingProps) {
           {/* Pricing card */}
           <div className="text-center mb-6">
             <div className="inline-flex items-baseline gap-1 mb-4">
-              <span className="text-4xl md:text-5xl font-light text-silver-800 dark:text-silver-100">$4.99</span>
+              <span className="text-4xl md:text-5xl font-light text-silver-800 dark:text-silver-100">${MONTHLY_PRICE}</span>
               <span className="text-silver-500 dark:text-silver-400">/month</span>
             </div>
 
