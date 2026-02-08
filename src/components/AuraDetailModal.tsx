@@ -239,10 +239,11 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                       >
                         {/* Hover tooltip */}
                         {isHovered && (
-                          <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10
+                          <div className={`absolute bottom-full mb-3 z-10
                                         bg-white dark:bg-silver-800 rounded-lg shadow-lg p-3 w-44
                                         border border-silver-200 dark:border-silver-700
-                                        animate-fade-in">
+                                        animate-fade-in
+                                        ${index === 0 ? 'left-0' : index === EVOLUTION_STAGES.length - 1 ? 'right-0' : 'left-1/2 -translate-x-1/2'}`}>
                             <div className="text-center">
                               {/* Mini aura image in tooltip */}
                               <div className="flex justify-center mb-2">
@@ -280,9 +281,10 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                               )}
                             </div>
                             {/* Tooltip arrow */}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2
+                            <div className={`absolute -bottom-1 w-2 h-2
                                           bg-white dark:bg-silver-800 rotate-45
-                                          border-r border-b border-silver-200 dark:border-silver-700" />
+                                          border-r border-b border-silver-200 dark:border-silver-700
+                                          ${index === 0 ? 'left-5' : index === EVOLUTION_STAGES.length - 1 ? 'right-5' : 'left-1/2 -translate-x-1/2'}`} />
                           </div>
                         )}
 
