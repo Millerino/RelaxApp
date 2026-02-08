@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import type { UserProfile } from './types';
 import { LampToggle } from './components/LampToggle';
 import { Background } from './components/Background';
 import { Header } from './components/Header';
@@ -132,7 +133,7 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
-  // Sync profile name/avatar from Supabase → local state so changes persist across devices
+  // Sync profile fields from Supabase → local state so changes persist across devices
   useEffect(() => {
     if (!user || !supabaseProfile) return;
     const supaName = supabaseProfile.name;
@@ -143,11 +144,15 @@ function AppShell() {
         ...state.profile,
         name: supaName,
         avatar: supaAvatar || state.profile?.avatar,
+        birthday: supabaseProfile.birthday || state.profile?.birthday,
+        gender: (supabaseProfile.gender as UserProfile['gender']) || state.profile?.gender,
+        country: supabaseProfile.country || state.profile?.country,
+        timezone: supabaseProfile.timezone || state.profile?.timezone,
         createdAt: state.profile?.createdAt || Date.now(),
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when supabase profile changes
-  }, [supabaseProfile?.name, supabaseProfile?.avatar, user]);
+  }, [supabaseProfile?.name, supabaseProfile?.avatar, supabaseProfile?.birthday, supabaseProfile?.gender, supabaseProfile?.country, supabaseProfile?.timezone, user]);
 
   // Sync premium status from Supabase profile → local state
   // This is the ONLY way premium gets activated: from the database
