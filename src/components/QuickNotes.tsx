@@ -65,7 +65,7 @@ export function QuickNotes() {
               onChange={(e) => setNewNote(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Capture a thought..."
-              className="w-full bg-white dark:bg-slate-900/50 text-sm text-slate-700 dark:text-slate-200
+              className="w-full bg-white dark:bg-slate-900/50 text-base text-slate-700 dark:text-slate-200
                        placeholder-slate-400 dark:placeholder-slate-500
                        resize-none focus:outline-none min-h-[52px] px-3 py-2.5
                        rounded-lg border border-slate-200 dark:border-slate-700
@@ -114,7 +114,8 @@ export function QuickNotes() {
 
           {/* Today's notes */}
           {todayNotes.length > 0 && (
-            <div className="space-y-2 pt-3 border-t border-slate-200/60 dark:border-slate-700/50">
+            <div className="space-y-2 pt-3 border-t border-slate-200/60 dark:border-slate-700/50
+                          max-h-[180px] overflow-y-auto">
               {todayNotes.slice().reverse().map((note) => (
                 <div
                   key={note.id}

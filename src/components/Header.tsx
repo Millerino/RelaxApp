@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { upsertProfile } from '../lib/supabase';
 import { AuthModal } from './AuthModal';
 import { SubscriptionModal } from './SubscriptionModal';
 import { ProfileEditor } from './ProfileEditor';
@@ -42,9 +43,12 @@ export function Header({ onNavigateHome }: HeaderProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch {
+      // Sign out failed — proceed with local cleanup anyway
+    }
     setShowUserMenu(false);
-    // Reset to welcome page on logout
     setStep('welcome');
   };
 
@@ -74,7 +78,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4">
+      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           {/* Logo/Brand - left side */}
           <button
@@ -97,8 +101,10 @@ export function Header({ onNavigateHome }: HeaderProps) {
                 >
                   <div className="w-6 h-6 rounded-full bg-lavender-200 dark:bg-lavender-800
                                 flex items-center justify-center text-lavender-600 dark:text-lavender-300
-                                text-xs font-medium">
-                    {avatar || initials}
+                                text-xs font-medium overflow-hidden">
+                    {avatar ? (
+                      <img src={`/images/avatars/${avatar}.png`} alt="" className="w-full h-full object-cover" />
+                    ) : initials}
                   </div>
                   <span className="hidden sm:inline max-w-[120px] truncate">
                     {displayName}
@@ -239,6 +245,13 @@ export function Header({ onNavigateHome }: HeaderProps) {
           onSave={(profile) => {
             setProfile(profile);
             setShowEditProfile(false);
+            // Sync profile changes to Supabase so they persist across devices
+            if (user) {
+              upsertProfile(user.id, {
+                name: profile.name,
+                avatar: profile.avatar || null,
+              });
+            }
           }}
           onClose={() => setShowEditProfile(false)}
         />
