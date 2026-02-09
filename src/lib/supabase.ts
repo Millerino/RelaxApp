@@ -52,13 +52,24 @@ export async function fetchProfile(userId: string): Promise<SupabaseProfile | nu
 /** Create or update the user's profile in Supabase */
 export async function upsertProfile(userId: string, fields: Partial<SupabaseProfile>): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase
-    .from('profiles')
-    .upsert({ id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 
-  if (error) {
-    console.warn('upsertProfile:', error.message);
-    return false;
+  // Use .update() since profile row already exists (created by signup trigger).
+  // .upsert() can fail silently with certain RLS configurations.
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('id', userId);
+
+  if (updateError) {
+    console.error('upsertProfile update failed:', updateError.message, updateError);
+    // Fallback: try upsert in case row doesn't exist yet
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (error) {
+      console.error('upsertProfile upsert fallback failed:', error.message, error);
+      return false;
+    }
   }
   return true;
 }
