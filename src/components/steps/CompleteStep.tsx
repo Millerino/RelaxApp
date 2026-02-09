@@ -12,6 +12,7 @@ import { AuthModal } from '../AuthModal';
 import { DayDetailModal } from '../DayDetailModal';
 import { QuickNotes } from '../QuickNotes';
 import { PatternInsight } from '../PatternInsight';
+import { EVOLUTION_STAGES, computeAura } from '../../lib/aura';
 import type { DayEntry } from '../../types';
 
 export function CompleteStep() {
@@ -111,12 +112,17 @@ export function CompleteStep() {
                 )}
 
                 {/* Mini Aura Orb - clickable */}
-                <div className="mb-6 flex justify-center">
+                <div className="mb-6 flex flex-col items-center">
                   <MiniAuraOrb
                     entries={state.entries}
                     xp={state.xp || 0}
                     onClick={() => setShowAuraDetail(true)}
                   />
+                  {computeAura(state.entries).isDecaying && (
+                    <p className="text-[11px] text-amber-500/80 dark:text-amber-400/70 mt-2">
+                      Log daily to keep your aura from fading
+                    </p>
+                  )}
                 </div>
 
                 <h2 className="text-3xl md:text-4xl font-light text-silver-800 dark:text-silver-100 mb-4">
@@ -323,12 +329,17 @@ export function CompleteStep() {
 
                 {/* Mini Aura Orb for returning users */}
                 {state.entries.length > 0 && (
-                  <div className="mb-6 flex justify-center">
+                  <div className="mb-6 flex flex-col items-center">
                     <MiniAuraOrb
                       entries={state.entries}
                       xp={state.xp || 0}
                       onClick={() => setShowAuraDetail(true)}
                     />
+                    {computeAura(state.entries).isDecaying && (
+                      <p className="text-[11px] text-amber-500/80 dark:text-amber-400/70 mt-2">
+                        Log daily to keep your aura from fading
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -489,34 +500,16 @@ function ConfettiEffect() {
   );
 }
 
-// Mini Aura Orb component for header - with XP progress and better interactivity
+// Mini Aura Orb component for header - with days-based progress and interactivity
 interface MiniAuraOrbProps {
   entries: DayEntry[];
   xp: number;
   onClick: () => void;
 }
 
-function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
-  const EVOLUTION_STAGES = [
-    { name: 'Spark', minXP: 0, colors: ['#cbd5e1', '#94a3b8', '#64748b'], image: '/images/aura/spark.png' },
-    { name: 'Ember', minXP: 50, colors: ['#fcd34d', '#f97316', '#ea580c'], image: '/images/aura/ember.png' },
-    { name: 'Flame', minXP: 150, colors: ['#fde047', '#eab308', '#ca8a04'], image: '/images/aura/flame.png' },
-    { name: 'Blaze', minXP: 300, colors: ['#fbbf24', '#f59e0b', '#d97706'], image: '/images/aura/blaze.png' },
-    { name: 'Radiance', minXP: 500, colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'], image: '/images/aura/radiance.png' },
-    { name: 'Aurora', minXP: 800, colors: ['#a5b4fc', '#818cf8', '#6366f1'], image: '/images/aura/aurora.png' },
-    { name: 'Celestial', minXP: 1200, colors: ['#e9d5ff', '#c084fc', '#a855f7'], image: '/images/aura/celestial.png' },
-  ];
-
-  // Calculate vitality based on days since last entry
-  const daysSinceLastEntry = (() => {
-    if (entries.length === 0) return Infinity;
-    const sortedEntries = [...entries].sort((a, b) => b.createdAt - a.createdAt);
-    const lastEntry = new Date(sortedEntries[0].date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    lastEntry.setHours(0, 0, 0, 0);
-    return Math.floor((today.getTime() - lastEntry.getTime()) / (1000 * 60 * 60 * 24));
-  })();
+function MiniAuraOrb({ entries, onClick }: MiniAuraOrbProps) {
+  const aura = computeAura(entries);
+  const { stageIndex, stage: currentStage, nextStage, daysSinceLastEntry, progressToNext } = aura;
 
   const vitality = (() => {
     if (daysSinceLastEntry === 0) return 1;
@@ -532,23 +525,6 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
     if (vitality >= 0.4) return 'Fading';
     return 'Dormant';
   })();
-
-  // Get current and next stage
-  const getCurrentStageIndex = () => {
-    for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
-      if (xp >= EVOLUTION_STAGES[i].minXP) return i;
-    }
-    return 0;
-  };
-
-  const stageIndex = getCurrentStageIndex();
-  const currentStage = EVOLUTION_STAGES[stageIndex];
-  const nextStage = EVOLUTION_STAGES[stageIndex + 1];
-
-  // Progress to next stage
-  const progressToNext = nextStage
-    ? (xp - currentStage.minXP) / (nextStage.minXP - currentStage.minXP)
-    : 1;
 
   // Get color based on average recent mood
   const recentMoods = entries.slice(-7).map(e => e.mood);

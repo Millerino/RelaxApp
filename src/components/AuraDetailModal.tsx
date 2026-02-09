@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { DayEntry } from '../types';
+import { EVOLUTION_STAGES, computeAura } from '../lib/aura';
 
 interface AuraDetailModalProps {
   entries: DayEntry[];
@@ -7,17 +8,7 @@ interface AuraDetailModalProps {
   onClose: () => void;
 }
 
-const EVOLUTION_STAGES = [
-  { name: 'Spark', minXP: 0, size: 60, rings: 1, glow: 'low', description: 'The beginning of your journey', colors: ['#cbd5e1', '#94a3b8', '#64748b'], orbSize: 16, glowIntensity: 0.2, image: '/images/aura/spark.png' },
-  { name: 'Ember', minXP: 50, size: 70, rings: 2, glow: 'low', description: 'Your aura is taking shape', colors: ['#fcd34d', '#f97316', '#ea580c'], orbSize: 18, glowIntensity: 0.3, image: '/images/aura/ember.png' },
-  { name: 'Flame', minXP: 150, size: 80, rings: 2, glow: 'medium', description: 'Growing stronger each day', colors: ['#fde047', '#eab308', '#ca8a04'], orbSize: 20, glowIntensity: 0.4, image: '/images/aura/flame.png' },
-  { name: 'Blaze', minXP: 300, size: 90, rings: 3, glow: 'medium', description: 'A powerful presence', colors: ['#fbbf24', '#f59e0b', '#d97706'], orbSize: 22, glowIntensity: 0.5, image: '/images/aura/blaze.png' },
-  { name: 'Radiance', minXP: 500, size: 100, rings: 3, glow: 'high', description: 'Shining bright', colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'], orbSize: 24, glowIntensity: 0.6, image: '/images/aura/radiance.png' },
-  { name: 'Aurora', minXP: 800, size: 110, rings: 4, glow: 'high', description: 'A magnificent display', colors: ['#a5b4fc', '#818cf8', '#6366f1'], orbSize: 26, glowIntensity: 0.75, image: '/images/aura/aurora.png' },
-  { name: 'Celestial', minXP: 1200, size: 120, rings: 4, glow: 'max', description: 'The pinnacle of wellness', colors: ['#e9d5ff', '#c084fc', '#a855f7'], orbSize: 30, glowIntensity: 1, image: '/images/aura/celestial.png' },
-];
-
-export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) {
+export function AuraDetailModal({ entries, onClose }: AuraDetailModalProps) {
   const [hoveredStage, setHoveredStage] = useState<number | null>(null);
 
   // Preload all aura images on mount so hover tooltips are instant
@@ -28,48 +19,17 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
     });
   }, []);
 
-  // Calculate days since last entry
-  const daysSinceLastEntry = useMemo(() => {
-    if (entries.length === 0) return Infinity;
-    const sortedEntries = [...entries].sort((a, b) => b.createdAt - a.createdAt);
-    const lastEntry = new Date(sortedEntries[0].date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    lastEntry.setHours(0, 0, 0, 0);
-    return Math.floor((today.getTime() - lastEntry.getTime()) / (1000 * 60 * 60 * 24));
-  }, [entries]);
+  const aura = computeAura(entries);
+  const { stageIndex, stage, nextStage, totalDays, daysSinceLastEntry, progressToNext, isDecaying } = aura;
 
-  // Calculate vitality
-  const vitality = useMemo(() => {
+  // Calculate vitality based on days since last entry
+  const vitality = (() => {
     if (daysSinceLastEntry === 0) return 1;
     if (daysSinceLastEntry === 1) return 0.9;
     if (daysSinceLastEntry === 2) return 0.7;
     if (daysSinceLastEntry === 3) return 0.4;
-    if (daysSinceLastEntry >= 4) return 0.2;
-    return 1;
-  }, [daysSinceLastEntry]);
-
-  // Get current evolution stage
-  const currentStageIndex = useMemo(() => {
-    for (let i = EVOLUTION_STAGES.length - 1; i >= 0; i--) {
-      if (xp >= EVOLUTION_STAGES[i].minXP) {
-        return i;
-      }
-    }
-    return 0;
-  }, [xp]);
-  const currentStage = { ...EVOLUTION_STAGES[currentStageIndex], index: currentStageIndex };
-
-  // Get next stage
-  const nextStage = EVOLUTION_STAGES[currentStage.index + 1] || null;
-
-  // Progress to next stage
-  const progressToNext = useMemo(() => {
-    if (!nextStage) return 1;
-    const currentMin = currentStage.minXP;
-    const nextMin = nextStage.minXP;
-    return (xp - currentMin) / (nextMin - currentMin);
-  }, [xp, currentStage, nextStage]);
+    return 0.2;
+  })();
 
   // Get color based on average recent mood
   const recentMoods = entries.slice(-7).map(e => e.mood);
@@ -86,8 +46,10 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
   };
 
   const colors = getGradientColors();
-  const size = currentStage.size * vitality;
+  const baseSize = 60 + stageIndex * 10;
+  const size = baseSize * vitality;
   const opacity = 0.4 + vitality * 0.6;
+  const rings = stageIndex >= 3 ? 3 : stageIndex >= 1 ? 2 : 1;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate">
@@ -112,14 +74,13 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
             </svg>
           </button>
           <h3 className="text-xl font-medium text-white">Your Aura</h3>
-          <p className="text-white/80 text-sm">{currentStage.name}</p>
+          <p className="text-white/80 text-sm">{stage.name}</p>
         </div>
 
         <div className="overflow-y-auto flex-1">
           {/* Aura Image Display */}
           <div className="py-8 flex justify-center relative">
-            {/* Outer glow rings */}
-            {currentStage.rings >= 3 && (
+            {rings >= 3 && (
               <div
                 className="absolute rounded-full animate-pulse"
                 style={{
@@ -134,7 +95,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                 }}
               />
             )}
-            {currentStage.rings >= 2 && (
+            {rings >= 2 && (
               <div
                 className="absolute rounded-full animate-pulse"
                 style={{
@@ -152,8 +113,8 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
 
             {/* Main aura image */}
             <img
-              src={currentStage.image}
-              alt={currentStage.name}
+              src={stage.image}
+              alt={stage.name}
               className="relative transition-all duration-1000 drop-shadow-2xl"
               style={{
                 width: size * 1.4,
@@ -169,11 +130,20 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
             {/* Stage description */}
             <div className="text-center">
               <p className="text-silver-600 dark:text-silver-300 text-sm italic">
-                "{currentStage.description}"
+                "{stage.description}"
               </p>
             </div>
 
-            {/* Progress to next stage - subtle, no explicit numbers */}
+            {/* Decay warning */}
+            {isDecaying && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200/50 dark:border-amber-700/30">
+                <p className="text-xs text-amber-700 dark:text-amber-300 text-center">
+                  Your aura is fading. Log today to restore it!
+                </p>
+              </div>
+            )}
+
+            {/* Progress to next stage */}
             {nextStage && (
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-4">
                 <div className="flex justify-between text-sm mb-2">
@@ -181,7 +151,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                     Growing toward {nextStage.name}
                   </span>
                   <span className="text-silver-500 dark:text-silver-400 text-xs">
-                    {progressToNext < 0.3 ? 'Just beginning' : progressToNext < 0.6 ? 'Making progress' : 'Almost there'}
+                    {totalDays} / {nextStage.minDays} days
                   </span>
                 </div>
                 <div className="h-2 bg-silver-200 dark:bg-silver-700 rounded-full overflow-hidden">
@@ -196,12 +166,12 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               </div>
             )}
 
-            {/* Stats grid - softer language */}
+            {/* Stats grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-3 text-center">
-                <p className="text-2xl font-semibold text-silver-800 dark:text-silver-100">{entries.length}</p>
+                <p className="text-2xl font-semibold text-silver-800 dark:text-silver-100">{totalDays}</p>
                 <p className="text-xs text-silver-500 dark:text-silver-400">
-                  {entries.length === 1 ? 'Reflection' : 'Reflections'}
+                  {totalDays === 1 ? 'Day logged' : 'Days logged'}
                 </p>
               </div>
               <div className="bg-silver-50 dark:bg-silver-800/50 rounded-xl p-3 text-center">
@@ -220,19 +190,20 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                 <div className="absolute top-5 left-4 right-4 h-0.5 bg-silver-200 dark:bg-silver-700" />
                 <div
                   className="absolute top-5 left-4 h-0.5 bg-gradient-to-r from-lavender-400 to-lavender-500 transition-all duration-500"
-                  style={{ width: `${(currentStage.index / (EVOLUTION_STAGES.length - 1)) * 100}%` }}
+                  style={{ width: `${(stageIndex / (EVOLUTION_STAGES.length - 1)) * 100}%` }}
                 />
 
                 {/* Stages */}
                 <div className="relative flex justify-between">
-                  {EVOLUTION_STAGES.map((stage, index) => {
-                    const isReached = index <= currentStage.index;
-                    const isCurrent = index === currentStage.index;
+                  {EVOLUTION_STAGES.map((s, index) => {
+                    const isReached = index <= stageIndex;
+                    const isCurrent = index === stageIndex;
                     const isHovered = hoveredStage === index;
+                    const glowIntensity = 0.2 + index * 0.13;
 
                     return (
                       <div
-                        key={stage.name}
+                        key={s.name}
                         className="relative flex flex-col items-center group"
                         onMouseEnter={() => setHoveredStage(index)}
                         onMouseLeave={() => setHoveredStage(null)}
@@ -245,42 +216,43 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                                         animate-fade-in
                                         ${index === 0 ? 'left-0' : index === EVOLUTION_STAGES.length - 1 ? 'right-0' : 'left-1/2 -translate-x-1/2'}`}>
                             <div className="text-center">
-                              {/* Mini aura image in tooltip */}
                               <div className="flex justify-center mb-2">
                                 <img
-                                  src={stage.image}
-                                  alt={stage.name}
+                                  src={s.image}
+                                  alt={s.name}
                                   className="drop-shadow-lg"
                                   style={{
                                     width: 40,
                                     height: 40,
-                                    filter: `drop-shadow(0 0 ${6 * stage.glowIntensity}px ${stage.colors[0]}80)`,
+                                    filter: `drop-shadow(0 0 ${6 * glowIntensity}px ${s.colors[0]}80)`,
                                   }}
                                 />
                               </div>
                               <p className="text-sm font-medium text-silver-800 dark:text-silver-100">
-                                {stage.name}
+                                {s.name}
                               </p>
                               <p className="text-xs text-silver-500 dark:text-silver-400 mt-0.5">
-                                {stage.description}
+                                {s.description}
+                              </p>
+                              <p className="text-[10px] text-silver-400 dark:text-silver-500 mt-1">
+                                {s.minDays === 0 ? 'Starting level' : `${s.minDays} days to unlock`}
                               </p>
                               {!isReached && (
-                                <p className="text-xs text-silver-400 dark:text-silver-500 mt-2 italic">
+                                <p className="text-xs text-silver-400 dark:text-silver-500 mt-1 italic">
                                   Still ahead on your journey
                                 </p>
                               )}
                               {isReached && !isCurrent && (
-                                <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-2">
+                                <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-1">
                                   You've been here
                                 </p>
                               )}
                               {isCurrent && (
-                                <p className="text-xs text-lavender-500 dark:text-lavender-400 mt-2">
+                                <p className="text-xs text-lavender-500 dark:text-lavender-400 mt-1">
                                   Where you are now
                                 </p>
                               )}
                             </div>
-                            {/* Tooltip arrow */}
                             <div className={`absolute -bottom-1 w-2 h-2
                                           bg-white dark:bg-silver-800 rotate-45
                                           border-r border-b border-silver-200 dark:border-silver-700
@@ -297,13 +269,13 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                         >
                           {isReached ? (
                             <img
-                              src={stage.image}
-                              alt={stage.name}
+                              src={s.image}
+                              alt={s.name}
                               className="transition-all duration-300"
                               style={{
-                                width: stage.orbSize * 1.4,
-                                height: stage.orbSize * 1.4,
-                                filter: `drop-shadow(0 0 ${6 * stage.glowIntensity * (isHovered ? 2 : 1)}px ${stage.colors[0]}80)`,
+                                width: (16 + index * 2) * 1.4,
+                                height: (16 + index * 2) * 1.4,
+                                filter: `drop-shadow(0 0 ${6 * glowIntensity * (isHovered ? 2 : 1)}px ${s.colors[0]}80)`,
                                 opacity: isCurrent ? 1 : 0.7,
                               }}
                             />
@@ -325,7 +297,7 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
                                          : 'text-silver-400 dark:text-silver-500'
                                        }
                                        ${isHovered ? 'text-lavender-500 dark:text-lavender-400' : ''}`}>
-                          {stage.name}
+                          {s.name}
                         </span>
                       </div>
                     );
@@ -334,33 +306,27 @@ export function AuraDetailModal({ entries, xp, onClose }: AuraDetailModalProps) 
               </div>
             </div>
 
-            {/* Tips to nurture your aura - softer language */}
-            {nextStage && (
-              <div className="bg-gradient-to-br from-lavender-50 to-lavender-100/50 dark:from-lavender-900/20 dark:to-lavender-800/20
-                            rounded-xl p-4 border border-lavender-200/50 dark:border-lavender-700/30">
-                <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2">
-                  Ways to nurture your aura
-                </h4>
-                <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1.5">
-                  <li className="flex items-start gap-2">
-                    <span className="text-lavender-400">·</span>
-                    <span>Show up and reflect, even briefly</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-lavender-400">·</span>
-                    <span>Name what you're feeling</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-lavender-400">·</span>
-                    <span>Write about what matters to you</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-lavender-400">·</span>
-                    <span>Return when you can — your aura remembers</span>
-                  </li>
-                </ul>
-              </div>
-            )}
+            {/* Aura info - how it works */}
+            <div className="bg-gradient-to-br from-lavender-50 to-lavender-100/50 dark:from-lavender-900/20 dark:to-lavender-800/20
+                          rounded-xl p-4 border border-lavender-200/50 dark:border-lavender-700/30">
+              <h4 className="text-sm font-medium text-lavender-700 dark:text-lavender-300 mb-2">
+                How your aura grows
+              </h4>
+              <ul className="text-xs text-lavender-600 dark:text-lavender-400 space-y-1.5">
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender-400">·</span>
+                  <span>Each day you log helps your aura evolve</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender-400">·</span>
+                  <span>3 days without logging and your aura starts to fade back</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender-400">·</span>
+                  <span>Log regularly to maintain and grow your presence</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
