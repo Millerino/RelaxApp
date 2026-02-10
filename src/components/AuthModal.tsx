@@ -54,7 +54,7 @@ export function AuthModal({ onClose, initialMode = 'login' }: AuthModalProps) {
           setSuccess('Check your email to confirm your account');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -76,6 +76,7 @@ export function AuthModal({ onClose, initialMode = 'login' }: AuthModalProps) {
         <div className="relative glass-card p-8 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1 text-silver-500 hover:text-silver-700
                      dark:text-silver-400 dark:hover:text-silver-200 transition-colors"
           >
@@ -109,6 +110,7 @@ export function AuthModal({ onClose, initialMode = 'login' }: AuthModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
+          aria-label="Close"
           className="absolute top-4 right-4 p-1 text-silver-500 hover:text-silver-700
                    dark:text-silver-400 dark:hover:text-silver-200 transition-colors"
         >

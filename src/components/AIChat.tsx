@@ -230,6 +230,7 @@ export function AIChat({ entries, userName, onClose }: AIChatProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 text-silver-400 hover:text-silver-600 dark:hover:text-silver-200 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

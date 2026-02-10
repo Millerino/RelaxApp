@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import type { MoodLevel } from '../../types';
 
@@ -13,12 +13,14 @@ const moods: { level: MoodLevel; label: string }[] = [
 export function MoodStep() {
   const { setMood, setStep, currentEntry } = useApp();
   const [clickedLevel, setClickedLevel] = useState<MoodLevel | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSelect = (level: MoodLevel) => {
     setClickedLevel(level);
     setMood(level);
-    // Auto-advance with smooth delay
-    setTimeout(() => {
+    // Auto-advance with smooth delay, clearing any previous timer
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       setStep('emotions');
     }, 400);
   };

@@ -6,6 +6,8 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ entries }: StatsCardProps) {
+  const [showMoodInfo, setShowMoodInfo] = useState(false);
+
   const stats = useMemo(() => {
     if (entries.length === 0) {
       return null;
@@ -134,8 +136,6 @@ export function StatsCard({ entries }: StatsCardProps) {
     if (mood >= 2) return 'bg-orange-400';
     return 'bg-red-400';
   };
-
-  const [showMoodInfo, setShowMoodInfo] = useState(false);
 
   return (
     <div className="space-y-4">

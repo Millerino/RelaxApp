@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
+import { FREE_TRIAL_MS } from '../lib/constants';
 
 interface AppContextType {
   state: UserState;
@@ -64,11 +65,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const today = new Date().toDateString();
     const todayEntry = state.entries.find(e => e.date === today);
     if (todayEntry && state.isOnboarded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore step on mount
       setState(prev => ({ ...prev, currentStep: 'complete' }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, []);
 
-  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium && !state.isLoggedIn;
+  // 3-day free trial: show paywall after 3 calendar days from first use
+  const shouldShowPaywall = useMemo(() => {
+    if (state.isPremium) return false;
+    if (!state.firstUsedAt) return false;
+    return Date.now() - state.firstUsedAt >= FREE_TRIAL_MS;
+  }, [state.isPremium, state.firstUsedAt]);
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));
@@ -138,7 +146,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         entries: [...prev.entries.filter(e => e.date !== today), entry],
         daysUsed: alreadyHasToday ? prev.daysUsed : prev.daysUsed + 1,
         isOnboarded: true,
-        xp: (prev.xp || 0) + earnedXP,
+        // Only award XP for genuinely new entries, not re-saves
+        xp: alreadyHasToday ? (prev.xp || 0) : (prev.xp || 0) + earnedXP,
+        // Track first use timestamp for free trial
+        firstUsedAt: prev.firstUsedAt || Date.now(),
       };
     });
 
@@ -166,9 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
       const isNewEntry = existingIndex === -1;
 
-      // Only give XP for new entries (not edits)
-      const xpGain = isNewEntry ? 10 : 0;
-
+      // Never award XP for edits or backfilled past entries - only the daily flow gives XP
       return {
         ...prev,
         entries: isNewEntry
@@ -176,7 +185,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : prev.entries.map((e, i) => i === existingIndex ? entry : e),
         daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
         isOnboarded: true,
-        xp: (prev.xp || 0) + xpGain,
       };
     });
   };
@@ -231,6 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       entries: [],
       currentStep: 'welcome',
       xp: 0,
+      firstUsedAt: undefined,
     });
     setCurrentEntry({});
   };
@@ -264,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

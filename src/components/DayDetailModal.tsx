@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
 
 interface DayDetailModalProps {
@@ -29,6 +30,13 @@ const ACTIVITIES = [
   { emoji: '🧘', label: 'Meditate' },
 ];
 
+const ALL_FEELINGS = [
+  'Happiness', 'Energy', 'Calm', 'Motivation', 'Confidence',
+  'Focus', 'Creativity', 'Gratitude', 'Love', 'Hope',
+  'Anxiety', 'Stress', 'Sadness', 'Anger', 'Loneliness',
+  'Fatigue', 'Restlessness', 'Self-doubt', 'Overwhelm', 'Peace',
+];
+
 const DEFAULT_FEELINGS = [
   { name: 'Happiness', color: 'emerald' },
   { name: 'Energy', color: 'amber' },
@@ -56,6 +64,7 @@ export function DayDetailModal({
   );
   const [hoveredFeeling, setHoveredFeeling] = useState<string | null>(null);
   const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
+  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
 
   // Handle drag for feeling sliders - uses stored track ref for accurate positioning
   const calcPercent = (clientX: number, track: HTMLElement) => {
@@ -108,8 +117,9 @@ export function DayDetailModal({
   // Filter notes for this day
   const dayNotes = quickNotes.filter(n => n.date === date.toDateString());
 
-  // Reset form when entry changes
+  // Reset form when entry changes - intentional synchronous state reset
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- form reset when navigating between days
     setEditMood(entry?.mood || null);
     setEditEmotions(entry?.emotions || []);
     setEditReflection(entry?.reflection || '');
@@ -166,6 +176,17 @@ export function DayDetailModal({
     );
   };
 
+  const addFeeling = (name: string) => {
+    if (!editFeelings.find(f => f.name === name)) {
+      setEditFeelings(prev => [...prev, { name, value: 50 }]);
+    }
+    setShowFeelingPicker(false);
+  };
+
+  const removeFeeling = (name: string) => {
+    setEditFeelings(prev => prev.filter(f => f.name !== name));
+  };
+
   const handleSave = () => {
     if (!onSaveEntry || editMood === null) return;
 
@@ -216,7 +237,7 @@ export function DayDetailModal({
     };
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 isolate"
       onClick={handleBackdropClick}
@@ -263,14 +284,15 @@ export function DayDetailModal({
 
       {/* Modal - wider with more space for content */}
       <div
-        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-md lg:max-w-lg
-                   animate-slide-up overflow-hidden max-h-[90vh] flex flex-col mx-12 lg:mx-20"
+        className="relative bg-white dark:bg-silver-900 rounded-2xl shadow-2xl w-full max-w-lg lg:max-w-xl
+                   animate-slide-up overflow-hidden max-h-[90vh] flex flex-col mx-4 sm:mx-8 lg:mx-20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className={`px-6 py-5 ${getMoodHeaderGradient(entry?.mood || editMood || null)} relative`}>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30
                      text-white transition-all hover:scale-110"
           >
@@ -364,9 +386,46 @@ export function DayDetailModal({
 
               {/* Feeling Bars */}
               <div>
-                <label className="text-sm font-medium text-silver-700 dark:text-silver-200 block mb-3">
-                  How's your...
-                </label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-silver-700 dark:text-silver-200">
+                    How's your...
+                  </label>
+                  <button
+                    onClick={() => setShowFeelingPicker(!showFeelingPicker)}
+                    className="flex items-center gap-1 text-xs text-lavender-500 hover:text-lavender-600 transition-colors"
+                  >
+                    <svg className={`w-3.5 h-3.5 transition-transform ${showFeelingPicker ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    {showFeelingPicker ? 'Close' : 'Add more'}
+                  </button>
+                </div>
+
+                {/* Expandable feeling picker */}
+                {showFeelingPicker && (
+                  <div className="mb-4 p-3 bg-silver-50 dark:bg-silver-800/50 rounded-xl">
+                    <p className="text-xs text-silver-500 dark:text-silver-400 mb-2">Tap to add or remove feelings to track:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ALL_FEELINGS.map(name => {
+                        const isActive = editFeelings.some(f => f.name === name);
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => isActive ? removeFeeling(name) : addFeeling(name)}
+                            className={`px-2.5 py-1 rounded-full text-xs transition-all ${
+                              isActive
+                                ? 'bg-lavender-100 dark:bg-lavender-900/40 text-lavender-700 dark:text-lavender-300 ring-1 ring-lavender-300 dark:ring-lavender-600'
+                                : 'bg-white dark:bg-silver-700 text-silver-600 dark:text-silver-300 hover:bg-lavender-50 dark:hover:bg-lavender-900/20'
+                            }`}
+                          >
+                            {isActive ? '✓ ' : '+ '}{name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   {editFeelings.map((feeling) => {
                     const colors = getFeelingColor(feeling.value);
@@ -375,7 +434,20 @@ export function DayDetailModal({
                     return (
                       <div key={feeling.name} className="relative">
                         <div className="flex justify-between text-xs mb-1.5">
-                          <span className="text-silver-600 dark:text-silver-300 font-medium">{feeling.name}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-silver-600 dark:text-silver-300 font-medium">{feeling.name}</span>
+                            {editFeelings.length > 1 && (
+                              <button
+                                onClick={() => removeFeeling(feeling.name)}
+                                className="text-silver-400 hover:text-rose-500 transition-colors"
+                                title="Remove"
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                           <span className={`font-medium transition-colors ${colors.text}`}>
                             {feeling.value >= 70 ? 'High' : feeling.value >= 40 ? 'Neutral' : 'Low'}
                           </span>
@@ -486,7 +558,7 @@ export function DayDetailModal({
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm transition-all"
+                           resize-none text-base transition-all"
                   rows={3}
                 />
               </div>
@@ -503,7 +575,7 @@ export function DayDetailModal({
                   className="w-full px-4 py-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
                            border border-silver-200 dark:border-silver-700 text-silver-800 dark:text-silver-100
                            placeholder-silver-400 focus:outline-none focus:ring-2 focus:ring-lavender-400
-                           resize-none text-sm transition-all"
+                           resize-none text-base transition-all"
                   rows={2}
                 />
               </div>
@@ -701,7 +773,8 @@ export function DayDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

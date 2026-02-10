@@ -165,6 +165,7 @@ export function BreathingExercise({ onClose }: BreathingExerciseProps) {
       {/* Close button */}
       <button
         onClick={onClose}
+        aria-label="Close"
         className="absolute top-6 right-6 p-2 text-white/60 hover:text-white transition-colors"
       >
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

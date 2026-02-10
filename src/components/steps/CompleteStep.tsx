@@ -30,10 +30,34 @@ export function CompleteStep() {
   const todayEntry = state.entries.find(e => e.date === today);
   const streak = calculateStreak(state.entries);
 
+  // Preload all images on dashboard mount so modals feel instant
+  useEffect(() => {
+    const imagesToPreload = [
+      // Aura evolution stages
+      '/images/aura/spark.png', '/images/aura/ember.png', '/images/aura/flame.png',
+      '/images/aura/blaze.png', '/images/aura/radiance.png', '/images/aura/aurora.png',
+      '/images/aura/celestial.png',
+      // Avatar/profile pictures
+      '/images/avatars/axolotl.png', '/images/avatars/capybara.png',
+      '/images/avatars/fennec-fox.png', '/images/avatars/koi-fish.png',
+      '/images/avatars/narwhal.png', '/images/avatars/pangolin.png',
+      '/images/avatars/quokka.png', '/images/avatars/otter.png',
+      '/images/avatars/red-panda.png', '/images/avatars/snow-leopard.png',
+      // Action icons
+      '/images/actions/breathe.png', '/images/actions/new-entry.png',
+      '/images/actions/profile.png', '/images/actions/your-aura.png',
+    ];
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   // Trigger confetti when entry is first completed
   useEffect(() => {
     if (todayEntry && !hasTriggeredConfetti.current) {
       hasTriggeredConfetti.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time confetti trigger
       setShowConfetti(true);
       const timer = setTimeout(() => setShowConfetti(false), 3000);
       return () => clearTimeout(timer);
@@ -51,14 +75,14 @@ export function CompleteStep() {
     return null;
   }, [state.profile?.name, user?.email]);
 
-  // Get time-based greeting
-  const greeting = useMemo(() => {
+  // Get time-based greeting (computed once on mount)
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     if (hour < 21) return 'Good evening';
     return 'Good night';
-  }, []);
+  });
 
   // Check if should show paywall (but not if user is authenticated via Supabase)
   // Placed after all hooks to satisfy React's Rules of Hooks
@@ -227,45 +251,27 @@ export function CompleteStep() {
                       <button
                         onClick={() => setShowBreathing(true)}
                         className="p-3 rounded-xl bg-lavender-50 dark:bg-lavender-900/20
-                                 flex flex-col items-center gap-2 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-colors"
+                                 flex flex-col items-center gap-2 hover:bg-lavender-100 dark:hover:bg-lavender-900/30 transition-all hover:scale-[1.02]"
                       >
-                        <div className="w-10 h-10 rounded-full bg-lavender-100 dark:bg-lavender-900/40
-                                      flex items-center justify-center">
-                          <svg className="w-5 h-5 text-lavender-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </div>
+                        <img src="/images/actions/breathe.png" alt="Breathe" className="w-10 h-10 rounded-xl object-cover" />
                         <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Breathe</span>
                       </button>
 
                       <button
                         onClick={() => setShowAuraDetail(true)}
                         className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20
-                                 flex flex-col items-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+                                 flex flex-col items-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all hover:scale-[1.02]"
                       >
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40
-                                      flex items-center justify-center">
-                          <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
+                        <img src="/images/actions/your-aura.png" alt="Your Aura" className="w-10 h-10 rounded-xl object-cover" />
                         <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Your Aura</span>
                       </button>
 
                       <button
                         onClick={handleNewEntry}
                         className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20
-                                 flex flex-col items-center gap-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                                 flex flex-col items-center gap-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all hover:scale-[1.02]"
                       >
-                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40
-                                      flex items-center justify-center">
-                          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </div>
+                        <img src="/images/actions/new-entry.png" alt="New Entry" className="w-10 h-10 rounded-xl object-cover" />
                         <span className="text-xs font-medium text-silver-700 dark:text-silver-200">New Entry</span>
                       </button>
 
@@ -275,15 +281,9 @@ export function CompleteStep() {
                           window.dispatchEvent(event);
                         }}
                         className="p-3 rounded-xl bg-silver-50 dark:bg-silver-800/50
-                                 flex flex-col items-center gap-2 hover:bg-silver-100 dark:hover:bg-silver-700/50 transition-colors"
+                                 flex flex-col items-center gap-2 hover:bg-silver-100 dark:hover:bg-silver-700/50 transition-all hover:scale-[1.02]"
                       >
-                        <div className="w-10 h-10 rounded-full bg-silver-100 dark:bg-silver-700
-                                      flex items-center justify-center">
-                          <svg className="w-5 h-5 text-silver-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
+                        <img src="/images/actions/profile.png" alt="Profile" className="w-10 h-10 rounded-xl object-cover" />
                         <span className="text-xs font-medium text-silver-700 dark:text-silver-200">Profile</span>
                       </button>
                     </div>
@@ -445,7 +445,7 @@ export function CompleteStep() {
 }
 
 function ConfettiEffect() {
-  const particles = useMemo(() => {
+  const [particles] = useState(() => {
     const colors = ['#c4b5fd', '#a78bfa', '#8b5cf6', '#34d399', '#fbbf24', '#f472b6', '#60a5fa'];
     return Array.from({ length: 40 }, (_, i) => ({
       id: i,
@@ -456,7 +456,7 @@ function ConfettiEffect() {
       size: 4 + Math.random() * 6,
       drift: -30 + Math.random() * 60,
     }));
-  }, []);
+  });
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
@@ -479,7 +479,7 @@ function ConfettiEffect() {
       <style>{`
         @keyframes confetti-fall {
           0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) translateX(var(--drift)) rotate(720deg); opacity: 0; }
+          100% { transform: translateY(800px) translateX(var(--drift)) rotate(720deg); opacity: 0; }
         }
         .animate-confetti-fall {
           animation: confetti-fall linear forwards;
@@ -498,13 +498,13 @@ interface MiniAuraOrbProps {
 
 function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
   const EVOLUTION_STAGES = [
-    { name: 'Spark', minXP: 0, colors: ['#cbd5e1', '#94a3b8', '#64748b'] },
-    { name: 'Ember', minXP: 50, colors: ['#fcd34d', '#f97316', '#ea580c'] },
-    { name: 'Flame', minXP: 150, colors: ['#fde047', '#eab308', '#ca8a04'] },
-    { name: 'Blaze', minXP: 300, colors: ['#fbbf24', '#f59e0b', '#d97706'] },
-    { name: 'Radiance', minXP: 500, colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'] },
-    { name: 'Aurora', minXP: 800, colors: ['#a5b4fc', '#818cf8', '#6366f1'] },
-    { name: 'Celestial', minXP: 1200, colors: ['#e9d5ff', '#c084fc', '#a855f7'] },
+    { name: 'Spark', minXP: 0, colors: ['#cbd5e1', '#94a3b8', '#64748b'], image: '/images/aura/spark.png' },
+    { name: 'Ember', minXP: 50, colors: ['#fcd34d', '#f97316', '#ea580c'], image: '/images/aura/ember.png' },
+    { name: 'Flame', minXP: 150, colors: ['#fde047', '#eab308', '#ca8a04'], image: '/images/aura/flame.png' },
+    { name: 'Blaze', minXP: 300, colors: ['#fbbf24', '#f59e0b', '#d97706'], image: '/images/aura/blaze.png' },
+    { name: 'Radiance', minXP: 500, colors: ['#c4b5fd', '#a78bfa', '#8b5cf6'], image: '/images/aura/radiance.png' },
+    { name: 'Aurora', minXP: 800, colors: ['#a5b4fc', '#818cf8', '#6366f1'], image: '/images/aura/aurora.png' },
+    { name: 'Celestial', minXP: 1200, colors: ['#e9d5ff', '#c084fc', '#a855f7'], image: '/images/aura/celestial.png' },
   ];
 
   // Calculate vitality based on days since last entry
@@ -580,23 +580,27 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
                      group-hover:-translate-y-[calc(100%+8px)]">
         <div className="bg-white dark:bg-silver-800 rounded-xl shadow-xl p-3 w-48
                        border border-silver-200 dark:border-silver-700">
-          {/* Stage progression - mini orbs instead of emojis */}
+          {/* Stage progression - mini images */}
           <div className="flex justify-between items-center mb-3 px-1">
             {EVOLUTION_STAGES.map((stage, i) => (
-              <div
-                key={stage.name}
-                className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                  i === stageIndex ? 'ring-2 ring-lavender-400 ring-offset-1 ring-offset-white dark:ring-offset-silver-800 scale-110' : ''
-                }`}
-                style={{
-                  background: i <= stageIndex
-                    ? `radial-gradient(circle at 30% 30%, ${stage.colors[0]}, ${stage.colors[1]})`
-                    : 'transparent',
-                  border: i > stageIndex ? '1px dashed rgba(148, 163, 184, 0.5)' : 'none',
-                  boxShadow: i <= stageIndex ? `0 0 4px ${stage.colors[0]}60` : 'none',
-                }}
-                title={stage.name}
-              />
+              i <= stageIndex ? (
+                <img
+                  key={stage.name}
+                  src={stage.image}
+                  alt={stage.name}
+                  className={`w-5 h-5 transition-all duration-300 ${
+                    i === stageIndex ? 'ring-2 ring-lavender-400 rounded-full ring-offset-1 ring-offset-white dark:ring-offset-silver-800 scale-125' : 'opacity-60'
+                  }`}
+                  style={{ filter: `drop-shadow(0 0 3px ${stage.colors[0]}60)` }}
+                  title={stage.name}
+                />
+              ) : (
+                <div
+                  key={stage.name}
+                  className="w-4 h-4 rounded-full border border-dashed border-silver-300 dark:border-silver-600"
+                  title={stage.name}
+                />
+              )
             ))}
           </div>
 
@@ -640,7 +644,7 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
         </div>
       </div>
 
-      {/* Orb container with hover effects */}
+      {/* Image container with hover effects */}
       <div className="relative">
         {/* Outer glow - expands on hover */}
         <div
@@ -655,41 +659,19 @@ function MiniAuraOrb({ entries, xp, onClick }: MiniAuraOrbProps) {
           }}
         />
 
-        {/* Second glow ring on hover */}
-        <div
-          className="absolute rounded-full transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-125"
-          style={{
-            width: size * 1.8,
-            height: size * 1.8,
-            background: `radial-gradient(circle, ${colors[1]}15, transparent 70%)`,
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-
-        {/* Main orb - grows, bounces, and pulses on hover */}
-        <div
-          className="relative rounded-full transition-all duration-300 ease-out
-                     group-hover:scale-110 group-hover:-translate-y-1 group-hover:animate-pulse"
+        {/* Main aura image */}
+        <img
+          src={currentStage.image}
+          alt={currentStage.name}
+          className="relative transition-all duration-300 ease-out
+                     group-hover:scale-110 group-hover:-translate-y-1"
           style={{
             width: size,
             height: size,
-            background: `radial-gradient(circle at 30% 30%, ${colors[0]}, ${colors[1]}, ${colors[2]})`,
-            boxShadow: `
-              0 0 ${15 * vitality}px ${colors[0]}50,
-              0 0 ${30 * vitality}px ${colors[1]}30,
-              inset 0 0 ${12 * vitality}px rgba(255,255,255,0.3)
-            `,
             opacity,
+            filter: `drop-shadow(0 0 ${15 * vitality}px ${colors[0]}50) drop-shadow(0 0 ${30 * vitality}px ${colors[1]}30)`,
           }}
-        >
-          {/* Inner highlight */}
-          <div
-            className="absolute inset-[15%] rounded-full"
-            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.4), transparent 60%)' }}
-          />
-        </div>
+        />
       </div>
 
       {/* Label below orb - no explicit XP */}
@@ -735,7 +717,7 @@ function calculateStreak(entries: DayEntry[]): number {
   }
 
   let streak = 1;
-  let checkDate = new Date(latestDate);
+  const checkDate = new Date(latestDate);
   checkDate.setDate(checkDate.getDate() - 1);
 
   for (let i = 1; i < sortedEntries.length; i++) {
