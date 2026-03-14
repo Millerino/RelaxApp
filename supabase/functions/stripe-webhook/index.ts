@@ -157,9 +157,10 @@ serve(async (req) => {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Webhook error:', err)
-    return new Response(`Webhook error: ${err.message}`, { status: 400 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return new Response(`Webhook error: ${message}`, { status: 400 })
   }
 })
 
@@ -181,9 +182,9 @@ async function verifyStripeWebhook(
 
     if (!timestamp || !expectedSig) return null
 
-    // Check timestamp is within 5 minutes
+    // Check timestamp is within 5 minutes and not in the future (with 60s tolerance for clock skew)
     const timestampAge = Math.floor(Date.now() / 1000) - parseInt(timestamp)
-    if (timestampAge > 300) return null
+    if (timestampAge > 300 || timestampAge < -60) return null
 
     // Compute expected signature
     const signedPayload = `${timestamp}.${payload}`
