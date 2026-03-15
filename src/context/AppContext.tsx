@@ -8,6 +8,7 @@ import {
   fetchQuickNotes, upsertQuickNote, upsertQuickNotes,
   deleteQuickNoteRemote, upsertProfile, fetchProfile,
 } from '../lib/supabase';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 
 interface AppContextType {
   state: UserState;
@@ -169,6 +170,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, []);
+
+  // --- Realtime sync: listen for changes from other devices via WebSocket ---
+  useRealtimeSync(user?.id, {
+    onEntryChange: useCallback((entry: DayEntry) => {
+      setState(prev => {
+        const existing = prev.entries.find(e => e.date === entry.date);
+        // Only update if the incoming entry is newer
+        if (existing && existing.createdAt >= entry.createdAt) return prev;
+        return {
+          ...prev,
+          entries: [...prev.entries.filter(e => e.date !== entry.date), entry],
+          daysUsed: existing ? prev.daysUsed : prev.daysUsed + 1,
+          isOnboarded: true,
+        };
+      });
+    }, []),
+    onNoteChange: useCallback((note: QuickNote) => {
+      setState(prev => ({
+        ...prev,
+        quickNotes: [
+          ...(prev.quickNotes || []).filter(n => n.id !== note.id),
+          note,
+        ],
+      }));
+    }, []),
+    onNoteDelete: useCallback((noteId: string) => {
+      setState(prev => ({
+        ...prev,
+        quickNotes: (prev.quickNotes || []).filter(n => n.id !== noteId),
+      }));
+    }, []),
+    onProfileChange: useCallback((profile: { xp?: number; days_used?: number }) => {
+      setState(prev => ({
+        ...prev,
+        xp: Math.max(prev.xp || 0, profile.xp || 0),
+        daysUsed: Math.max(prev.daysUsed, profile.days_used || 0),
+      }));
+    }, []),
+  });
 
   // 3-day free trial: show paywall after 3 calendar days from first use
   const shouldShowPaywall = useMemo(() => {

@@ -232,19 +232,15 @@ function AppShell() {
     return () => { cancelled = true; };
   }, []); // Run once on mount
 
-  // Refresh profile + entries/notes on window focus and periodically for cross-device sync
+  // Fallback sync on window focus (realtime handles instant sync, this catches missed events)
   useEffect(() => {
     if (!user) return;
-    const refresh = () => {
+    const handleFocus = () => {
       refreshProfile();
       refreshData();
     };
-    const interval = setInterval(refresh, 60_000);
-    window.addEventListener('focus', refresh);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', refresh);
-    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [user, refreshProfile, refreshData]);
 
   // Listen for auth modal events from Paywall/other components
