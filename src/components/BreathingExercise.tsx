@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface BreathingExerciseProps {
   onClose: () => void;
@@ -63,6 +63,7 @@ export function BreathingExercise({ onClose }: BreathingExerciseProps) {
 
   const startExercise = () => {
     if (!selectedTechnique) return;
+    exerciseStartRef.current = Date.now();
     setIsActive(true);
     setCurrentPhaseIndex(0);
     setProgress(0);
@@ -81,6 +82,9 @@ export function BreathingExercise({ onClose }: BreathingExerciseProps) {
     stopExercise();
   };
 
+  // Track exercise start time with a ref to avoid timer drift
+  const exerciseStartRef = useRef<number>(0);
+
   useEffect(() => {
     if (!isActive || !currentPhase || !selectedTechnique) return;
 
@@ -92,14 +96,14 @@ export function BreathingExercise({ onClose }: BreathingExerciseProps) {
       const phaseProgress = Math.min(elapsed / phaseDuration, 1);
       setProgress(phaseProgress);
 
-      setTotalElapsed(prev => {
-        const newTotal = prev + 50;
-        if (newTotal >= TOTAL_DURATION) {
-          stopExercise();
-          return 0;
-        }
-        return newTotal;
-      });
+      // Use real elapsed time instead of accumulating 50ms increments to avoid drift
+      const realTotalElapsed = Date.now() - exerciseStartRef.current;
+      setTotalElapsed(realTotalElapsed);
+
+      if (realTotalElapsed >= TOTAL_DURATION) {
+        stopExercise();
+        return;
+      }
 
       if (elapsed >= phaseDuration) {
         setCurrentPhaseIndex(prev => {

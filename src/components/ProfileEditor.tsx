@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { UserProfile, WellnessGoal } from '../types';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,14 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
   const [deleteStep, setDeleteStep] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Cleanup timer on unmount to prevent state updates on unmounted component
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   const toggleGoal = (goal: WellnessGoal) => {
     setWellnessGoals(prev =>
       prev.includes(goal)
@@ -81,7 +89,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     };
 
     // Simulate brief save delay for UX
-    setTimeout(() => {
+    saveTimerRef.current = setTimeout(() => {
       onSave(updatedProfile);
       setIsSaving(false);
     }, 300);

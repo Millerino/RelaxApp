@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { DayEntry, MoodLevel, QuickNote, FeelingLevel } from '../types';
 
@@ -66,6 +66,16 @@ export function DayDetailModal({
   const [draggingFeeling, setDraggingFeeling] = useState<string | null>(null);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
 
+  // Track active document listeners for cleanup on unmount
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up any lingering document listeners if component unmounts during drag
+      cleanupRef.current?.();
+    };
+  }, []);
+
   // Handle drag for feeling sliders - uses stored track ref for accurate positioning
   const calcPercent = (clientX: number, track: HTMLElement) => {
     const rect = track.getBoundingClientRect();
@@ -84,14 +94,16 @@ export function DayDetailModal({
       updateFeeling(feelingName, calcPercent(moveEvent.clientX, track));
     };
 
-    const handleMouseUp = () => {
+    const cleanup = () => {
       setDraggingFeeling(null);
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', cleanup);
+      cleanupRef.current = null;
     };
 
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseup', cleanup);
+    cleanupRef.current = cleanup;
   };
 
   const handleFeelingTouchStart = (e: React.TouchEvent, feelingName: string) => {
@@ -104,14 +116,16 @@ export function DayDetailModal({
       updateFeeling(feelingName, calcPercent(moveEvent.touches[0].clientX, track));
     };
 
-    const handleTouchEnd = () => {
+    const cleanup = () => {
       setDraggingFeeling(null);
       document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchend', cleanup);
+      cleanupRef.current = null;
     };
 
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchend', cleanup);
+    cleanupRef.current = cleanup;
   };
 
   // Filter notes for this day

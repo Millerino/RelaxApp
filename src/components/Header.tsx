@@ -103,8 +103,21 @@ export function Header({ onNavigateHome }: HeaderProps) {
                                 flex items-center justify-center text-lavender-600 dark:text-lavender-300
                                 text-xs font-medium overflow-hidden">
                     {avatar ? (
-                      <img src={`/images/avatars/${avatar}.png`} alt="" className="w-full h-full object-cover" />
-                    ) : initials}
+                      <img
+                        src={`/images/avatars/${avatar}.png`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Hide broken image and let parent show initials via fallback
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          // Show the initials fallback
+                          const fallback = img.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = '';
+                        }}
+                      />
+                    ) : null}
+                    <span className={avatar ? 'hidden' : ''}>{initials}</span>
                   </div>
                   <span className="hidden sm:inline max-w-[120px] truncate">
                     {displayName}
