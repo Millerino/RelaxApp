@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 import {
   fetchEntries, upsertEntry, upsertEntries,
   fetchQuickNotes, upsertQuickNote, upsertQuickNotes,
-  deleteQuickNoteRemote, upsertProfile,
+  deleteQuickNoteRemote, upsertProfile, fetchProfile,
 } from '../lib/supabase';
 
 interface AppContextType {
@@ -31,6 +31,7 @@ interface AppContextType {
   deleteQuickNote: (id: string) => void;
   updateQuickNoteEmoji: (id: string, emoji: string) => void;
   getNotesForDate: (date: string) => QuickNote[];
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -74,9 +75,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     hasSyncedRef.current = true;
 
     const sync = async () => {
-      const [remoteEntries, remoteNotes] = await Promise.all([
+      const [remoteEntries, remoteNotes, remoteProfile] = await Promise.all([
         fetchEntries(user.id),
         fetchQuickNotes(user.id),
+        fetchProfile(user.id),
       ]);
 
       setState(prev => {
@@ -110,7 +112,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         // Use the higher XP and days_used (in case remote is ahead)
-        const newXp = Math.max(prev.xp || 0, 0);
+        const remoteXp = remoteProfile?.xp || 0;
+        const newXp = Math.max(prev.xp || 0, remoteXp);
         const newDaysUsed = Math.max(prev.daysUsed, mergedEntries.length);
 
         return {
@@ -343,6 +346,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return (state.quickNotes || []).filter(n => n.date === date);
   };
 
+  // Re-fetch entries and quick notes from Supabase (called on focus / interval)
+  const refreshData = useCallback(async () => {
+    if (!user) return;
+
+    const [remoteEntries, remoteNotes] = await Promise.all([
+      fetchEntries(user.id),
+      fetchQuickNotes(user.id),
+    ]);
+
+    setState(prev => {
+      // Merge entries: for same date, keep the one with later createdAt
+      const localByDate = new Map(prev.entries.map(e => [e.date, e]));
+      const remoteByDate = new Map(remoteEntries.map(e => [e.date, e]));
+      const mergedEntries: DayEntry[] = [];
+      const allDates = new Set([...localByDate.keys(), ...remoteByDate.keys()]);
+
+      for (const date of allDates) {
+        const local = localByDate.get(date);
+        const remote = remoteByDate.get(date);
+        if (local && remote) {
+          mergedEntries.push(local.createdAt >= remote.createdAt ? local : remote);
+        } else {
+          mergedEntries.push((local || remote)!);
+        }
+      }
+
+      // Merge quick notes: remote wins for same ID, keep unique from both
+      const localNotesById = new Map((prev.quickNotes || []).map(n => [n.id, n]));
+      const remoteNotesById = new Map(remoteNotes.map(n => [n.id, n]));
+      const allNoteIds = new Set([...localNotesById.keys(), ...remoteNotesById.keys()]);
+      const mergedNotes: QuickNote[] = [];
+      for (const id of allNoteIds) {
+        const remote = remoteNotesById.get(id);
+        const local = localNotesById.get(id);
+        mergedNotes.push((remote || local)!);
+      }
+
+      return {
+        ...prev,
+        entries: mergedEntries,
+        quickNotes: mergedNotes,
+        daysUsed: Math.max(prev.daysUsed, mergedEntries.length),
+      };
+    });
+  }, [user]);
+
   const clearAllData = async (): Promise<void> => {
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEY);
@@ -383,6 +432,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteQuickNote,
       updateQuickNoteEmoji,
       getNotesForDate,
+      refreshData,
     }}>
       {children}
     </AppContext.Provider>

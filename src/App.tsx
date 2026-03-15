@@ -112,7 +112,7 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile, setStep, subscribeToPremium, cancelSubscription } = useApp();
+  const { state, setProfile, setStep, subscribeToPremium, cancelSubscription, refreshData } = useApp();
   const { user, profile: supabaseProfile, refreshProfile } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -232,17 +232,20 @@ function AppShell() {
     return () => { cancelled = true; };
   }, []); // Run once on mount
 
-  // Refresh profile on window focus and periodically to catch webhook-driven changes
+  // Refresh profile + entries/notes on window focus and periodically for cross-device sync
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(() => refreshProfile(), 60_000);
-    const handleFocus = () => refreshProfile();
-    window.addEventListener('focus', handleFocus);
+    const refresh = () => {
+      refreshProfile();
+      refreshData();
+    };
+    const interval = setInterval(refresh, 60_000);
+    window.addEventListener('focus', refresh);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('focus', refresh);
     };
-  }, [user, refreshProfile]);
+  }, [user, refreshProfile, refreshData]);
 
   // Listen for auth modal events from Paywall/other components
   useEffect(() => {
