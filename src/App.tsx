@@ -134,24 +134,34 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
-  // Bidirectional profile sync between Supabase and local state
+  // Profile sync: Supabase is the source of truth for signed-in users
   useEffect(() => {
     if (!user || !supabaseProfile) return;
     const supaName = supabaseProfile.name;
     const localName = state.profile?.name;
 
-    if (supaName && supaName !== localName) {
-      // Supabase has data → pull to local
-      setProfile({
-        ...state.profile,
-        name: supaName,
-        avatar: supabaseProfile.avatar || state.profile?.avatar,
-        birthday: supabaseProfile.birthday || state.profile?.birthday,
-        gender: (supabaseProfile.gender as UserProfile['gender']) || state.profile?.gender,
-        country: supabaseProfile.country || state.profile?.country,
-        timezone: supabaseProfile.timezone || state.profile?.timezone,
-        createdAt: state.profile?.createdAt || Date.now(),
-      });
+    if (supaName) {
+      // Always pull latest profile from Supabase → overwrite local
+      const needsUpdate =
+        supaName !== localName ||
+        supabaseProfile.avatar !== state.profile?.avatar ||
+        supabaseProfile.birthday !== state.profile?.birthday ||
+        supabaseProfile.gender !== state.profile?.gender ||
+        supabaseProfile.country !== state.profile?.country ||
+        supabaseProfile.timezone !== state.profile?.timezone;
+
+      if (needsUpdate) {
+        setProfile({
+          ...state.profile,
+          name: supaName,
+          avatar: supabaseProfile.avatar ?? state.profile?.avatar,
+          birthday: supabaseProfile.birthday ?? state.profile?.birthday,
+          gender: (supabaseProfile.gender as UserProfile['gender']) ?? state.profile?.gender,
+          country: supabaseProfile.country ?? state.profile?.country,
+          timezone: supabaseProfile.timezone ?? state.profile?.timezone,
+          createdAt: state.profile?.createdAt || Date.now(),
+        });
+      }
     } else if (!supaName && localName) {
       // Local has data but Supabase doesn't → push to Supabase
       upsertProfile(user.id, {
