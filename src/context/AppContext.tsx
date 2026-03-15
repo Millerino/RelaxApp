@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { UserState, DayEntry, OnboardingStep, MoodLevel, Goal, UserProfile, QuickNote } from '../types';
+import { FREE_TRIAL_MS } from '../lib/constants';
+import { useAuth } from './AuthContext';
+import {
+  fetchEntries, upsertEntry, upsertEntries,
+  fetchQuickNotes, upsertQuickNote, upsertQuickNotes,
+  deleteQuickNoteRemote, upsertProfile,
+} from '../lib/supabase';
 
 interface AppContextType {
   state: UserState;
@@ -53,11 +60,102 @@ const getInitialState = (): UserState => {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<UserState>(getInitialState);
   const [currentEntry, setCurrentEntry] = useState<Partial<DayEntry>>({});
+  const { user } = useAuth();
+  const hasSyncedRef = useRef(false);
 
   // Persist state to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
+
+  // --- Cloud sync: pull remote data on login, merge with local ---
+  useEffect(() => {
+    if (!user || hasSyncedRef.current) return;
+    hasSyncedRef.current = true;
+
+    const sync = async () => {
+      const [remoteEntries, remoteNotes] = await Promise.all([
+        fetchEntries(user.id),
+        fetchQuickNotes(user.id),
+      ]);
+
+      setState(prev => {
+        // Merge entries: for same date, keep the one with later createdAt
+        const localByDate = new Map(prev.entries.map(e => [e.date, e]));
+        const remoteByDate = new Map(remoteEntries.map(e => [e.date, e]));
+
+        const mergedEntries: DayEntry[] = [];
+        const allDates = new Set([...localByDate.keys(), ...remoteByDate.keys()]);
+
+        for (const date of allDates) {
+          const local = localByDate.get(date);
+          const remote = remoteByDate.get(date);
+          if (local && remote) {
+            // Keep whichever was created/updated later
+            mergedEntries.push(local.createdAt >= remote.createdAt ? local : remote);
+          } else {
+            mergedEntries.push((local || remote)!);
+          }
+        }
+
+        // Merge quick notes: remote wins for same ID, keep unique from both
+        const localNotesById = new Map((prev.quickNotes || []).map(n => [n.id, n]));
+        const remoteNotesById = new Map(remoteNotes.map(n => [n.id, n]));
+        const allNoteIds = new Set([...localNotesById.keys(), ...remoteNotesById.keys()]);
+        const mergedNotes: QuickNote[] = [];
+        for (const id of allNoteIds) {
+          const remote = remoteNotesById.get(id);
+          const local = localNotesById.get(id);
+          mergedNotes.push((remote || local)!);
+        }
+
+        // Use the higher XP and days_used (in case remote is ahead)
+        const newXp = Math.max(prev.xp || 0, 0);
+        const newDaysUsed = Math.max(prev.daysUsed, mergedEntries.length);
+
+        return {
+          ...prev,
+          entries: mergedEntries,
+          quickNotes: mergedNotes,
+          daysUsed: newDaysUsed,
+          xp: newXp,
+        };
+      });
+
+      // Push any local-only entries to Supabase
+      setState(prev => {
+        const remoteIds = new Set(remoteEntries.map(e => e.id));
+        const localOnly = prev.entries.filter(e => !remoteIds.has(e.id));
+        if (localOnly.length > 0) {
+          upsertEntries(user.id, localOnly);
+        }
+
+        const remoteNoteIds = new Set(remoteNotes.map(n => n.id));
+        const localOnlyNotes = (prev.quickNotes || []).filter(n => !remoteNoteIds.has(n.id));
+        if (localOnlyNotes.length > 0) {
+          upsertQuickNotes(user.id, localOnlyNotes);
+        }
+
+        // Sync XP/daysUsed to profile
+        upsertProfile(user.id, {
+          xp: prev.xp || 0,
+          days_used: prev.daysUsed,
+          first_used_at: prev.firstUsedAt ?? null,
+        });
+
+        return prev;
+      });
+    };
+
+    sync();
+  }, [user]);
+
+  // Reset sync flag on logout so next login re-syncs
+  useEffect(() => {
+    if (!user) {
+      hasSyncedRef.current = false;
+    }
+  }, [user]);
 
   // Check if today's entry already exists
   useEffect(() => {
@@ -66,9 +164,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (todayEntry && state.isOnboarded) {
       setState(prev => ({ ...prev, currentStep: 'complete' }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, []);
 
-  const shouldShowPaywall = state.daysUsed >= 3 && !state.isPremium && !state.isLoggedIn;
+  // 3-day free trial: show paywall after 3 calendar days from first use
+  const shouldShowPaywall = useMemo(() => {
+    if (state.isPremium) return false;
+    if (!state.firstUsedAt) return false;
+    return Date.now() - state.firstUsedAt >= FREE_TRIAL_MS;
+  }, [state.isPremium, state.firstUsedAt]);
 
   const setStep = (step: OnboardingStep) => {
     setState(prev => ({ ...prev, currentStep: step }));
@@ -110,7 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return xp;
   };
 
-  const saveDayEntry = (overrides?: Partial<DayEntry>) => {
+  const saveDayEntry = useCallback((overrides?: Partial<DayEntry>) => {
     const today = new Date().toDateString();
     const merged = { ...currentEntry, ...overrides };
     const entry: DayEntry = {
@@ -138,12 +242,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         entries: [...prev.entries.filter(e => e.date !== today), entry],
         daysUsed: alreadyHasToday ? prev.daysUsed : prev.daysUsed + 1,
         isOnboarded: true,
-        xp: (prev.xp || 0) + earnedXP,
+        xp: alreadyHasToday ? (prev.xp || 0) : (prev.xp || 0) + earnedXP,
+        firstUsedAt: prev.firstUsedAt || Date.now(),
       };
     });
 
+    // Sync to Supabase
+    if (user) {
+      upsertEntry(user.id, entry);
+    }
+
     setCurrentEntry({});
-  };
+  }, [currentEntry, state.entries, user]);
 
   const login = (email: string) => {
     setState(prev => ({ ...prev, isLoggedIn: true, email }));
@@ -161,13 +271,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, isPremium: false }));
   };
 
-  const updateEntry = (entry: DayEntry) => {
+  const updateEntry = useCallback((entry: DayEntry) => {
     setState(prev => {
       const existingIndex = prev.entries.findIndex(e => e.date === entry.date);
       const isNewEntry = existingIndex === -1;
-
-      // Only give XP for new entries (not edits)
-      const xpGain = isNewEntry ? 10 : 0;
 
       return {
         ...prev,
@@ -176,16 +283,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : prev.entries.map((e, i) => i === existingIndex ? entry : e),
         daysUsed: isNewEntry ? prev.daysUsed + 1 : prev.daysUsed,
         isOnboarded: true,
-        xp: (prev.xp || 0) + xpGain,
       };
     });
-  };
+
+    // Sync to Supabase
+    if (user) {
+      upsertEntry(user.id, entry);
+    }
+  }, [user]);
 
   const setProfile = (profile: UserProfile) => {
     setState(prev => ({ ...prev, profile }));
   };
 
-  const addQuickNote = (text: string, date?: string, emoji?: string) => {
+  const addQuickNote = useCallback((text: string, date?: string, emoji?: string) => {
     const note: QuickNote = {
       id: crypto.randomUUID(),
       text,
@@ -197,23 +308,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...prev,
       quickNotes: [...(prev.quickNotes || []), note],
     }));
-  };
 
-  const deleteQuickNote = (id: string) => {
+    if (user) {
+      upsertQuickNote(user.id, note);
+    }
+  }, [user]);
+
+  const deleteQuickNote = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
       quickNotes: (prev.quickNotes || []).filter(n => n.id !== id),
     }));
-  };
 
-  const updateQuickNoteEmoji = (id: string, emoji: string) => {
-    setState(prev => ({
-      ...prev,
-      quickNotes: (prev.quickNotes || []).map(n =>
+    if (user) {
+      deleteQuickNoteRemote(user.id, id);
+    }
+  }, [user]);
+
+  const updateQuickNoteEmoji = useCallback((id: string, emoji: string) => {
+    setState(prev => {
+      const updated = (prev.quickNotes || []).map(n =>
         n.id === id ? { ...n, emoji } : n
-      ),
-    }));
-  };
+      );
+      // Sync the updated note
+      if (user) {
+        const note = updated.find(n => n.id === id);
+        if (note) upsertQuickNote(user.id, note);
+      }
+      return { ...prev, quickNotes: updated };
+    });
+  }, [user]);
 
   const getNotesForDate = (date: string): QuickNote[] => {
     return (state.quickNotes || []).filter(n => n.date === date);
@@ -231,6 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       entries: [],
       currentStep: 'welcome',
       xp: 0,
+      firstUsedAt: undefined,
     });
     setCurrentEntry({});
   };
@@ -264,6 +389,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

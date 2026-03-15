@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { DayEntry } from '../types';
 
 interface AIChatProps {
@@ -14,14 +15,42 @@ interface Message {
   timestamp: number;
 }
 
-// Simple markdown to HTML converter for chat messages
-function formatMarkdown(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+// Format markdown to React elements (safe, no dangerouslySetInnerHTML)
+function formatMarkdown(text: string): ReactNode[] {
+  // Split by bold (**...**) and italic (*...*) markers
+  const parts: ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Try bold first (**)
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    // Try italic (*)
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
+
+    const boldIndex = boldMatch?.index ?? Infinity;
+    const italicIndex = italicMatch?.index ?? Infinity;
+
+    if (boldIndex === Infinity && italicIndex === Infinity) {
+      // No more markers
+      parts.push(remaining);
+      break;
+    }
+
+    if (boldIndex <= italicIndex && boldMatch) {
+      // Add text before bold
+      if (boldIndex > 0) parts.push(remaining.slice(0, boldIndex));
+      parts.push(<strong key={key++}>{boldMatch[1]}</strong>);
+      remaining = remaining.slice(boldIndex + boldMatch[0].length);
+    } else if (italicMatch) {
+      // Add text before italic
+      if (italicIndex > 0) parts.push(remaining.slice(0, italicIndex));
+      parts.push(<em key={key++}>{italicMatch[1]}</em>);
+      remaining = remaining.slice(italicIndex + italicMatch[0].length);
+    }
+  }
+
+  return parts;
 }
 
 // Suggestions for what users can ask
@@ -230,6 +259,7 @@ export function AIChat({ entries, userName, onClose }: AIChatProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 text-silver-400 hover:text-silver-600 dark:hover:text-silver-200 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +282,7 @@ export function AIChat({ entries, userName, onClose }: AIChatProps) {
                             : 'bg-silver-100 dark:bg-silver-800 text-silver-700 dark:text-silver-200 rounded-bl-md'
                           }`}
               >
-                <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }} />
+                <div className="whitespace-pre-wrap">{formatMarkdown(message.content)}</div>
               </div>
             </div>
           ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { UserProfile, WellnessGoal } from '../types';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,8 +21,16 @@ const WELLNESS_GOALS: { id: WellnessGoal; label: string; icon: string }[] = [
 ];
 
 const ANIMAL_AVATARS = [
-  '🐶', '🐱', '🐻', '🐼', '🦊', '🐨', '🦁', '🐯',
-  '🐸', '🐵', '🐰', '🐦', '🦋', '🐢', '🐙', '🦄',
+  { id: 'red-panda', label: 'Red Panda' },
+  { id: 'axolotl', label: 'Axolotl' },
+  { id: 'snow-leopard', label: 'Snow Leopard' },
+  { id: 'otter', label: 'Otter' },
+  { id: 'fennec-fox', label: 'Fennec Fox' },
+  { id: 'capybara', label: 'Capybara' },
+  { id: 'narwhal', label: 'Narwhal' },
+  { id: 'quokka', label: 'Quokka' },
+  { id: 'pangolin', label: 'Pangolin' },
+  { id: 'koi-fish', label: 'Koi Fish' },
 ];
 
 const COUNTRIES = [
@@ -50,6 +58,14 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
   const [deleteStep, setDeleteStep] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Cleanup timer on unmount to prevent state updates on unmounted component
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   const toggleGoal = (goal: WellnessGoal) => {
     setWellnessGoals(prev =>
       prev.includes(goal)
@@ -73,7 +89,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
     };
 
     // Simulate brief save delay for UX
-    setTimeout(() => {
+    saveTimerRef.current = setTimeout(() => {
       onSave(updatedProfile);
       setIsSaving(false);
     }, 300);
@@ -95,6 +111,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
       onClose();
     } catch (error) {
       console.error('Error deleting account:', error);
+      alert('Something went wrong while deleting your account. Please try again.');
       setIsDeleting(false);
     }
   };
@@ -270,6 +287,7 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 text-silver-400 hover:text-silver-600 dark:hover:text-silver-200 transition-colors rounded-lg hover:bg-silver-100/50 dark:hover:bg-silver-800/50"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,10 +302,14 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-2xl font-medium
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-2xl font-medium overflow-hidden
                          hover:ring-2 hover:ring-lavender-400/50 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-silver-900 transition-all"
               >
-                {avatar || name.charAt(0).toUpperCase() || '?'}
+                {avatar ? (
+                  <img src={`/images/avatars/${avatar}.png`} alt={avatar} className="w-full h-full object-cover" />
+                ) : (
+                  name.charAt(0).toUpperCase() || '?'
+                )}
               </button>
               <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-lavender-500 flex items-center justify-center
                             border-2 border-white dark:border-silver-900">
@@ -298,22 +320,23 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
               {showAvatarPicker && (
                 <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-silver-800
                               rounded-xl shadow-xl border border-silver-200 dark:border-silver-700 z-20
-                              grid grid-cols-4 gap-1.5 w-48">
-                  {ANIMAL_AVATARS.map(emoji => (
+                              grid grid-cols-5 gap-1.5 w-56">
+                  {ANIMAL_AVATARS.map(animal => (
                     <button
-                      key={emoji}
-                      onClick={() => { setAvatar(emoji); setShowAvatarPicker(false); }}
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl
-                                hover:bg-lavender-50 dark:hover:bg-lavender-900/30 transition-colors
-                                ${avatar === emoji ? 'bg-lavender-100 dark:bg-lavender-900/50 ring-2 ring-lavender-400' : ''}`}
+                      key={animal.id}
+                      onClick={() => { setAvatar(animal.id); setShowAvatarPicker(false); }}
+                      className={`w-10 h-10 rounded-lg overflow-hidden
+                                hover:ring-2 hover:ring-lavender-400 transition-all hover:scale-105
+                                ${avatar === animal.id ? 'ring-2 ring-lavender-400 scale-105' : ''}`}
+                      title={animal.label}
                     >
-                      {emoji}
+                      <img src={`/images/avatars/${animal.id}.png`} alt={animal.label} className="w-full h-full object-cover" />
                     </button>
                   ))}
                   {avatar && (
                     <button
                       onClick={() => { setAvatar(''); setShowAvatarPicker(false); }}
-                      className="col-span-4 mt-1 text-xs text-silver-500 hover:text-silver-700 dark:hover:text-silver-300 py-1"
+                      className="col-span-5 mt-1 text-xs text-silver-500 hover:text-silver-700 dark:hover:text-silver-300 py-1"
                     >
                       Remove avatar
                     </button>
@@ -331,7 +354,6 @@ export function ProfileEditor({ profile, onSave, onClose }: ProfileEditorProps) 
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="input-field"
-                autoFocus
               />
               {name.trim().length > 0 && name.trim().length < 2 && (
                 <p className="text-xs text-red-500 mt-1">Name must be at least 2 characters</p>

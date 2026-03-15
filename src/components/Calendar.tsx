@@ -17,11 +17,14 @@ export function Calendar({ entries, onSaveEntry, quickNotes = [], weekOffset: co
   const [internalOffset, setInternalOffset] = useState(0);
   const weekOffset = controlledOffset ?? internalOffset;
 
+  // Use today's date string as cache key so it updates at midnight
+  const todayStr = new Date().toDateString();
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- update when date changes
+  }, [todayStr]);
 
   // Get the week's days based on offset
   const weekDays = useMemo(() => {

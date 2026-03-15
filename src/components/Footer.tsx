@@ -7,7 +7,7 @@ interface FooterProps {
 
 export function Footer({ onPricingClick, onFAQClick, onSupportClick, onLegalClick }: FooterProps) {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-30 px-6 py-4">
+    <footer className="fixed bottom-0 left-0 right-0 z-30 px-6 py-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
       <div className="max-w-4xl mx-auto flex justify-center items-center gap-6">
         <button
           onClick={onFAQClick}

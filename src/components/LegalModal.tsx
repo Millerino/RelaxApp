@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MONTHLY_PRICE } from '../lib/constants';
 
 interface LegalModalProps {
   onClose: () => void;
@@ -23,6 +24,7 @@ export function LegalModal({ onClose }: LegalModalProps) {
           {/* Close button */}
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1 text-silver-500 hover:text-silver-700
                      dark:text-silver-400 dark:hover:text-silver-200 transition-colors"
           >
@@ -101,7 +103,7 @@ export function LegalModal({ onClose }: LegalModalProps) {
                   </h3>
                   <p className="leading-relaxed">
                     You have the right to access, export, or delete your data at any time. Contact
-                    us at support@pulsero.fit for any data-related requests.
+                    us at pulsero.help@gmail.com for any data-related requests.
                   </p>
                 </section>
 
@@ -154,7 +156,7 @@ export function LegalModal({ onClose }: LegalModalProps) {
                     Subscription & Billing
                   </h3>
                   <p className="leading-relaxed">
-                    Premium subscriptions are billed monthly at $4.99 USD. You may cancel at any
+                    Premium subscriptions are billed monthly at ${MONTHLY_PRICE} USD. You may cancel at any
                     time, and your subscription will remain active until the end of your billing
                     period. We offer a 7-day money-back guarantee.
                   </p>

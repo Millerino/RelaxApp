@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { upsertProfile } from './lib/supabase';
+import type { UserProfile } from './types';
 import { LampToggle } from './components/LampToggle';
 import { Background } from './components/Background';
 import { Header } from './components/Header';
@@ -45,23 +47,19 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
     if (user && currentStep === 'welcome' && entries.length > 0) {
       setStep('complete');
     }
-    // Not logged-in user on complete with no entries: go to welcome
-    else if (!user && currentStep === 'complete' && entries.length === 0) {
+    // Not logged-in user on complete: go to welcome (don't show local data without auth)
+    else if (!user && currentStep === 'complete') {
       setStep('welcome');
     }
   }, [user, currentStep, entries.length, setStep]);
 
   // Handle logo click
   const handleNavigateHome = () => {
-    // Don't allow bypassing paywall via logo click
-    if (shouldShowPaywall && !user) {
-      return;
-    }
     setStep(entries.length > 0 ? 'complete' : 'welcome');
   };
 
-  // Show paywall if user has used for 3+ days and isn't premium
-  if (shouldShowPaywall && !user && currentStep !== 'complete') {
+  // Show paywall after 3-day free trial for non-premium users
+  if (shouldShowPaywall && currentStep !== 'complete') {
     return (
       <>
         <Header onNavigateHome={handleNavigateHome} />
@@ -114,8 +112,8 @@ function AppContent({ onShowPricing, onShowFAQ, onShowSupport, onShowLegal }: Ap
 }
 
 function AppShell() {
-  const { state, setProfile, setStep } = useApp();
-  const { user } = useAuth();
+  const { state, setProfile, setStep, subscribeToPremium, cancelSubscription } = useApp();
+  const { user, profile: supabaseProfile, refreshProfile } = useAuth();
   const [showPricing, setShowPricing] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
@@ -128,7 +126,6 @@ function AppShell() {
 
   const handleAuthComplete = useCallback(() => {
     setIsAuthCallback(false);
-    // Always navigate to complete step for authenticated users
     setStep('complete');
   }, [setStep]);
 
@@ -137,13 +134,125 @@ function AppShell() {
     setShowAuthModal(true);
   };
 
-  // Auto-create minimal profile for logged-in users without one (no modal needed)
+  // Bidirectional profile sync between Supabase and local state
+  useEffect(() => {
+    if (!user || !supabaseProfile) return;
+    const supaName = supabaseProfile.name;
+    const localName = state.profile?.name;
+
+    if (supaName && supaName !== localName) {
+      // Supabase has data → pull to local
+      setProfile({
+        ...state.profile,
+        name: supaName,
+        avatar: supabaseProfile.avatar || state.profile?.avatar,
+        birthday: supabaseProfile.birthday || state.profile?.birthday,
+        gender: (supabaseProfile.gender as UserProfile['gender']) || state.profile?.gender,
+        country: supabaseProfile.country || state.profile?.country,
+        timezone: supabaseProfile.timezone || state.profile?.timezone,
+        createdAt: state.profile?.createdAt || Date.now(),
+      });
+    } else if (!supaName && localName) {
+      // Local has data but Supabase doesn't → push to Supabase
+      upsertProfile(user.id, {
+        name: localName,
+        avatar: state.profile?.avatar || null,
+        birthday: state.profile?.birthday || null,
+        gender: state.profile?.gender || null,
+        country: state.profile?.country || null,
+        timezone: state.profile?.timezone || null,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when supabase profile changes
+  }, [supabaseProfile?.name, supabaseProfile?.avatar, supabaseProfile?.birthday, supabaseProfile?.gender, supabaseProfile?.country, supabaseProfile?.timezone, user]);
+
+  // Sync premium status from Supabase profile → local state
+  // This is the ONLY way premium gets activated: from the database
+  useEffect(() => {
+    if (!user || !supabaseProfile) return;
+
+    const dbSaysPremium = supabaseProfile.is_premium;
+    // Also grant premium if subscription was canceled but paid period hasn't ended
+    const stillHasTime = supabaseProfile.premium_until
+      ? new Date(supabaseProfile.premium_until) > new Date()
+      : false;
+    const shouldBePremium = dbSaysPremium || stillHasTime;
+
+    if (shouldBePremium && !state.isPremium) {
+      subscribeToPremium();
+    }
+    // Anti-tampering: revoke if DB says not premium AND paid period has ended
+    if (!shouldBePremium && state.isPremium) {
+      cancelSubscription();
+    }
+  }, [supabaseProfile?.is_premium, supabaseProfile?.premium_until, state.isPremium, user, supabaseProfile, subscribeToPremium, cancelSubscription]);
+
+  // Handle payment success redirect from Stripe
+  // Does NOT grant premium — only polls Supabase for the webhook to confirm
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('payment_success')) return;
+
+    window.history.replaceState({}, '', window.location.pathname);
+    setStep('complete');
+
+    if (!user) return;
+
+    let cancelled = false;
+    // Poll Supabase for webhook confirmation (5 attempts, 3s apart = 15s)
+    const checkPremium = async (attempts: number) => {
+      if (cancelled) return;
+      try {
+        const p = await refreshProfile();
+        if (cancelled) return;
+        if (p?.is_premium) {
+          subscribeToPremium();
+        } else if (attempts > 0) {
+          setTimeout(() => checkPremium(attempts - 1), 3000);
+        }
+      } catch {
+        // Network error — retry if attempts remain
+        if (!cancelled && attempts > 0) {
+          setTimeout(() => checkPremium(attempts - 1), 3000);
+        }
+      }
+    };
+    checkPremium(5);
+
+    return () => { cancelled = true; };
+  }, []); // Run once on mount
+
+  // Refresh profile on window focus and periodically to catch webhook-driven changes
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => refreshProfile(), 60_000);
+    const handleFocus = () => refreshProfile();
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, refreshProfile]);
+
+  // Listen for auth modal events from Paywall/other components
+  useEffect(() => {
+    const handleOpenAuth = () => {
+      setShowAuthModal(true);
+    };
+    window.addEventListener('openAuthModal', handleOpenAuth);
+    return () => window.removeEventListener('openAuthModal', handleOpenAuth);
+  }, []);
+
+  // Auto-create minimal profile for logged-in users without one
   useEffect(() => {
     if (user && !state.profile) {
+      const name = user.email?.split('@')[0] || 'Friend';
       setProfile({
-        name: user.email?.split('@')[0] || 'Friend',
+        name,
         createdAt: Date.now(),
       });
+      // Also push to Supabase so name isn't null
+      upsertProfile(user.id, { name });
     }
   }, [user, state.profile, setProfile]);
 
@@ -198,6 +307,16 @@ function AppShell() {
           onComplete={(profile) => {
             setProfile(profile);
             setShowProfileSetup(false);
+            if (user) {
+              upsertProfile(user.id, {
+                name: profile.name,
+                avatar: profile.avatar || null,
+                birthday: profile.birthday || null,
+                gender: profile.gender || null,
+                country: profile.country || null,
+                timezone: profile.timezone || null,
+              });
+            }
           }}
           onSkip={() => setShowProfileSetup(false)}
           initialProfile={state.profile}

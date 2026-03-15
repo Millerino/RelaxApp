@@ -6,7 +6,8 @@ export function LampToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed top-6 right-6 z-50 p-3 rounded-full
+      style={{ top: 'max(1.5rem, env(safe-area-inset-top))' }}
+      className="fixed right-6 z-50 p-3 rounded-full
                  bg-white/20 dark:bg-silver-800/40 backdrop-blur-md
                  border border-white/30 dark:border-silver-700/30
                  hover:bg-white/30 dark:hover:bg-silver-700/40

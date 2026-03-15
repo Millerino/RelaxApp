@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     question: 'Is my data private?',
-    answer: 'Absolutely. Your journal entries and personal reflections are encrypted and stored securely. We never share your data with third parties, and you can export or delete your data at any time.',
+    answer: 'Absolutely. Your journal entries and personal reflections are stored securely. We never share your data with third parties, and you can delete your data at any time.',
   },
   {
     question: 'How does the free trial work?',
@@ -44,6 +44,7 @@ export function FAQModal({ onClose }: FAQModalProps) {
           {/* Close button */}
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1 text-silver-500 hover:text-silver-700
                      dark:text-silver-400 dark:hover:text-silver-200 transition-colors"
           >
@@ -84,8 +85,8 @@ export function FAQModal({ onClose }: FAQModalProps) {
           <div className="mt-6 pt-4 border-t border-silver-200/50 dark:border-silver-700/30">
             <p className="text-xs text-silver-500 dark:text-silver-400 text-center">
               Still have questions? Contact us at{' '}
-              <a href="mailto:support@pulsero.fit" className="text-lavender-500 hover:text-lavender-600">
-                support@pulsero.fit
+              <a href="mailto:pulsero.help@gmail.com" className="text-lavender-500 hover:text-lavender-600">
+                pulsero.help@gmail.com
               </a>
             </p>
           </div>
